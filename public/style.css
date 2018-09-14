@@ -18,7 +18,8 @@ html{ height:100%; }
   margin: 0;
 }
 .mincon {
-  padding: 5%;
+  padding: 2.5%;
+  padding-top: 4%;
   text-align: center;
   font-family: 'Archivo', sans-serif;
 }
@@ -99,75 +100,6 @@ html{ height:100%; }
   }
 }
 
-
-/* *=======*
-   * INDEX *
-   *=======* */
-
-.avholder {
-  padding: 0px;
-  margin: 0px;
-  margin-right: 64px !important;
-}
-
-.missing-bar {
-  margin-top: 10px;
-  background: #df7878 !important;
-  text-align: center;
-}
-.total-day-bar {
-  margin-top: 10px;
-  background: #e9e9fd !important;
-  text-align: center;
-}
-.total-bar {
-  margin-top: 10px;
-  background: #d4d4e6 !important;
-  text-align: center;
-}
-.subnav-toggler {
-  background: #6c7980;
-  z-index:2;
-}
-.sub-nav {
-  text-align: center;
-  background: #6c7980;
-  padding: 5px;
-  font-family: 'Noto Sans', sans-serif;
-}
-.nav-item .nav-link {
-  transition: background .4s ease-in-out;
-}
-
-.nav-item .nav-link.active {
-  background: #0275d8;
-}
-
-.sub-nav-link.red {
-  color: #d34b4b !important;
-}
-.sub-nav-link.yellow {
-  color: #dfc554 !important;
-}
-.sub-nav-link.green {
-  color: #62ca00 !important;
-}
-.sub-nav-link.grey {
-  color: #c0c0d4 !important;
-}
-.sub-nav-link.red.active {
-  color: #ff7b7b !important;
-}
-.sub-nav-link.yellow.active {
-  color: #ffd495 !important;
-}
-.sub-nav-link.green.active {
-  color: #b3ff6c !important;
-}
-.sub-nav-link.grey.active {
-  color: #ffffff !important;
-}
-
 .version-footer {
   position: absolute;
   bottom: 0;
@@ -202,6 +134,17 @@ td, th {
 }
 
 /* *=========*
+   *   NAV   *
+   *=========* */
+
+.nav-item .nav-link {
+  transition: background .4s ease-in-out;
+}
+.nav-item .nav-link.active {
+  background: #0275d8;
+}
+
+/* *=========*
    * ACCOUNT *
    *=========* */
 
@@ -218,7 +161,7 @@ td, th {
   font-family: 'Noto Sans', sans-serif;
 }
 .formBox {
-  border: 2px solid #e3e3e3;
+  border: 2px solid #5c5c5c;
   padding: 15px;
 }
 .loginWithGithub {

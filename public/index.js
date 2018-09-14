@@ -131,6 +131,7 @@ function updateTotalWeekBar() {
     $(".job-time").each(function() {
         total += parseFloat($(this).text());
     });
+    if(total >= 24) $("#subm-btn").attr("disabled");
     $("#total-week-bar").text(total + " hours logged this week.");
 }
 function updateTotalDayBar(tableEl) {
