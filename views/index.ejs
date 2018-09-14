@@ -33,6 +33,10 @@
 		}
 	</script>
 
+
+	<!-- MOJS -->
+    <script src="./lib/mo.js"></script>
+	<script src="./burstpack.anim.js"></script>
 	<script src="./index.js"></script>
 	<link rel="stylesheet" href="./index.css" />
 	<link rel="stylesheet" href="./index.night.css" />
@@ -100,28 +104,30 @@
 						<hr style="margin-top: 30px; margin-bottom: 30px;"/>
 						
 						<table class="ts-body col-12 job-table">
-							<% var cc = 0; for (var job of timesheet.jobs) { if(job.day == day) { %>
-								<tr class="ts-row row<% if(cc % 2 == 0) { %> even<% } %> no-gutters col-12 job-row">
-									<td class="col-3 job-proj"><%= job.proj %></td>
-									<td class="col-3 job-shot"><%= job.shot %></td>
-									<td class="col-3 job-task"><%= job.task %></td>
-									<td class="col-2 job-time"><%= job.time %></td>
-									<td class="col-1 job-del">
-										<form action="/code/deljob" method="POST">
-											<% if(user.isadmin) { %> <input name="jobuser" class="delj-user" value="<%= tuser.name %>" hidden /> <% } else { %> <input name="jobuser" class="delj-user" value="<%= user.name %>" hidden /> <% } %>
-											<input name="jobid" class="delj-id" value="<%= job.id %>" hidden />
-											<input name="day" class="delj-day" value="<%= day %>" hidden />
-											<input name="date" class="delj-date" value="<%= targetdate %>" hidden />
-											<button class="btn-delj" id="deljob-<%= job.id %>" type="submit" style="color: #e75045;" <% if(!editable) { %> disabled <% } %> >
-												<i class="fa fa-trash" aria-hidden="true"></i>
-											</button>
-										</form>
-									</td>
-								</tr>
-							<% cc++; } }
-							var totaldaytime = 0; for (var job of timesheet.jobs) {
-								if(job.day == day) totaldaytime += parseFloat(job.time);
-							} %>
+							<tbody>
+								<% var cc = 0; for (var job of timesheet.jobs) { if(job.day == day) { %>
+									<tr class="ts-row row<% if(cc % 2 == 0) { %> even<% } %> no-gutters col-12 job-row">
+										<td class="col-3 job-proj"><%= job.proj %></td>
+										<td class="col-3 job-shot"><%= job.shot %></td>
+										<td class="col-3 job-task"><%= job.task %></td>
+										<td class="col-2 job-time"><%= job.time %></td>
+										<td class="col-1 job-del">
+											<form action="/code/deljob" method="POST">
+												<% if(user.isadmin) { %> <input name="jobuser" class="delj-user" value="<%= tuser.name %>" hidden /> <% } else { %> <input name="jobuser" class="delj-user" value="<%= user.name %>" hidden /> <% } %>
+												<input name="jobid" class="delj-id" value="<%= job.id %>" hidden />
+												<input name="day" class="delj-day" value="<%= day %>" hidden />
+												<input name="date" class="delj-date" value="<%= targetdate %>" hidden />
+												<button class="btn-delj" id="deljob-<%= job.id %>" type="submit" style="color: #e75045;" <% if(!editable) { %> disabled <% } %> >
+													<i class="fa fa-trash" aria-hidden="true"></i>
+												</button>
+											</form>
+										</td>
+									</tr>
+								<% cc++; } }
+								var totaldaytime = 0; for (var job of timesheet.jobs) {
+									if(job.day == day) totaldaytime += parseFloat(job.time);
+								} %>
+							</tbody>
 							<tr class="ts-row row no-gutters col-12 total-day-bar">
 								<td class="col-1 offset-9" style="text-align: left;"> <%= totaldaytime %> </td>
 								<td class="col-2">Total</td>

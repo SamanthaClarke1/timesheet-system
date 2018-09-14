@@ -12,23 +12,26 @@
 		<title>Timesheets!</title>
 		<link rel="shortcut icon" href="/favicon.ico?">
 			<!-- jQuery -->
-		<script src="https://code.jquery.com/jquery-3.1.1.min.js" crossorigin="anonymous"></script>
+		<script src="./lib/jquery.js"></script>
+			<!-- jQuery Form Validator -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js" crossorigin="anonymous"></script>
 			<!-- Tether & Popper (for bootstrap) -->
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" crossorigin="anonymous"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" crossorigin="anonymous"></script>
+		<script src="./lib/tether.js"></script>
+		<script src="./lib/popper.js"></script>
 			<!-- Bootstrap -->
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" crossorigin="anonymous">
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" crossorigin="anonymous"></script>
+		<link rel="stylesheet" href="./lib/bootstrap4.css">
+		<script src="./lib/bootstrap4.js"></script>
 			<!-- Fonts & Icons-->
-			<link href="https://fonts.googleapis.com/css?family=Archivo|Noto+Sans:700" rel="stylesheet"> 
+		<link href="https://fonts.googleapis.com/css?family=Archivo|Noto+Sans:700" rel="stylesheet"> 
 		<script src="https://use.fontawesome.com/52160498ec.js"></script>
 			<!-- Our CSS/JS -->
-		<script src="/general.js"></script>
-		<link rel="stylesheet" href="/style.css">
-		<link rel="stylesheet" href="/style.night.css">
+		<script src="./general.js"></script>
+		<link rel="stylesheet" href="./style.css">
+		<link rel="stylesheet" href="./style.night.css">
 	</head>
   
 	<body>
+		<!-- Navbar -->
 		<nav class="navbar navbar-toggleable-md navbar-inverse bg-inverse font-main">
 			<% if(user) { %>
 				<div class="navbar-toggler-right navbar-username-right-holder avholder font-big">
@@ -51,7 +54,7 @@
 			</a>
 
 
-			<!-- Some other navbar shit; mostly  -->
+			<!-- Navbar bar  -->
 			<div class="collapse navbar-collapse" id="navbarSupportedContent">
 				<ul class="navbar-nav mr-auto animated">
 					<% if(user) { %>
@@ -99,7 +102,7 @@
 			<%- body %>
 		</div>
 		<div class="text-center version-footer font-main grn-text semi-dim">
-			<small> Developed by Samuel Clarke, May-July 2018, for CumulusVFX <br/> Version 1.5.1 | Codename: Excellent Information </small>
+			<small> Developed by Samuel Clarke, May-July 2018, for CumulusVFX <br/> Version 1.5.3 | Codename: Alert Analytic </small>
 		</div>
 </body>
 </html>

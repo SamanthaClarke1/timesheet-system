@@ -1,29 +1,36 @@
-<div class="mincon container" style="text-align: left;">
-	<div class="col-12 row login-page-container">
+<head>
+	<script src="./lib/mo.js"></script>
+	<script src="./burstpack.anim.js"></script>
+	<script src="./inp-burst.js"></script>
+</head>
 
-		<!--MANUAL LOGINS-->
-
-		<form class="formBox rounded col-12 text-center manual-logins" action="/auth/login" method="post">
-			<div class="login-header">
-				<h2 class="grn-text"> Login </h2>
-				<hr class="title-underline">
-			</div>
-			
-			<!--Username-->
-			<div class="form-group">
-				<label class="grn-text semi-dim" for="in-username"> Username </label>
-				<input type="username" class="form-control" name="username" id="in-username" placeholder="Alpha-numeric only (a-z, 0-9)" required>
-			</div>
-			
-			<!--Password-->
-			<div class="form-group">
-				<label class="grn-text semi-dim" for="in-password"> Password </label>
-				<input type="password" class="form-control" name="password" id="in-password" placeholder="Password" required>
-			</div>
+<body>
+	<div class="mincon container" style="text-align: left;">
+		<div class="col-12 row login-page-container">
 	
-			<input type="submit" value="Log In" class="btn btn-outline-info loginWith"/>
-			
-			<!--a href="/auth/google"> <i class="fa fa-google-plus"></i> Or Log In With Google</a--> <!-- this was a dream that never was. we dont get new employees that often - ill just add em myself.-->
-		</form>
+			<!--MANUAL LOGINS-->
+			<form class="formBox rounded col-12 text-center manual-logins" id="main-form" action="/auth/login" method="post">
+				<div class="login-header">
+					<h2 class="grn-text"> Login </h2>
+					<hr class="title-underline">
+				</div>
+				
+				<!--Username-->
+				<div class="form-group">
+					<label class="grn-text semi-dim" for="in-username"> Username </label>
+					<input type="username" class="form-control" name="username" id="in-username" placeholder="Alpha-numeric only (a-z, 0-9)" required>
+				</div>
+				
+				<!--Password-->
+				<div class="form-group">
+					<label class="grn-text semi-dim" for="in-password"> Password </label>
+					<input type="password" class="form-control" name="password" id="in-password" placeholder="Password" required>
+				</div>
+		
+				<input type="submit" id="main-submit-btn" value="Log In" class="btn btn-outline-info loginWith"/>
+				
+				<!--a href="/auth/google"> <i class="fa fa-google-plus"></i> Or Log In With Google</a--> <!-- this was a dream that never was. we dont get new employees that often - ill just add em myself.-->
+			</form>
+		</div>
 	</div>
-</div>
+</body>

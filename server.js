@@ -2,14 +2,6 @@
 
 /* Code written by Samuel J. Clarke, May-June 2018, for CumulusVFX. */
 
-// ####### VALUES THAT MAY NEED EDITING EN EL FUTURO ## //
-var tasks = {"default": ["Clean-Up", "Roto", "Precomp", "3d", "Comp", "Misc", "Track", "FX", "Paint", "Ingest", "Animation"],
-			 "admin":   ["Annual Leave", "Sick Leave", "Idle", "Training", "Meetings", "Housekeeping", "Engineering", "Repairs"]};
-var projs = ["Back of the Net", "Occupation 2", "At Last", "2040", "Lamb Of God", "ram", "Chocolate Oyster", "2Wolves", "Predator", "Admin"];
-var daysdict={"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6};
-var RowEnum = {"id": 0, "user": 1, "start": 2, "end": 3, "proj": 4, "vacation": 5, "note": 6};
-var days=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-Object.freeze(RowEnum);
 
 // ## init variables, imports etc ## //
 
@@ -31,7 +23,6 @@ var passport       = require('passport'),
 var mongodb        = require('mongodb').MongoClient;
 var url            = 'mongodb://guest:'+process.env.MONGO_PASS+'@ds016298.mlab.com:16298/timetable';  // Connection URL.
 
-
 // ## configuring express ## //
 
 app.set('views', __dirname + '/views');
@@ -47,9 +38,52 @@ app.use(express.static(__dirname + '/public'));
 app.use(passport.initialize());
 app.use(passport.session());
 
-var __DEBUG_KNOCKBACK__ = false; // NEVER EVER SET THIS TO TRUE UNLESS YOU 100% KNOW WHAT YOU ARE DOING. IT WILL KNOCKBACK ALL OF THE TIMESHEETS BY A WEEK.
-var __DEBUG_FORCEUNIX__ = false; // NEVER EVER SET THIS TO TRUE UNLESS YOU 100% KNOW WHAT YOU ARE DOING. IT WILL UPDATE ALL OF THE UNIX DATES TO WHATEVER THE STRING DATE IS. // i mean actually this one is not really all that dangerous but its ok
 
+
+
+
+// ############ CONTROL BOX STARTS HERE ############ //
+
+
+
+// #### EASILY EDITABLE VARS START HERE #### //
+
+var tasks = {"default": ["Clean-Up", "Roto", "Precomp", "3d", "Comp", "Misc", "Track", "FX", "Paint", "Ingest", "Animation"],
+			 "admin":   ["Annual Leave", "Sick Leave", "Idle", "Training", "Meetings", "Housekeeping", "Engineering", "Repairs"]};
+var projs = ["Back of the Net", "Occupation 2", "At Last", "2040", "Lamb Of God", "ram", "Chocolate Oyster", "2Wolves", "Predator", "Admin"];
+var daysdict={"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6};
+var RowEnum = {"id": 0, "user": 1, "start": 2, "end": 3, "proj": 4, "vacation": 5, "note": 6};
+var days=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+// #### EASILY EDITABLE VARS END HERE #### //
+
+
+
+// #### SYSTEM DEBUG VARS START HERE (BE CAREFUL) #### //
+
+var __DEBUG_FORCEUNIX__ = false; // !i!i! CAREFUL !i!i!i  -  THIS WILL UPDATE ALL OF THE UNIX DATES TO WHATEVER THE STRING DATE IS. // i mean actually this one is not really all that dangerous but its ok
+var __DEBUG_FORCE_TS_NAMING_SCHEMA__ = false; // !i!i! CAREFUL !i!i!i  -  THIS WILL FORCE ALL OF THE TIMESHEET NAMES TO THE PROPER SCHEMA
+
+// #### SYSTEM DEBUG VARS END HERE (THANKS FOR BEING CAREFUL) #### //
+
+
+
+// #### 2+2=4, 4-1=3, QUICK MAFS #### //
+
+console.log(hashOf("CMLS")); // default password to manually insert.
+
+// #### END QUICK MAFS #### //
+
+
+
+// ############ END CONTROL BOX ############ //
+
+
+
+
+
+
+Object.freeze(RowEnum);
 // ## page rendering in relation to the database ## //
 
 // Use connect method to connect to the Server
@@ -66,24 +100,24 @@ mongodb.connect(url, function (err, db) {
 		var plansDB = ttdb.collection('plans'); // this stores all of the auto-fill data. things like project defaults. its basically just a group of future 'jobs'. timesheets that "will" exist. organised by date { date: *date, user: *name, jobs: *jobs[] }
 		var parsedDB = ttdb.collection('parsed'); // this stores all of the parsed spreadsheet. atm just to work with some ajax on the planner page (remembering what their last spreadsheet was).
 
-		if(__DEBUG_KNOCKBACK__) { // untested
+		if(__DEBUG_FORCE_TS_NAMING_SCHEMA__) {
 			timesheetDB.find({}).toArray(function(err, data) {
 				if(err) throw err;
 				for(var timesheet of data) {
 					var original = JSON.parse(JSON.stringify(timesheet));
-					var now = new Date(timesheet.date);
-					var unow = now.getTime();
-					var pmon = getPreviousMonday(new Date(unow - 1000*60*60*24*2));
-					timesheet.date = getThisDate(pmon);
-					timesheet['unix-date'] = pmon.getTime();
-					//TOFIX
-					timesheetDB.update({"user": user.name, "date": req.body.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) { //TOFIX
-						if(err) throw err;
-						return res.end(JSON.stringify({"err": "", "errcode": 200, "data": toIns}, null, 2)); //painfulpart
-					});// TOFIX
+					var now = new Date(timesheet['unix-date']);
+					timesheet['date'] = getThisDate(now);
+
+					console.log("updated ts date to:", timesheet["date"]);
+					timesheetDB.update({"user": original.user, "unix-date": original['unix-date']}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) {
+						if(err) throw err; //painfulpart
+						console.log("success i think");
+					});
 				}
+				console.log("done i think");
 			})
 		}
+
 		if(__DEBUG_FORCEUNIX__) {
 			timesheetDB.find({}).toArray(function(err, data) {
 				if(err) throw err;
@@ -156,7 +190,7 @@ mongodb.connect(url, function (err, db) {
 			} else {
 				timesheetDB.find({"user": req.user.name}, {"_id": 0, "date": 1}).toArray(function(err, timesheets) {
 					if(err) throw err;
-					
+
 					timesheets.sort((a, b) => { return b["unix-date"] - a["unix-date"]; });
 					timesheets.unshift({"user": req.user.name, "jobs": req.user.timesheet.jobs, "date": thisdate});
 					for(var i = 1; i <= 4; i++) {
@@ -334,11 +368,11 @@ mongodb.connect(url, function (err, db) {
 		});
 		app.get("/ajax/getplans", ensureAJAXAuthenticated, function(req, res) {
 			if(req.user.isadmin != "true") {
-				res.end('{"error": "Insufficient permissions"}');
+				res.json({"err": "Insufficient permissions", "errcode": 403, "data": {}});
 			} else {
 				parsedDB.find().toArray(function(err, data) {
 					if(err) throw err;
-					res.end(JSON.stringify(data, null, 2));
+					res.json({"err": "", "errcode": 200, "data": data});
 				});;
 			}
 		});
@@ -350,7 +384,7 @@ mongodb.connect(url, function (err, db) {
 		});*/
 		app.post("/code/addjob", ensureAJAXAuthenticated, function(req, res) {
 			if(req.body.date != "Current" && new Date(req.body.date).getTime() > getPreviousMonday().getTime()) {// the target date is in the future, plans !i!i DONT !i!i get the scans
-				return res.end(JSON.stringify({"err": "Future weeks are read only.", "errcode": 403, "data": {}}, null, 2));
+				return res.json({"err": "Future weeks are read only.", "errcode": 403, "data": {}});
 			}
 
 			usersDB.findOne({"name": req.body.jobuser}, function(err, user) {
@@ -373,13 +407,13 @@ mongodb.connect(url, function (err, db) {
 						"id": makeSlug(15, 15)
 					};
 					if(toIns.day.length && toIns.shot && toIns.proj && toIns.time && toIns.task) {
-						if(toIns.day.length  > 11) return res.end(JSON.stringify({"err": "Day too long", "errcode": 400, "data": ""}, null, 2));
-						if(toIns.shot.length > 35) return res.end(JSON.stringify({"err": "Shot code too long", "errcode": 400, "data": ""}, null, 2));
-						if(toIns.proj.length > 25) return res.end(JSON.stringify({"err": "Project too long", "errcode": 400, "data": ""}, null, 2));
-						if(toIns.task.length > 20) return res.end(JSON.stringify({"err": "Task too long", "errcode": 400, "data": ""}, null, 2));
-						if(toIns.day.length  <  2) return res.end(JSON.stringify({"err": "Day too short", "errcode": 400, "data": ""}, null, 2));
-						if(toIns.task.length <  1) return res.end(JSON.stringify({"err": "Task too short", "errcode": 400, "data": ""}, null, 2));
-						if(toIns.shot.length <  1) return res.end(JSON.stringify({"err": "Shot code too short", "errcode": 400, "data": ""}, null, 2))
+						if(toIns.day.length  > 11) return res.json({"err": "Day too long", "errcode": 400, "data": ""});
+						if(toIns.shot.length > 35) return res.json({"err": "Shot code too long", "errcode": 400, "data": ""});
+						if(toIns.proj.length > 25) return res.json({"err": "Project too long", "errcode": 400, "data": ""});
+						if(toIns.task.length > 20) return res.json({"err": "Task too long", "errcode": 400, "data": ""});
+						if(toIns.day.length  <  2) return res.json({"err": "Day too short", "errcode": 400, "data": ""});
+						if(toIns.task.length <  1) return res.json({"err": "Task too short", "errcode": 400, "data": ""});
+						if(toIns.shot.length <  1) return res.json({"err": "Shot code too short", "errcode": 400, "data": ""})
 
 						timesheet.jobs.push(toIns);
 		
@@ -387,16 +421,16 @@ mongodb.connect(url, function (err, db) {
 							req.user.timesheet = timesheet;
 							usersDB.update({name: user.name}, {"name": user.name,"displayName": user.displayName,"dob": user.dob,"password": user.password,"isadmin": user.isadmin,"email": user.email,"timesheet": user.timesheet}, function(err, data) {
 								if(err) throw err;
-								return res.end(JSON.stringify({"err": "", "errcode": 200, "data": toIns}, null, 2)); //painfulpart
+								return res.json({"err": "", "errcode": 200, "data": toIns}); //painfulpart
 							});
 						} else {
 							timesheetDB.update({"user": user.name, "date": req.body.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) {
 								if(err) throw err;
-								return res.end(JSON.stringify({"err": "", "errcode": 200, "data": toIns}, null, 2)); //painfulpart
+								return res.json({"err": "", "errcode": 200, "data": toIns}); //painfulpart
 							});
 						}
 					} else {
-						return res.end(JSON.stringify({"err": "Missing input fields!", "errcode": 400, "data": {}}, null, 2));
+						return res.json({"err": "Missing input fields!", "errcode": 400, "data": {}});
 					}
 				});
 			});
@@ -423,18 +457,18 @@ mongodb.connect(url, function (err, db) {
 								req.user.timesheet = timesheet;
 								usersDB.update({name: user.name}, {"name": user.name,"displayName": user.displayName,"dob": user.dob,"password": user.password,"isadmin": user.isadmin,"email": user.email,"timesheet": timesheet}, function(err, data) {
 									if(err) throw err;
-									return res.end(JSON.stringify({"err": "", "errcode": 200,}, null, 2)); //painfulpart
+									return res.json({"err": "", "errcode": 200,}); //painfulpart
 								});
 								break;
 							} else {
 								timesheetDB.update({"user": user.name, "date": req.body.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) {
 									if(err) throw err;
-									return res.end(JSON.stringify({"err": "", "errcode": 200,}, null, 2)); //painfulpart
+									return res.json({"err": "", "errcode": 200,}); //painfulpart
 								});
 								break;
 							}
 						} else if(i >= timesheet.jobs.length - 1) { // if its the last job, and its still not found anything, redirect them.
-							return res.end(JSON.stringify({"err": "Job Not Found", "errcode": 400}, null, 2));
+							return res.json({"err": "Job Not Found", "errcode": 400});
 						}
 					}
 				});
@@ -446,7 +480,7 @@ mongodb.connect(url, function (err, db) {
 		});
 
 		app.get("/ajax/getanalyticsdata", ensureAJAXAuthenticated, function(req, res) {
-			if(req.user.isadmin != "true") return res.end({"err": "User does not have the permissions to use this function", "errcode": 403, "data": {}}, null, 2);
+			if(req.user.isadmin != "true") return res.json({"err": "User does not have the permissions to use this function", "errcode": 403, "data": {}});
 			
 			var fromdate = new Date(req.query.fromdate).getTime(), todate = new Date(req.query.todate).getTime();
 
@@ -459,7 +493,7 @@ mongodb.connect(url, function (err, db) {
 			timesheetDB.find(mongSearch).toArray(function(err, timesheets) {
 				if(err) throw err;
 
-				return res.end(JSON.stringify({"err": "", "errcode": 200, "data": timesheets}, null, 2))
+				return res.json({"err": "", "errcode": 200, "data": timesheets})
 			});
 		}) // /analytics?user=philippa&user=william&user=morgane&user=jee&fromdate=2018-06-07&todate=2018-06-12
 
@@ -471,14 +505,14 @@ mongodb.connect(url, function (err, db) {
 				usersDB.find({}).project({'name': 1, 'displayName': 1}).toArray(function(err, users) { 
 					if(err) throw err;
 
-					return res.end(JSON.stringify({"err": "", "errcode": 200, "data": users}, null, 2));
+					return res.json({"err": "", "errcode": 200, "data": users});
 				});
 			} else if(ttype == "projs") {
-				return res.end(JSON.stringify({"err": "", "errcode": 200, "data": projs}, null, 2));
+				return res.json({"err": "", "errcode": 200, "data": projs});
 			} else if(ttype == "tasks") {
-				return res.end(JSON.stringify({"err": "", "errcode": 200, "data": tasks}, null, 2));
+				return res.json({"err": "", "errcode": 200, "data": tasks});
 			} else { 
-				return res.end(JSON.stringify({"err": "Malformed request", "errcode": 400, "data": {}}, null, 2)); 
+				return res.json({"err": "Malformed request", "errcode": 400, "data": {}}); 
 			}
 		});
 
@@ -607,13 +641,13 @@ mongodb.connect(url, function (err, db) {
 		function callMeOnMonday(effective) {
 			var now = new Date();
 			//if(!effective) {now.setDate(10); now.setMonth(7);} // debug, makes it run once, just to force the user timesheets into the outdated bin.
-			nextMonday = getNextMonday(10);
+			nextMonday = getNextMonday(7); // run at next monday, 7am.
 			setTimeout(callMeOnMonday, nextMonday.getTime() - now.getTime(), true);
 
 			if(effective) {
 				//now.setDate(28); now.setMonth(4); // debug, sets the date to upload.
 				console.log("It's a monday! Moving the timesheets! " + getThisDate(now));
-				getPreviousMonday(new Date(now.getTime() - 1000*60*60*24*2), 0) // this is just inserting the previous weeks monday date. nothing to see here, move along.
+				var thisdate = getPreviousMonday(new Date(now.getTime() - (1000*60*60*24*2)), 0) // this is just inserting the previous weeks monday date. nothing to see here, move along.
 				
 				usersDB.find().toArray(function(err, users) {
 					for(var tuser of users) {
@@ -734,7 +768,7 @@ function ensureAuthenticated(req, res, next) {
 }
 function ensureAJAXAuthenticated(req, res, next) {
 	if (req.isAuthenticated()) { return next(); }
-	res.end(JSON.stringify({"err": "User Is Not Authenticated", "errcode": 403, "data": ""}))
+	res.json({"err": "User Is Not Authenticated", "errcode": 403, "data": ""});
 }
 function ensureAuthenticatedSilently(req, res, next) {
 	if (req.isAuthenticated()) { return next(); }

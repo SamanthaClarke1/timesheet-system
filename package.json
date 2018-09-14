@@ -1,9 +1,9 @@
 {
   "name": "timetable-manager",
-  "version": "1.4.3",
+  "version": "1.5.3",
   "description": "Manages the timetables for cmls. Recieves input from artists, that log their time, and stores it in a db.",
   "main": "server.js",
-  "codename": "Excellent Information",
+  "codename": "Alert Analytic",
   "dependencies": {
     "body-parser": "^1.18.3",
     "dotenv": "^5.0.1",

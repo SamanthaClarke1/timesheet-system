@@ -132,8 +132,8 @@ $(document).ready(function() {
 
 	function updatePlans() {
 		$.get("/ajax/getplans", function(data) {
-			if(data) {
-				data = data[0].rows;
+			if(data.errcode == 200) {
+				data = data.data[0].rows;
 				var toSetAsHTML = '<table class="col-12" style="margin-top: 20px; margin-bottom: 30px;"> <tr class="col-12"> <th class="col-2"> Id </th> <th class="col-2"> User </th>';
 				toSetAsHTML += '<th class="col-2"> Start </th> <th class="col-2"> End </th> <th class="col-2"> Project </th> <th class="col-2"> Vacation? </th> <th class="col-2"> Note </th> </tr> </table><table id="plans-table" class="col-12">';
 				var total = 0;
@@ -147,6 +147,8 @@ $(document).ready(function() {
 				}
 				toSetAsHTML += "</table>"
 				$("#plansHolder").html(toSetAsHTML);
+			} else {
+				alert("ERRORCODE: " + data.errcode + " ERROR: " + data.err);
 			}
 		}, "json");
 	} 

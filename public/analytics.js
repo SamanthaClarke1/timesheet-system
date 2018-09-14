@@ -3,9 +3,10 @@ var viewMode = "user";
 var projCache = "";
 
 $(document).ready(function() {
+
   $("#search-type-val").val(viewMode);
 
-  $(".bx-opt").click(function() {
+  $(".bx-opt").click(function(e) {
     $(".bx-switch").children().each(function() {
       $(this).removeClass("active");
     })
@@ -45,7 +46,13 @@ $(document).ready(function() {
     })
   }
 
-  $("#flush-cache-btn").click(function() { if(viewMode == "proj") refreshProjCache(); })
+  $("#flush-cache-btn").click(function(e) {
+    var coords = { x: e.pageX, y: e.pageY };
+    littleburst.tune(coords).generate();
+    littleburst_timeline.replay();
+    
+    if(viewMode == "proj") refreshProjCache(); 
+  })
 
   function fillParams(users) {
     if(!$("#from-date").val()) $("#from-date").val("2018-01-01");
@@ -69,37 +76,43 @@ $(document).ready(function() {
   });
 
   $("#submit-btn").bind("click", function(e) {
-      e.preventDefault(); // dont send off the from by redirecting the user to it
-      var parentForm = $("#graph-params-form");
+    e.preventDefault(); // dont send off the from by redirecting the user to it
+    var parentForm = $("#graph-params-form");
 
-      if(viewMode == "user") {
-        $.get('/ajax/getanalyticsdata', parentForm.serialize(), renderGraphDataParser, "json");
-      } else {
-        renderGraph(projCache, marg);
-      }
+    if(viewMode == "user") {
+      $.get('/ajax/getanalyticsdata', parentForm.serialize(), renderGraphDataParser, "json");
+    } else {
+      renderGraph(projCache, marg);
+    }
+    
+    var coords = { x: e.pageX, y: e.pageY };
+    littleburst.tune(coords).generate();
+    littleburst_timeline.replay();
   });
 
-  $.get('/ajax/getanalyticsdata', $("#graph-params-form").serialize(), renderGraphDataParser, "json");
 
   var week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   let marg = {
     top: 50,
-    bot: 25,
-    left: 200,
+    bot: 15,
+    left: 25,
     right: 25,
-    rbar: 100
+    rbar: 100,
+    lbar: 175,
+    rxy: 0,
+    endcap: 50
   };
   
   function renderGraph(data, marg) {
     if(data.length < 1) return alert("No Items Found");
     
     var dpack = prepData(data);
-    if(!dpack) return alert('No Items Found');
+    if(!dpack) return alert('No Shots Found');
 
     $("#tables").empty();
     $("#tables").css("height", "70vh");
     let container = d3.select("#tables").node().getBoundingClientRect();
-    let w = container.width - marg.right - marg.rbar, h = container.height - marg.bot;
+    let w = container.width - marg.right - marg.rbar - marg.lbar, h = container.height - marg.bot;
 
     var nusers = dictToArr(dpack[0]), nprojs = dictToArr(dpack[1]);
     
@@ -125,7 +138,7 @@ $(document).ready(function() {
     const svg = d3.select("#tables")
       .append("svg")
       .attr("id", "tables-svg")
-      .attr("viewBox", (-marg.left)+","+(-marg.top)+","+(container.width)+","+(15000))
+      .attr("viewBox", ((marg.left + marg.lbar) * -1)+","+(-marg.top)+","+(container.width)+","+(15000))
       .attr("width", (container.width))
       .attr("height", (15000));
 
@@ -149,9 +162,9 @@ $(document).ready(function() {
       createTotalBar(svg, nprojs, "totalbar", marg, w - marg.left - marg.right, 0, wscl, hscl);
     }
 
-    var tH = (barB?barB.node().getBBox().height:0) + barA.node().getBBox().height + marg.bot * 4;
+    var tH = (barB?barB.node().getBBox().height:0) + barA.node().getBBox().height + marg.bot * 3 + marg.endcap;
     svg.attr('height', tH)
-       .attr("viewBox", (-marg.left)+","+(-marg.top)+","+(container.width)+","+(tH));
+       .attr("viewBox", ((marg.left+marg.lbar)*-1)+","+(-marg.top)+","+(container.width)+","+(tH));
 
     createAxis(svg, xScale, yScale, dayRange, minDate, maxDate);
   }
@@ -188,7 +201,7 @@ $(document).ready(function() {
       .attr('class', (d) => { return tcl+'-job '+tcl+'-job-day-' + d.date; })
       .append('title')
       .text((d) => {
-        return "Project: " + d.proj + "\nDay: " + d.day + "\nShot: " + (d.shot ? d.shot:"general") + "\nHours: " + d.time + "\nTask: " + d.task;
+        return "Project: " + d.proj + "\nDay: " + d.day + "\nShot: " + (d.shot ? d.shot:"general") + "\nHours: " + d.time + (viewMode == "user"?"\nTask: " + d.task:"");
       })
       .attr("class", "tooltip");
     
@@ -242,6 +255,7 @@ $(document).ready(function() {
       }
       for(var j of d.jobs) {
         j.date = getThisDate(new Date(d['unix-date'] + daysToMilliseconds(week.indexOf(j.day))));
+        j.shot = (j.shot?j.shot.toLowerCase():"general");
         if(!jobOffsets[j.date]) jobOffsets[j.date] = 0;
         j.offset = parseFloat(jobOffsets[j.date]);
         jobOffsets[j.date] += parseFloat(j.time);
@@ -337,7 +351,7 @@ $(document).ready(function() {
   
   function createTitleBar(svg, dat, tclass, marg, inx, iny, wscl, hscl) {
     var usrbar = svg.append('g')
-      .attr('transform', "translate("+((marg.right / 2)-marg.left + inx)+", "+(iny)+")")
+      .attr('transform', "translate("+((marg.left / 2)-marg.lbar + inx)+", "+(iny)+")")
       .attr('class', tclass)
       .attr('id', tclass+"-0");
     
@@ -348,17 +362,17 @@ $(document).ready(function() {
       .attr('transform', (d, i) => { return "translate(0,"+((d.gyspacing / 8) * hscl)+")"; })
       
     usrbarrow.append('rect')
-      .attr('width', marg.left - marg.right)
+      .attr('width', marg.lbar - marg.left)
       .attr('height', (d, i) => { return (hscl * (d.offset / 8)); })
       .attr('fill', (d, i) => { return (d.id % 2 == 0 ? "#ccc" : "#ddd"); })
-      .attr('rx', 6)
-      .attr('ry', 6)
+      .attr('rx', marg.rxy)
+      .attr('ry', marg.rxy)
       .attr('class', tclass + '-row-rect')
     
     usrbarrow.append('text')
       //.attr('width', marg.left - marg.right)
       //.attr('height', (d, i) => { return (hscl * (d.offset / 8)); })
-      .attr('x', marg.right / 2)
+      .attr('x', marg.left / 2)
       .attr('y', (d, i) => { return hscl * (d.offset / 8) / 2; })
       .attr('fill', "#111")
       .attr('class', tclass + '-row-rect')
@@ -385,8 +399,8 @@ $(document).ready(function() {
       .attr('width', tw)
       .attr('height', (d, i) => { return (hscl * (d.offset / 8)); })
       .attr('fill', (d, i) => { return (d.id % 2 == 0 ? "#ccc" : "#ddd"); })
-      .attr('rx', 6)
-      .attr('ry', 6)
+      .attr('rx', marg.rxy)
+      .attr('ry', marg.rxy)
       .attr('class', tclass + '-row-rect')
     
     usrbarrow.append('text')

@@ -1,46 +1,55 @@
-<div class="mincon container" style="text-align: left;">
-	<div class="col-12 row login-page-container">
 
-		<!--MANUAL LOGINS-->
-		
-		<form class="formBox rounded col-12 text-center manual-logins" action="/auth/signup" method="post">
-			<div class="login-header">
-				<h2 class="grn-text font-big"> Add a user </h2>
-				<hr class="title-underline">
-			</div>
+<head>
+	<script src="./lib/mo.js"></script>
+	<script src="./burstpack.anim.js"></script>
+	<script src="./inp-burst.js"></script>
+</head>
 
-			<!--Username-->
-			<div class="form-group">
-				<label class="col-12 grn-text semi-dim" for="in-username"> Username </label>
-				<small class="col-12 grn-text dim">Please note that the closer to their shotgun name this is, the more likely it is to work.</small>
-				<input type="username" class="form-control" name="username" id="in-username" placeholder="Alpha-numeric only (a-z, 0-9)" required>
-			</div>
-
-			<!--Email-->
-			<div class="form-group">
-				<label class="grn-text semi-dim" for="in-username"> Email </label>
-				<input type="email" class="form-control" name="email" id="in-email" placeholder="johndoe@cumulusvfx.com" required>
-			</div>
-
-			<!--Password-->
-			<div class="form-group">
-				<label class="grn-text semi-dim" for="in-password"> Password </label>
-				<input type="password" class="form-control" name="password" id="in-password" placeholder="Password" required>
-			</div>
-
-			<!--Password-->
-			<div class="form-group">
-				<label class="grn-text semi-dim" for="in-password"> Confirm Password </label>
-				<input type="password" class="form-control" name="confirmpassword" id="in-confirmpassword" placeholder="Confirm Password" required>
-			</div>
+<body>
+	<div class="mincon container" style="text-align: left;">
+		<div class="col-12 row login-page-container">
+	
+			<!--MANUAL LOGINS-->
 			
-			<div class="row">
-				<input type="submit" value="Submit" class="btn btn-outline-info col-8 offset-2"/>
-				<div class="col-2" style="margin:auto;">
-					<small class="col-12">Is Admin</small>
-					<input class="col-12" type="checkbox" name="isadmin" id="in-isadmin" value="true">
+			<form class="formBox rounded col-12 text-center manual-logins" id="main-form" action="/auth/signup" method="post">
+				<div class="login-header">
+					<h2 class="grn-text font-big"> Add a user </h2>
+					<hr class="title-underline">
 				</div>
-			</div>
-		</form>
+	
+				<!--Username-->
+				<div class="form-group">
+					<label class="col-12 grn-text semi-dim" for="in-username"> Username </label>
+					<small class="col-12 grn-text dim">Please note that the closer to their shotgun name this is, the more likely it is to work.</small>
+					<input type="username" class="form-control" name="username" id="in-username" placeholder="Alpha-numeric only (a-z, 0-9)" required>
+				</div>
+	
+				<!--Email-->
+				<div class="form-group">
+					<label class="grn-text semi-dim" for="in-username"> Email </label>
+					<input type="email" class="form-control" name="email" id="in-email" placeholder="johndoe@cumulusvfx.com" required>
+				</div>
+	
+				<!--Password-->
+				<div class="form-group">
+					<label class="grn-text semi-dim" for="in-password"> Password </label>
+					<input type="password" class="form-control" name="password" id="in-password" placeholder="Password" required>
+				</div>
+	
+				<!--Confirm Password-->
+				<div class="form-group">
+					<label class="grn-text semi-dim" for="in-password"> Confirm Password </label>
+					<input type="password" class="form-control" name="confirmpassword" id="in-confirmpassword" placeholder="Confirm Password" required>
+				</div>
+				
+				<div class="row">
+					<input type="submit" id="main-submit-btn" value="Submit" class="btn btn-outline-info col-8 offset-2"/>
+					<div class="col-2" style="margin:auto;">
+						<small class="col-12">Is Admin</small>
+						<input class="col-12" type="checkbox" name="isadmin" id="in-isadmin" value="true">
+					</div>
+				</div>
+			</form>
+		</div>
 	</div>
-</div>
+</body>

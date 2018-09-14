@@ -22,8 +22,9 @@ $(document).ready(function() {
                     if(data.errcode == 200) {
                         var srv = fromSrv;
                         job = data.data;
+                        var tid = Math.floor(Math.random() * 1000000);
                         var toIns = `
-                            <tr class="ts-row row no-gutters col-12 job-row">
+                            <tr class="ts-row row no-gutters col-12 job-row shrinkme" id="tid-`+tid+`">
                                 <td class="col-3 job-proj">`+job.proj+`</td>
                                 <td class="col-3 job-shot">`+job.shot+`</td>
                                 <td class="col-3 job-task">`+job.task+`</td>
@@ -40,12 +41,25 @@ $(document).ready(function() {
                             </tr>
                         `;
                         parentForm.parent().children(".job-table").each(function() {
-                            $(this).append(toIns);
+                            var tbody = $(this).children("tbody").first();
+                            tbody.append(toIns);
+                            
+                            var njob=$("#tid-"+tid);
+                            var coords = { x: njob.offset().left + 20, y: njob.offset().top + 20 };
+                            sparkflow.tune(coords).generate();
+                            sparkflow_timeline.replay();
+
+                            var coordsr = {x: coords.x + njob.width(), y: coords.y}; 
+                            sparkflowr.tune(coordsr).generate();
+                            sparkflowr_timeline.replay();
+
+                            setTimeout(function(njob){njob.removeClass("shrinkme")}, 10, njob);
+
                             bindDeleteBlocker($("#deljob-"+job.id));
-                            updateTotalWeekBar($(this));
+                            updateTotalWeekBar(tbody);
                             var total = updateTotalDayBar($(this));
                             updateDayColor(job.day, total);
-                            updateShading($(this));
+                            updateShading(tbody);
                         });
                     } else if(data.err && data.errcode) {
                         alert("ERRCODE " + data.errcode + " : " + data.err);
@@ -108,11 +122,21 @@ function delJobEvent() {
         $.post('/code/deljob', parentForm.serialize(), function(data) { // but use my js to send it off, it's async :)
             if(data.err == "") {
                 var jobrow = parentForm.parent().parent();
-                jobrow.remove(); // remove the job
-                updateTotalWeekBar(parentTable);
-                var total = updateTotalDayBar(parentTable); // update the total
-                updateDayColor(day, total);
-                updateShading(parentTable); // update the colors
+
+                var offset = jobrow.find('.btn-delj').first().offset();
+                var coords = { x: offset.left + 20, y: offset.top + 20 };
+                smokeflow.tune(coords).generate();
+                smokeflow_timeline.replay();
+
+                jobrow.addClass("shrinkme");
+
+                setTimeout(function(jobrow, parentTable, day) {
+                    jobrow.remove(); // remove the job
+                    updateTotalWeekBar(parentTable);
+                    var total = updateTotalDayBar(parentTable); // update the total
+                    updateDayColor(day, total);
+                    updateShading(parentTable); // update the colors
+                }, 700, jobrow, parentTable, day)
             } else {
                 alert(data.err);
             }
@@ -123,7 +147,15 @@ function delJobEvent() {
 function updateDayColor(day, total) {
     var el = $("#" + day + "-daylink").children("a");
     var classToAdd = (total == 0 ? "red" : (total >= 8 ? "green" : "yellow"));
+
+    var shouldBurst = true;
+    if(el.hasClass("green")) shouldBurst = false;
     el.removeClass("red").removeClass("green").removeClass("yellow").addClass(classToAdd);
+    if(classToAdd == "green" && shouldBurst) {
+        var coords = {x: el.offset().left + 10, y: el.offset().top + 10};
+        successburst.tune(coords).generate();
+        successburst_timeline.replay();
+    }
 }
 
 function updateTotalWeekBar() {

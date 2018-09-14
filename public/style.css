@@ -116,22 +116,30 @@ html{ height:100%; }
   font-family: 'Noto Sans', sans-serif;
 }
 .ts-row {
-  background: rgb(232, 236, 236);
+  background-color: rgb(232, 236, 236);
   margin-bottom: 8px;
   border-radius: 5px;
+  height: 2.5em;
+  overflow: hidden;
+  opacity: 1;
+  transition: height 0.7s, margin-bottom 0.7s, opacity 0.7s, background-color 0.7s;
+}
+.ts-row.shrinkme {
+  height: 0em;
+  margin-bottom: 0px;
+  opacity: 0;
 }
 .ts-row.even {
-  background: rgb(228, 247, 252);
+  background-color: rgb(228, 247, 252);
 }
 td.col-3 {
   padding-left: 8px;
   padding-right: 4px;
-  height: 4vh;
-  min-height: 30px;
 }
 td, th {
   overflow:hidden;
 }
+
 
 /* *=========*
    *   NAV   *
