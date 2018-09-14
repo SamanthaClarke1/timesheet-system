@@ -1,0 +1,76 @@
+body {
+  background-color: #2e2f35;
+  color: white;
+}
+.mincon {
+  background: #2e2f35;
+  color: white;
+}
+.mcon {
+  padding: 0%;
+  font-family: 'Archivo', sans-serif;
+  background: #2e2f35;
+  color: white;
+}
+.bordercon {
+  border-right: 1px solid #282829;
+  border-left: 1px solid #282829;
+  border-bottom: 1px solid #282829;
+}
+hr {
+  background: rgb(166, 173, 175);
+}
+.version-footer {
+  background-color: #272831;
+  color: white;
+}
+.ts-row {
+  background: #434c57;
+  margin-bottom: 8px;
+  border-radius: 5px;
+  color: #d8d8d8;
+}
+.ts-row.even {
+  background: #313B47;
+}
+/* *==========*
+   *   BTNS   *
+   *==========* */
+.navbar.navbar-toggleable-md.navbar-inverse.bg-inverse {
+  background-color: #242830 !important;
+}
+.btn.btn-outline-info:hover {
+  background : rgb(70, 154, 202);
+}
+.btn.btn-outline-info:active {
+  background : rgb(70, 154, 202);
+}  
+.btn-delj {
+    background: #272831;
+}
+.errholder {
+    background: #270b0b;
+    animation: errholder-hider 4s;
+  }
+  @keyframes errholder-hider {
+    0% {
+      height: 12vh;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+      background: #db2153;
+      opacity: 1;
+    }
+    60% {
+      background: #db2153;
+      height: 12vh;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+      opacity: 0.9;
+    }
+    100% {
+      background: #583535;
+      margin-bottom: 0px;
+      padding-bottom: 0px;
+      opacity: 0;
+    }
+  }

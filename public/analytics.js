@@ -39,7 +39,7 @@ $(document).ready(function() {
       if(data.length < 1) return alert("No Items Found");
 
       $("#tables").empty();
-      $("#tables").css("height", "200vh");
+      $("#tables").css("height", "70vh");
       let container = d3.select("#tables").node().getBoundingClientRect();
       let w = container.width - marg.right, h = Math.min(container.height * 2 , (container.width * .75)) - marg.bot;
       
@@ -67,9 +67,9 @@ $(document).ready(function() {
       
       const svg = d3.select("#tables")
         .append("svg")
-        .attr("viewBox", (-marg.left)+","+(-marg.top)+","+(container.width)+","+(h))
+        .attr("viewBox", (-marg.left)+","+(-marg.top)+","+(container.width)+","+(100000))
         .attr("width", (container.width))
-        .attr("height", (h));
+        .attr("height", (100000));
 
       $("#tables").height(h);
       
@@ -102,15 +102,13 @@ $(document).ready(function() {
         .attr('width', w - (marg.right + marg.left))
         .attr('height', (d, i) => { return (hscl * (d.offset / 8)); })
         .attr('fill', (d, i) => { return (d.id % 2 == 0 ? "#ccc" : "#ddd"); })
-        .attr("rx", 6)
-        .attr("ry", 6)
         .attr('class', (d, i) => { return tcl+"-row "+tcl+"-row-r-" + i; });
           
       usrrow.selectAll('g')
         .data((d) => { return d.jobs; })
         .enter()
         .append('rect')
-        .attr('x', (d, i) => { return millisecondsToDays(new Date(d.date).getTime() - minDate) * wscl; })
+        .attr('x', (d, i) => { return Math.round(millisecondsToDays(new Date(d.date).getTime() - minDate)) * wscl; })
         .attr('y', (d, i) => { return hscl * (d.offset / 8); })
         .attr('width', wscl)
         .attr('height', (d, i) => { return hscl * (d.time / 8); })
@@ -206,10 +204,18 @@ $(document).ready(function() {
         }
         projs[i].offset = maxOffset;
       }};
-      
+
+      for(var i in projs){if(projs.hasOwnProperty(i)) { // create shots
+        var proj = projs[i];
+        var shotTotals = {};
+        for(var j in proj.jobs) {
+          console.log(proj.jobs[j].shot);
+        }
+      }};
+
       users = setGySpacing(users);
       projs = setGySpacing(projs);
-      console.log(users);
+      console.log(projs);
       
       return [users, projs];
     }

@@ -133,6 +133,7 @@ progress[value]::-moz-progress-bar {
 }
 .ts-planner-row {
 	display: none;
+	color: black;
 }
 .ts-planner-row.showing {
 	display: inherit !important;

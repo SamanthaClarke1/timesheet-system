@@ -47,6 +47,8 @@ app.use(express.static(__dirname + '/public'));
 app.use(passport.initialize());
 app.use(passport.session());
 
+var __DEBUG_KNOCKBACK__ = false; // NEVER EVER SET THIS TO TRUE UNLESS YOU 100% KNOW WHAT YOU ARE DOING. IT WILL KNOCKBACK ALL OF THE TIMESHEETS BY A WEEK.
+var __DEBUG_FORCEUNIX__ = false; // NEVER EVER SET THIS TO TRUE UNLESS YOU 100% KNOW WHAT YOU ARE DOING. IT WILL UPDATE ALL OF THE UNIX DATES TO WHATEVER THE STRING DATE IS.
 
 // ## page rendering in relation to the database ## //
 
@@ -63,6 +65,41 @@ mongodb.connect(url, function (err, db) {
 		var timesheetDB = ttdb.collection('timesheets'); // this stores all 'archived' timesheets. only admins can edit these timesheets. organised by date { date: *date, user: *name, jobs: *jobs[] }
 		var plansDB = ttdb.collection('plans'); // this stores all of the auto-fill data. things like project defaults. its basically just a group of future 'jobs'. timesheets that "will" exist. organised by date { date: *date, user: *name, jobs: *jobs[] }
 		var parsedDB = ttdb.collection('parsed'); // this stores all of the parsed spreadsheet. atm just to work with some ajax on the planner page (remembering what their last spreadsheet was).
+
+		if(__DEBUG_KNOCKBACK__) { // untested
+			timesheetDB.find({}).toArray(function(err, data) {
+				if(err) throw err;
+				for(var timesheet of data) {
+					var original = JSON.parse(JSON.stringify(timesheet));
+					var now = new Date(timesheet.date);
+					var unow = now.getTime();
+					var pmon = getPreviousMonday(new Date(unow - 1000*60*60*24*2));
+					timesheet.date = getThisDate(pmon);
+					timesheet['unix-date'] = pmon.getTime();
+					//TOFIX
+					timesheetDB.update({"user": user.name, "date": req.body.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) { //TOFIX
+						if(err) throw err;
+						return res.end(JSON.stringify({"err": "", "errcode": 200, "data": toIns}, null, 2)); //painfulpart
+					});// TOFIX
+				}
+			})
+		}
+		if(__DEBUG_FORCEUNIX__) {
+			timesheetDB.find({}).toArray(function(err, data) {
+				if(err) throw err;
+				for(var timesheet of data) {
+					var original = JSON.parse(JSON.stringify(timesheet));
+					var now = new Date(timesheet.date);
+					timesheet['unix-date'] = now.getTime();
+
+					console.log(timesheet["unix-date"]);
+					timesheetDB.update({"user": original.user, "date": original.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) {
+						if(err) throw err; //painfulpart
+						console.log("success i think")
+					});
+				}
+			})
+		}
 
 		// http://expressjs.com/en/starter/basic-routing.html
 		app.get("/", ensureAuthenticated, function (req, res) {
@@ -350,7 +387,7 @@ mongodb.connect(url, function (err, db) {
 								return res.end(JSON.stringify({"err": "", "errcode": 200, "data": toIns}, null, 2)); //painfulpart
 							});
 						} else {
-							timesheetDB.update({"user": user.name, "date": req.body.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date}, function(err, data) {
+							timesheetDB.update({"user": user.name, "date": req.body.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) {
 								if(err) throw err;
 								return res.end(JSON.stringify({"err": "", "errcode": 200, "data": toIns}, null, 2)); //painfulpart
 							});
@@ -387,7 +424,7 @@ mongodb.connect(url, function (err, db) {
 								});
 								break;
 							} else {
-								timesheetDB.update({"user": user.name, "date": req.body.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date}, function(err, data) {
+								timesheetDB.update({"user": user.name, "date": req.body.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) {
 									if(err) throw err;
 									return res.end(JSON.stringify({"err": "", "errcode": 200,}, null, 2)); //painfulpart
 								});
@@ -615,7 +652,7 @@ mongodb.connect(url, function (err, db) {
 			if(effective) {
 				//now.setDate(28); now.setMonth(4); // debug, sets the date to upload.
 				console.log("It's a monday! Moving the timesheets! " + getThisDate(now));
-				var thisdate = getThisDate(now); // this is broken, just inserting the current date i think, idk, please fix this future me
+				getPreviousMonday(new Date(now.getTime() - 1000*60*60*24*2), 0) // this is just inserting the previous weeks monday date. nothing to see here, move along.
 				
 				usersDB.find().toArray(function(err, users) {
 					for(var tuser of users) {
