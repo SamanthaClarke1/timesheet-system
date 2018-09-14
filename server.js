@@ -1,32 +1,33 @@
 /* Code written by Samuel J. Clarke, May-July 2018, for CumulusVFX. */
 //begin server.js
 
-"use strict";
 
 //#region imports ## init variables, imports etc ## //
 
-var express        = require('express');
-var fs             = require('fs');
-var util           = require('util');
-var session        = require('express-session');
-var app            = express();
-var passwordHash   = require('password-hash');
-var bodyParser     = require('body-parser');
-var partials       = require('express-partials');
-var XLSX           = require('xlsx');
-var multer         = require('multer')
-var upload         = multer({ inMemory: true })
-
-var passport       = require('passport'),
-    LocalStrategy  = require('passport-local').Strategy/*,
-	GoogleStrategy = require( 'passport-google-oauth2' ).Strategy;*/
-var mongodb        = require('mongodb').MongoClient;
-var url            = 'mongodb://guest:'+process.env.MONGO_PASS+'@ds016298.mlab.com:16298/timetable';  // Connection URL.
+// requires
+const express        = require('express');
+const fs             = require('fs');
+const util           = require('util');
+const session        = require('express-session');
+const passwordHash   = require('password-hash');
+const bodyParser     = require('body-parser');
+const partials       = require('express-partials');
+const XLSX           = require('xlsx');
+const multer         = require('multer');
+const readline       = require('readline');
+const passport       = require('passport'),
+    LocalStrategy    = require('passport-local').Strategy;
+const mongodb        = require('mongodb').MongoClient;
 
 //#endregion imports
 
 //#region importConfig ## configuring express ## //
 
+// inits
+const app            = express();
+const upload         = multer({ inMemory: true });
+
+// app.set/use
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.use(partials());
@@ -42,16 +43,39 @@ app.use(passport.session());
 
 //#endregion importConfig
 
+//#region pre-code
+
+const promptr  = "\[\033[01m\033[38;2;70;242;221m\] >> \033[38;2;0;176;255m";
+const srvrPRFX = "\[\033[00m\033[38;2;153;95;178m\] SRVR: ";// server title. eg ${srvrPRFX} Connected to the mongoDB server.
+const intrPRFX = "\[\033[00m\033[38;2;125;163;230m\] INTR: ";// interface title
+
+const exit = function(exitCode) {
+	process.stdout.write("\033[00m\n");
+	process.exit(exitCode);
+}
+console.log = function(str,pers=srvrPRFX) {// WOAH, LOOK AT THE SPOOKY
+	process.stdout.clearLine();
+	process.stdout.cursorTo(0);
+	process.stdout.write(pers+str+"\n"+promptr);
+}
+var loaderShouldBePrinting = true;
+printLoader("Server in startup ");
+
+//#endregion pre-code
+
 //#region ctrlBox ############ CONTROL BOX STARTS HERE ############ //
 
 //#region ev #### EASILY EDITABLE VARS START HERE #### //
 
-const tasks = {"default": ["Clean-Up", "Roto", "Precomp", "3d", "Comp", "Misc", "Track", "FX", "Paint", "Ingest", "Animation"].sort(function(a,b){return (a<b?-1:(a>b?1:0))}),
-			 "admin":   ["Annual Leave", "Sick Leave", "Idle", "Training", "Meetings", "Housekeeping", "Engineering", "Repairs"].sort(function(a,b){return (a<b?-1:(a>b?1:0))})};
-const projs = ["Kojo", "Preacher", "Back of the Net", "Occupation 2", "At Last", "2040", "Lamb Of God", "ram", "Chocolate Oyster", "2Wolves", "Predator", "Admin"].sort(function(a,b){return (a<b?-1:(a>b?1:0))});
-const daysdict={"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6};
+var selectList = getSelectList();
+
+var tasks = selectList.tasks;
+var projs = selectList.projs;
+
+const daysdict = {"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6};
 const RowEnum = {"id": 0, "user": 1, "start": 2, "end": 3, "proj": 4, "vacation": 5, "note": 6};
-const days=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const url = 'mongodb://guest:'+process.env.MONGO_PASS+'@ds016298.mlab.com:16298/timetable';  // Connection URL.
 
 //#endregion ev #### EASILY EDITABLE VARS END HERE #### //
 
@@ -67,7 +91,7 @@ const __DEBUG_UNTEAR_DATA_DATE__ = 1531058400000;
 const __DEBUG_KNOCK_FROM__ = 1534082400000;
 const __DEBUG_KNOCK_TO__ = 1531058400000;
 
-const __DEV_RELEASE__ = true;
+const __DEV_RELEASE__ = false;
 
 //#endregion dbv #### SYSTEM DEBUG VARS END HERE (THANKS FOR BEING CAREFUL) #### //
 
@@ -81,9 +105,9 @@ const __DEV_RELEASE__ = true;
 
 //#region mongoDB_connect
 // Use connect method to connect to the Server
-mongodb.connect(url, function (err, db) {
+mongodb.connect(url, function mongConnect(err, db) {
 	if (err) {
-		console.log('Unable to connect to the mongoDB server. Error:', err);
+		console.log('Unable to connect to the mongoDB server. Error: ' + err);
 	} else {
 		console.log('Connected to the mongoDB server. ' + url.split(process.env.MONGO_PASS).join("{SECRET_PASSWORD}"));
 		//#endregion mongoDB_connect
@@ -107,7 +131,7 @@ mongodb.connect(url, function (err, db) {
 					var original = JSON.parse(JSON.stringify(timesheet));
 					var now = new Date(timesheet['unix-date']);
 					timesheet['date'] = getThisDate(now);
-					console.log("updated ts date to:", timesheet["date"], "  from:", original.date);
+					console.log("updated ts date to: "+ timesheet["date"]+ "  from: "+ original.date);
 
 					timesheetDB.update({"user": original.user, "unix-date": original['unix-date']}, {$set: {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}}, function(err, data) {
 						if(err) throw err; //painfulpart
@@ -167,7 +191,7 @@ mongodb.connect(url, function (err, db) {
 
 					timesheetDB.update({"user": original.user, "date": original.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) {
 						if(err) throw err; //painfulpart
-						console.log("knocked", getThisDate(new Date(frmDate)), "to", getThisDate(toDate));
+						console.log("knocked "+ getThisDate(new Date(frmDate))+ "to"+ getThisDate(toDate));
 					});
 				}
 			});
@@ -191,7 +215,7 @@ mongodb.connect(url, function (err, db) {
 		//#region displayHandlers
 
 		// http://expressjs.com/en/starter/basic-routing.html
-		app.get("/", ensureAuthenticatedSilently, function (req, res) {
+		app.get("/", ensureAuthenticatedSilently, function slashRootGET(req, res) {
 			var thisdate = "Current";
 
 			if(req.user.isadmin) {//swjp
@@ -284,18 +308,18 @@ mongodb.connect(url, function (err, db) {
 			}
 		});
 
-		app.get("/usercosts", ensureAuthenticated, function(req, res) {
+		app.get("/usercosts", ensureAuthenticated, function slashUsercostsGET(req, res) {
 			res.render("usercosts.ejs", {error: false, user: req.user});
 		})
 
-		app.get("/analytics", ensureAuthenticated, function(req, res) {
+		app.get("/analytics", ensureAuthenticated, function slashAnalyticsGET(req, res) {
 			if(req.user.isadmin != "true") {
 				return res.redirect("/?err=You%20don't%20have%20permissions%20to%20use%20the%20planner");
 			}
 			res.render("analytics.ejs", {error: false, user: req.user, projs: projs})
 		})
 
-		app.get("/planner", ensureAuthenticated, function(req, res) {
+		app.get("/planner", ensureAuthenticated, function slashPlannerGET(req, res) {
 			if(req.user.isadmin != "true") {
 				return res.redirect("/?err=You%20don't%20have%20permissions%20to%20use%20the%20planner");
 			}
@@ -312,7 +336,7 @@ mongodb.connect(url, function (err, db) {
 
 		//#region ajaxGetters
 
-		app.get("/ajax/getusercosts", ensureAJAXAuthenticated, function(req, res) {
+		app.get("/ajax/getusercosts", ensureAJAXAuthenticated, function slashAjaxGetusercostsGET(req, res) {
 			if(req.user.isadmin != "true") return res.json({"err": "User does not have the permissions to use this function", "errcode": 403, "data": {}});
 			
 			usersDB.find({}).project({'name': 1, 'displayName': 1, 'cost': 1}).toArray(function(err, users) { 
@@ -322,7 +346,7 @@ mongodb.connect(url, function (err, db) {
 			});
 		});
 		
-		app.get("/ajax/getanalyticsdata", ensureAJAXAuthenticated, function(req, res) {
+		app.get("/ajax/getanalyticsdata", ensureAJAXAuthenticated, function slashAjaxGetanalyticsdataGET(req, res) {
 			if(req.user.isadmin != "true") return res.json({"err": "User does not have the permissions to use this function", "errcode": 403, "data": {}});
 			
 			var fromdate = new Date(req.query.fromdate).getTime(), todate = new Date(req.query.todate).getTime();
@@ -344,7 +368,7 @@ mongodb.connect(url, function (err, db) {
 			});
 		}); // /analytics?user=philippa&user=william&user=morgane&user=jee&fromdate=2018-06-07&todate=2018-06-12
 
-		app.get("/ajax/getallnames/:type", ensureAJAXAuthenticated, function(req, res) {
+		app.get("/ajax/getallnames/:type", ensureAJAXAuthenticated, function slashAjaxGetallnamesGET(req, res) {
 			//req.params.type is the type.
 			var ttype = req.params.type;
 
@@ -363,7 +387,7 @@ mongodb.connect(url, function (err, db) {
 			}
 		});
 
-		app.get("/ajax/getplans", ensureAJAXAuthenticated, function(req, res) {
+		app.get("/ajax/getplans", ensureAJAXAuthenticated, function slashAjaxGetplansGET(req, res) {
 			if(req.user.isadmin != "true") {
 				res.json({"err": "Insufficient permissions", "errcode": 403, "data": {}});
 			} else {
@@ -378,7 +402,7 @@ mongodb.connect(url, function (err, db) {
 
 		//#region ajaxSetters
 
-		app.post("/ajax/setusercost", ensureAJAXAuthenticated, function(req, res) {
+		app.post("/ajax/setusercost", ensureAJAXAuthenticated, function slashAjaxSetusercostPOST(req, res) {
 			var uname = req.body.uname;
 			var ucost = req.body.ucosts;
 
@@ -388,7 +412,7 @@ mongodb.connect(url, function (err, db) {
 				if(!data) {
 					return res.json({"err": "Could not find a user.", "errcode": 400, "data": {}})
 				} else {
-					console.log("setting",uname,"'s cost to $"+ucost+"ph")
+					console.log("setting "+uname+"'s cost to $"+ucost+"ph")
 					usersDB.update({"name": uname}, {$set: {"cost": ucost}});
 					data.cost = ucost;
 					return res.json({"err": "", "errcode": 200, "data": {"name": data.name, "cost": ucost, "displayName": data.displayName}});
@@ -396,13 +420,13 @@ mongodb.connect(url, function (err, db) {
 			})
 		});
 
-		app.post("/code/addjob", ensureAJAXAuthenticated, function(req, res) {
+		app.post("/code/addjob", ensureAJAXAuthenticated, function slashCodeAddjobPOST(req, res) {
 			if(req.body.date != "Current" && new Date(req.body.date).getTime() > getPreviousMonday().getTime()) {// the target date is in the future, plans !i!i DONT !i!i get the scans
 				return res.json({"err": "Future weeks are read only.", "errcode": 403, "data": {}});
 			}
 
 			usersDB.findOne({"name": req.body.jobuser}, function(err, user) {
-				console.log("adding "+user.name+"'s job on date " + req.body.date + " day " + req.body.day, "NOW:", getThisDate());
+				console.log("adding "+user.name+"'s job on date " + req.body.date + " day " + req.body.day + " NOW: " + getThisDate());
 				timesheetDB.findOne({"user": user.name, "date": req.body.date}, function(err, timesheet) {
 					if(err) throw err;
 
@@ -433,7 +457,7 @@ mongodb.connect(url, function (err, db) {
 		
 						if(!truets) {
 							req.user.timesheet = timesheet;
-							usersDB.update({name: user.name}, {"name": user.name,"displayName": user.displayName,"dob": user.dob,"password": user.password,"isadmin": user.isadmin,"email": user.email,"timesheet": user.timesheet}, function(err, data) {
+							usersDB.update({name: user.name}, {"cost": user.cost, "name": user.name,"displayName": user.displayName,"dob": user.dob,"password": user.password,"isadmin": user.isadmin,"email": user.email,"timesheet": user.timesheet}, function(err, data) {
 								if(err) throw err;
 								return res.json({"err": "", "errcode": 200, "data": toIns}); //painfulpart
 							});
@@ -450,7 +474,7 @@ mongodb.connect(url, function (err, db) {
 			});
 		});
 
-		app.post("/code/deljob", ensureAJAXAuthenticated, function(req, res) {
+		app.post("/code/deljob", ensureAJAXAuthenticated, function slashCodeDeljobPOST(req, res) {
 			usersDB.findOne({"name": req.body.jobuser}, function(err, user) {
 				timesheetDB.findOne({"user": user.name, "date": req.body.date}, function(err, timesheet) {
 					if(err) throw err;
@@ -469,7 +493,7 @@ mongodb.connect(url, function (err, db) {
 							
 							if(!truets) {
 								req.user.timesheet = timesheet;
-								usersDB.update({name: user.name}, {"name": user.name,"displayName": user.displayName,"dob": user.dob,"password": user.password,"isadmin": user.isadmin,"email": user.email,"timesheet": timesheet}, function(err, data) {
+								usersDB.update({name: user.name}, {"cost": user.cost, "name": user.name,"displayName": user.displayName,"dob": user.dob,"password": user.password,"isadmin": user.isadmin,"email": user.email,"timesheet": timesheet}, function(err, data) {
 									if(err) throw err;
 									return res.json({"err": "", "errcode": 200,}); //painfulpart
 								});
@@ -489,7 +513,7 @@ mongodb.connect(url, function (err, db) {
 			});
 		});
 
-		app.post("/ajax/planviaspreadsheet", upload.single('file'), ensureAJAXAuthenticated, function(req, res) { // this ended up being such a large algorithm :/
+		app.post("/ajax/planviaspreadsheet", upload.single('file'), ensureAJAXAuthenticated, function slashAjackPlanviaspreadsheetPOST(req, res) { // this ended up being such a large algorithm :/
 			// req.file is the spreadsheet file, loaded in memory. ty multer <3
 			if(req.user.isadmin != "true") {
 				return res.redirect("/?err=You%20don't%20have%20permissions%20to%20use%20the%20planner");
@@ -555,7 +579,7 @@ mongodb.connect(url, function (err, db) {
 				if(sdjs[i].hours == 8) { // should always be true, just a fail-safe to not divide twice
 					sdjs[i].hours /= same_day_jobs;
 				} else { // also, yes, i know its way more inefficient to do it one at a time, but this whole thing shouldnt be being called often at all, and it runs smooth enough anyway. ill leave that as a stretch goal.
-					console.log("Something went wrong, somethings starting with, like, ", sdjs[i].hours, " hours, this should only ever be 8   >:(");
+					console.log("Something went wrong, somethings starting with, like, " + sdjs[i].hours + " hours, this should only ever be 8   >:(");
 				}
 			} 
 			sdjs.sort( (a, b) => { // sort by monday, then by user.
@@ -585,7 +609,7 @@ mongodb.connect(url, function (err, db) {
 					});
 					toRemove += 1;
 				} 
-				console.log(targetmonday, "  |  ", getThisDate(new Date(targetmonday)));
+				console.log(targetmonday+ "  |  "+ getThisDate(new Date(targetmonday)));
 				var thisweek = {
 					"user": targetuser,
 					"date": getThisDate(new Date(targetmonday)),
@@ -622,17 +646,17 @@ mongodb.connect(url, function (err, db) {
 		
 		//#region authDisplays
 
-		app.get("/login", function (req, res) {
+		app.get("/login", function slashLoginGET(req, res) {
 			res.render("login.ejs", {user: req.user, error: req.query.err});
 		});
 
-		app.get("/signup", ensureAuthenticated, function(req, res) {
+		app.get("/signup", ensureAuthenticated, function slashSignupGET(req, res) {
 			if(req.user.isadmin == "true") {
 				res.render("signup.ejs", {user: req.user, error: req.query.err});
 			}
 		});
 
-		app.get("/changepassword", ensureAuthenticated, function(req, res) {
+		app.get("/changepassword", ensureAuthenticated, function slashChangepasswordGET(req, res) {
 			res.render("changepassword.ejs", {user: req.user, error: req.query.err});
 		});
 
@@ -648,6 +672,7 @@ mongodb.connect(url, function (err, db) {
 		//   since the user load on this server is not expected to be high, and older timesheets
 		//   will be stored elsewhere.
 		passport.serializeUser(function(user, done) {
+			console.log(user.name+" has joined.");
 			done(null, user);
 		});
 	
@@ -674,7 +699,7 @@ mongodb.connect(url, function (err, db) {
 
 		//#region authCodePages
 
-		app.post("/auth/signup", ensureAuthenticated, function(req, res) {
+		app.post("/auth/signup", ensureAuthenticated, function slashAuthSignup(req, res) {
 			if(req.user.isadmin) {
 				if(req.body.username.length > 25 || req.body.password > 25 || req.body.confirmpassword > 25) res.redirect("/signup?err=Input%20Fields%20Too%20Long.");
 				else if(req.body.password != req.body.confirmpassword || req.body.password.length < 4 || req.body.username.length < 2) {
@@ -711,16 +736,16 @@ mongodb.connect(url, function (err, db) {
 			}
 		});
 
-		app.post("/auth/login", passport.authenticate('local', { failureRedirect: '/login?err=Login%20details%20incorrect.' }), function(req, res) {
+		app.post("/auth/login", passport.authenticate('local', { failureRedirect: '/login?err=Login%20details%20incorrect.' }), function slashAuthLoginPOST(req, res) {
 			return res.redirect("/");
 		});
 
-		app.get("/auth/logout", function(req, res) {
+		app.get("/auth/logout", function slashAuthLogoutGET(req, res) {
 			req.logout();
 			return res.redirect('/login');
 		});
 
-		app.post("/auth/changepassword", ensureAuthenticated, function(req, res) {
+		app.post("/auth/changepassword", ensureAuthenticated, function slashAuthChangepasswordPOST(req, res) {
 			if(req.body.newpassword != req.body.newconfirmpassword) {
 				return res.redirect("/changepassword?err=Password%20must%20be%20the%20same%20as%20the%20confirmation%20password.")
 			} else if (req.body.newpassword.length < 4) {
@@ -732,7 +757,7 @@ mongodb.connect(url, function (err, db) {
 			if(passwordHash.verify(req.body.oldpassword, req.user.password)) {
 				req.user.password = hashOf(req.body.newpassword); 
 				var user = req.user;
-				usersDB.update({name: user.name}, {"name": user.name,"displayName": user.displayName,"dob": user.dob,"password": user.password,"isadmin": user.isadmin,"email": user.email,"timesheet": user.timesheet}, function(err, data) { //painfulpart
+				usersDB.update({name: user.name}, {"cost": user.cost, "name": user.name,"displayName": user.displayName,"dob": user.dob,"password": user.password,"isadmin": user.isadmin,"email": user.email,"timesheet": user.timesheet}, function(err, data) { //painfulpart
 					if(err) throw err;
 					return res.redirect("/");
 				});
@@ -748,8 +773,11 @@ mongodb.connect(url, function (err, db) {
 		//#region misc
 
 		//The 404 Route (ALWAYS Keep this as the last route)
-		app.get('*', function(req, res){
-			res.render('404.ejs', {user: req.user, error: req.query.err});
+		app.get("*", function slashStarGET(req, res) {
+			return res.render('404.ejs', {user: req.user, error: req.query.err});
+		});
+		app.post("*", function slashStarPOST(req, res) {
+			return res.json({"err": "Page is not found", "errcode": 404, "data": ""});
 		});
 
 		//#endregion misc
@@ -770,7 +798,7 @@ mongodb.connect(url, function (err, db) {
 				usersDB.find().toArray(function(err, users) {
 					for(var tuser of users) {
 						var toIns = {"user": tuser.name, "jobs": tuser.timesheet.jobs, "date": getThisDate(thisdate), "unix-date": new Date(thisdate).getTime()};
-						console.log("timesheet insert called on " + tuser.name, getThisDate(thisdate));
+						console.log("timesheet insert called on " + tuser.name + " " + getThisDate(thisdate));
 						timesheetDB.insert(toIns, function(err, data) {
 							if(err) throw err;
 							console.log(data.ops[0].user + " has had his timesheets inserted into the timesheet db.");
@@ -791,11 +819,11 @@ mongodb.connect(url, function (err, db) {
 							if(!data) ts = {"jobs": []}
 							else ts = data;
 							console.log(data);
-							var toInsu = {"name": tuser.name, "displayName": tuser.displayName, "dob": tuser.dob, "password": tuser.password, "isadmin": tuser.isadmin, "email": tuser.email, "timesheet": ts};
+							var toInsu = {"cost": tuser.cost, "name": tuser.name, "displayName": tuser.displayName, "dob": tuser.dob, "password": tuser.password, "isadmin": tuser.isadmin, "email": tuser.email, "timesheet": ts};
 							console.log("update called on " + tuser.name);
 		
 							usersDB.update({name: tuser.name}, toInsu, function(err, data) { // target behaviour: calls update, which calls this function again, with 1 higher index.
-								if(err) throw err;
+								if(err) throw err; // painfulpart
 								console.log(tuser.name + " updated.");
 								if(++ind < users.length) updateUsers(ind); // if its not looping outside of the max users, update the next user.
 							});
@@ -806,9 +834,16 @@ mongodb.connect(url, function (err, db) {
 				});
 			}
 		}
-		callMeOnMonday(false);
+		callMeOnMonday(false); //SET TO TRUE TO RUN ONCE, INCASE THE SERVER GETS RESTARTED OR WHATEVS.
 
 		//#endregion autoSubm
+	
+		//#region post-load-code
+		setTimeout(function () {
+			loaderShouldBePrinting = false;
+			console.log("Finished Loading.");
+		}, 1500 + Math.random() * 2000); //yes, im making the load time longer on purpose, but i have a spinny thing to compensate.
+		//#endregion post-load-code
 	}
 });
 
@@ -832,12 +867,195 @@ https.createServer(sslOptions, app).listen(process.env.HTTPS_PORT, function() {c
 
 //#endregion serverFinalSetup
 
+//#region createCommandLineInterface
+const correctionArr = [
+	[["add", "ontribut", "rm", "del", "ubtrac", "gain", "plus", "pdate", "task", "proj", "electio"], "change-selections [remove|@add] [task|@proj] [admin|@default] {selection}", "change-selections"],
+	[["save", "store", "electio", "task", "proj", "onfirm"], "save-selections", "save-selections"],
+	[["quit", "xit", "terminate", "leave", "end", "fin"], "exit", "exit"],
+	[["big", "boy", "me me"], "memebigboy", "memebigboy"],
+	[["lear", "cls", "c;ear", "wipe"], "clear", "clear"],
+	[["hash", "get pass", "password"], "get-hash-of {password}", "get-hash-of"],
+	[["java", "script", "math", "val", "calc"], "eval {cmd}", "eval"],
+	//[["os", "sys", "calc", "run", "cmd", "ash"], "bash {cmd}"],
+	[["elp", "how", "?", "man", "anua"], "help", "help"]
+];
+
+const rl = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout,
+	prompt: promptr,
+	completer: function(line) {
+		var hits = [];
+		var tline = line.toLowerCase();
+		for(var cc of correctionArr) {
+			for(var signifier of cc[0]) {
+				if(tline.indexOf(signifier) != -1 || cc[1].indexOf(tline) != -1) {
+					hits.push(cc[2]);
+					break;
+				}
+			}
+		}
+		return [hits, line];
+	}
+});
+
+
+
+rl.on('line', (input) => {
+	funcReq = input.split(' ')[0].toLowerCase();
+	params = input.split(' ').slice(1, input.split(' ').length);
+	switch(funcReq) {
+		case "memebigboy":
+			process.stdout.write(intrPRFX+"go away josh");
+			break;
+		case "exit":
+			onQuitAttempt();
+			break;
+		case "change-selections":
+			//#TODO: gotta make code that will update the (task) and (proj) vars, when this is said to it.
+			if(params[0] != "add" && params[0] != "remove") params.splice(0, 0, "add")
+			if(params[1] != "task" && params[1] != "proj") params.splice(1, 0, 'proj');
+			if(params[2] != "admin" && params[2] != "default") params.splice(2, 0, "default");
+			params[3] = params.slice(3, params.length).join(' ');
+			params.splice(4, params.length - 4);
+
+			process.stdout.write(intrPRFX+"PARAMS: "+params.toString()+"\n");
+
+			if(params[0] == "add") {
+				if(params[1] == "task") {
+					tasks[params[2]].push(params[3]);
+					tasks[params[2]] = tasks[params[2]].sort(function(a,b){return (a<b?-1:(a>b?1:0))});
+					process.stdout.write(intrPRFX+" Success adding task '"+params[3]+"'");
+				} else {
+					projs.push(params[3]);
+					projs = projs.sort(function(a,b){return (a<b?-1:(a>b?1:0))});
+					process.stdout.write(intrPRFX+" Success adding project '"+params[3]+"'");
+				}
+			} else {
+				if(params[1] == "task") {
+					let ind = tasks[params[2]].indexOf(params[3]);
+					if(ind != -1) {
+						tasks[params[2]].splice(ind, 1);
+						process.stdout.write(intrPRFX+" Success removing task '"+params[3]+"'");
+					} else {
+						process.stdout.write(intrPRFX+" Couldn't find task '"+params[3]+"'");
+					}
+				} else {
+					let ind = projs.indexOf(params[3]);
+					if(ind != -1) {
+						projs.splice(ind, 1);
+						process.stdout.write(intrPRFX+" Success removing project '"+params[3]+"'");
+					} else {
+						process.stdout.write(intrPRFX+" Couldn't find project '"+params[3]+"'");
+					}
+				}
+			}
+
+			break;
+		case "save-selections":
+			writeSelectList(tasks, projs);
+			break;
+		case "get-hash-of":
+			process.stdout.write(hashOf(params[0]));
+			break;
+		case "eval":
+			let result;
+			try {
+				result = eval("try {\n"+params.join(' ')+"} catch(err) { process.stdout.write(err.toString()+ \"\\n\"); }");
+				if(result) result = result.toString();
+			} catch(err) {throw err;}
+			if(result) process.stdout.write(result);
+			break;
+		case "clear":
+			process.stdout.write(intrPRFX+'\033[2J\033[01;00m');
+			break;
+		case "help":
+			process.stdout.write(intrPRFX+"possible functions: \n")
+			for(let i = 0; i<correctionArr.length; i++) {
+				if(correctionArr[i]) process.stdout.write("\t-- "+correctionArr[i][1]+"\n");
+			}
+			process.stdout.write("\nPS: I use standard arg formatting. IE: \t\n-- params are space seperated. \t\n-- args surrounded by `[]` mean they are optional \t\n-- `|` indicates an 'or' choice \t\n-- `*` is a wild card, eg, it represents 'anything' \t\n-- `@` implies it is the default choice. \t\n-- `{}` indicates a variable, eg {name} \t\n-- `#` indicates a number \t\n-- `&` specifies that if the first arg is passed, the other must be as well. \t\n-- `()` groups logic. eg. `3/(3*2)=0.5`, or `[address | (state & country)]` \t\n-- `{#..#}` indicates a number range, eg, `{0..5}` = 0 to 5 \n\nPPS: Only parameters are case-sensitive.")
+			break;
+		default:
+			process.stdout.write(intrPRFX+`couldn't understand your input of: ${input}\n`);
+			let possibilities = [];
+			for(let i in correctionArr) {
+				for(let signifier of correctionArr[i][0]) {
+					if(input.indexOf(signifier) != -1) {
+						let signified = correctionArr[i][1];
+						possibilities.push(signified);
+						break;
+					}
+				}
+			}
+			if(possibilities.length >= 1) {
+				process.stdout.write(`however, there are ${possibilities.length} similar function(s):\n `);
+			} else {
+				process.stdout.write("Maybe try using `help`!\n");
+			}
+			for(let possibility of possibilities) {
+				process.stdout.write("\t-- "+possibility);
+			}
+	};
+	process.stdout.write(`\n${promptr}`);
+});
+
+function onQuitAttempt() {
+	var loaderWasPrinting = loaderShouldBePrinting;
+	loaderShouldBePrinting = false;
+	rl.question("\033[00m\033[38;2;255;33;145mAre you sure you want to exit? [y(es)/n(o)] "+promptr, (answer) => {
+		if (answer.match(/^y(es)?$/i)) {
+			rl.question("\033[00m\033[38;2;255;33;145mDo you want to save your selections (task/proj lists)? [y(es)/n(o)] "+promptr, (answer) => {
+				if (answer.match(/^y(es)?$/i)) {
+					writeSelectList(tasks, projs);
+				}
+				rl.pause();
+				exit(0);
+				loaderShouldBePrinting = loaderWasPrinting;
+			});
+		}
+		else {
+			console.log('Exit canceled.', intrPRFX);
+		}
+		loaderShouldBePrinting = loaderWasPrinting;
+	});
+}
+
+rl.on('SIGINT', onQuitAttempt);
+
+//rl.on('pause', () => {
+//	console.log(`SAMts Interface paused.`);
+//});
+
+//rl.on('resume', () => {
+//	console.log(`SAMts Interface resumed`);
+//});
+
+
+console.log(`SAMts Interface Initiated.`)
+
+//#endregion createCommandLineInterface
+
 //#region helperFuncs //
 
 //#region DATE-TIME HELPER FUNCS
 // function is1917(now=new Date()) { if(now.getMonth() == 2 && now.getDate() == 8) { return now.getYear() - 17; } else { return -1; } }
 function getThisDate(now=new Date()) {
 	return now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+}
+
+
+function printLoader(msg="Loading ", iter=0){
+	if(loaderShouldBePrinting) {
+		iterArr = ['\\ .     [\033[0;45m-\033[0m      ]', 
+				    '| ..    [\033[0;45m---\033[0m    ]', 
+				    '/ ...   [\033[0;45m-----\033[0m  ]', 
+				    '- ....  [\033[0;45m-------\033[0m]']
+		process.stdout.clearLine();
+		process.stdout.cursorTo(0);
+		process.stdout.write("\033[01;32m" + msg + iterArr[iter % iterArr.length] + "\033[00;00m");
+		setTimeout(printLoader, 333, msg, iter+1)
+	}
 }
 
 function getNextMonday(hours) { 
@@ -917,6 +1135,66 @@ function ensureAuthenticatedSilently(req, res, next) {
 //#endregion passport funcs
 
 //#region data parsing
+
+function getSelectList(){
+	var content = fs.readFileSync(__dirname+"/opt/selectList.json");
+	var selectList = JSON.parse(content);
+	return sortSelectList(selectList);
+}
+function sortSelectList(selectList) {
+	selectList.tasks.admin = selectList.tasks.admin.sort(function(a,b){return (a<b?-1:(a>b?1:0))});
+	selectList.tasks.default = selectList.tasks.default.sort(function(a,b){return (a<b?-1:(a>b?1:0))});
+	selectList.projs = selectList.projs.sort(function(a,b){return (a<b?-1:(a>b?1:0))});
+	return selectList;
+}
+function writeSelectList(tasks, projs) {
+	var selectList = JSON.stringify(sortSelectList({"tasks": tasks, "projs": projs}), null, 2);
+	fs.writeFileSync(__dirname+'/opt/selectList.json', selectList);
+	return selectList;
+}
+
+function samrtLog(obj, indMult=2, index=0, println=true, iskey=false, shouldComma=true) {
+	for(let i = 0; i < index * indMult; i++) {
+		if(!iskey) process.stdout.write(" ");
+	}
+	if(obj == null) {
+		process.stdout.write("\033[01;32mundefined\033[00m");
+	}
+	else if(typeof obj == "boolean" && !obj) process.stdout.write("\033[01;32mfalse\033[00m");
+	else if(typeof obj == "boolean") process.stdout.write("\033[01;32mtrue\033[00m");
+	else if(typeof obj == "object") {
+		if(typeof obj[Symbol.iterator] === 'function') {
+			process.stdout.write("\033[01;35m[\033[00m\n")
+			for(var i = 0; i < obj.length; i++) {
+				samrtLog(obj[i], indMult, index + 1, true, false, (i == obj.length -1 ? false : true));
+			}
+			process.stdout.write("\033[01;35m]\033[00m");
+		} else {
+			process.stdout.write("\033[01;35m{\033[00m\n");
+			var keys = Object.keys(obj);
+			for(let i = 0; i < keys.length; i++) {
+				samrtLog(keys[i], indMult, index+1, false, false, false);
+				process.stdout.write("\033[01;35m: \033[00m");
+				samrtLog(obj[keys[i]], indMult, index+1, false, true, (i == keys.length - 1 ? false : true));
+				process.stdout.write("\033[01;35m\n")
+			}
+			for(let i = 0; i < index * indMult; i++) process.stdout.write(" ");
+			process.stdout.write("\033[01;35m}\033[00m")
+		}
+	} else if (typeof obj == "string") {
+		process.stdout.write("\033[01;35m'\033[00m" + obj.toString() + "\033[01;35m'\033[00m");
+	} else if (typeof obj == "number") {
+		process.stdout.write("\033[01;34m"+obj.toString()+"\033[00m");
+	}
+
+	if(index > 0) {
+		if(shouldComma) {
+			process.stdout.write("\033[01;35m,\033[00m");
+		}
+		if(println) process.stdout.write("\n");
+	}
+}
+
 // ref: http://stackoverflow.com/a/1293163/2343
 // This will parse a delimited string into an array of
 // arrays. The default delimiter is the comma, but this

@@ -1,6 +1,6 @@
 
 var users = [];
-var marg = {"lbar": 150, "top": 20, "right": 20, "bot": 20, "left": 20};
+var marg = {"lbar": 150, "top": 20, "right": 20, "bot": 20, "left": 20, "barspacing": 2};
 
 $(document).ready(function() {
     function renderD3(dset) {
@@ -43,7 +43,6 @@ $(document).ready(function() {
             .attr("width", (container.width))
             .attr("height", (h));
 
-
         createTitleBar(svg, dset, "uc-d3-users-", -marg.left, 0, wscl, hscl);
         createUserCostBars(svg, dset, "uc-d3-costs-", 0, 0, wscl, hscl);
 
@@ -69,6 +68,7 @@ $(document).ready(function() {
         e.preventDefault();
         littleburst.tune({x: $(this).offset().left, y: $(this).offset().top}).generate();
         littleburst_timeline.replay();
+        $("#uname-inp").val($("#uname-inp").val().toLowerCase());
 
         $.post("/ajax/setusercost", $("#uc-mform").serialize(), function(data) {
             if(data.errcode != 200) {
@@ -87,16 +87,16 @@ $(document).ready(function() {
 
     function createUserCostBars(svg, dat, tcl, inx, iny, wscl, hscl) {
         var usrbar = svg.append('g')
-            .attr('transform', 'translate('+(inx)+', '+(iny)+')')
+            .attr('transform', 'translate('+(inx)+', '+(iny+marg.barspacing*2)+')')
             .attr('class', tcl);
 
         var usrbarrow = usrbar.selectAll('g')
             .data(dat)
             .enter()
             .append('rect')
-            .attr('transform', (d, i) => { return "translate(0, "+(hscl*i)+")"; })
+            .attr('transform', (d, i) => { return "translate(0, "+(hscl*i + marg.barspacing / 2)+")"; })
             .attr('width', (d, i) => { return (d.cost ? d.cost : 10) * wscl; })
-            .attr('height', hscl)
+            .attr('height', hscl - marg.barspacing)
             .attr('fill', (d, i) => { return (i % 2 == 0 ? "#ccc" : "#ddd")})
             .attr('onclick', (d) => { return '$("#uname-inp").val("'+d.name+'"); $("#ucosts-inp").val("'+d.cost+'");'; })
             .append('title')
@@ -108,18 +108,18 @@ $(document).ready(function() {
     
     function createTitleBar(svg, dat, tcl, inx, iny, wscl, hscl) {
         var usrbar = svg.append('g')
-            .attr('transform', "translate("+((marg.left / 2)-marg.lbar + inx)+", "+(iny)+")")
+            .attr('transform', "translate("+((marg.left / 2)-marg.lbar + inx)+", "+(iny+marg.barspacing*2)+")")
             .attr('class', tcl);
         
         var usrbarrow = usrbar.selectAll('g')
             .data(dat)
             .enter()
             .append('g')
-            .attr('transform', (d, i) => { return "translate(0,"+(hscl*i)+")"; })
+            .attr('transform', (d, i) => { return "translate(0,"+(hscl*i + marg.barspacing / 2)+")"; })
             
         usrbarrow.append('rect')
             .attr('width', marg.lbar - marg.left)
-            .attr('height', hscl)
+            .attr('height', hscl - marg.barspacing)
             .attr('fill', (d, i) => { return (i % 2 == 0 ? "#ccc" : "#ddd"); })
             .attr('class', tcl + '-row-rect')
             .attr('onclick', (d) => { return '$("#uname-inp").val("'+d.name+'")'; })
