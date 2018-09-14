@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+
+<html lang="en">
+	<head>
+		<!-- Code written by Samuel J. Clarke, May-June 2018, for CumulusVFX. -->
+
+			<!-- Meta -->
+		<meta name="viewport" content="width=device-width, initial-scale=1,0, shrink-to-fit=no">
+		<meta name="author" content="Samuel J. Clarke">
+		<meta name="keywords" content="HTML,CSS,XML,JavaScript,Cumulus,CumulusVFX,VFX,Timesheets">
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>Timesheets!</title>
+		<link rel="shortcut icon" href="/favicon.ico?">
+			<!-- jQuery -->
+		<script src="https://code.jquery.com/jquery-3.1.1.min.js" crossorigin="anonymous"></script>
+			<!-- Tether & Popper (for bootstrap) -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" crossorigin="anonymous"></script>
+			<!-- Bootstrap -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" crossorigin="anonymous">
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" crossorigin="anonymous"></script>
+			<!-- Fonts & Icons-->
+		<link href="https://fonts.googleapis.com/css?family=Archivo" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Work+Sans:600" rel="stylesheet">
+		<script src="https://use.fontawesome.com/52160498ec.js"></script>
+			<!-- Our CSS/JS -->
+		<script src="/general.js"></script>
+		<link rel="stylesheet" href="/style.css">
+	</head>
+  
+	<body>
+		<nav class="navbar navbar-toggleable-md navbar-inverse bg-inverse">
+			<% if(user) { %>
+				<div class="navbar-toggler-right navbar-username-right-holder avholder">
+					<p class="navbar-username-right"><%= user.displayName %></p>
+				</div>
+			<% } %>
+
+			<!-- Navbar toggle button -->
+			<button class="navbar-toggler navbar-toggler-right" type="button" 
+				data-toggle="collapse" data-target="#navbarSupportedContent" 
+				aria-controls="navbarSupportedContent" aria-expanded="false" 
+				aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+
+			<!-- Navbar logo -->
+			<a class="navbar-brand" href="/">
+				<img class="img img-responsive icon48" alt="cmls logo"
+				     src="/CMLS_logo_noText_v001_small.png" />
+			</a>
+
+			<!-- Some other navbar shit; mostly  -->
+			<div class="collapse navbar-collapse" id="navbarSupportedContent">
+				<ul class="navbar-nav mr-auto animated ">
+					<% if(user) { %>
+					<li class="nav-item" id="home-navi">
+						<a class="nav-link" href="/"><i class="fa fa-home" aria-hidden="true"></i> Home </a>
+					</li>
+					<% } else { %>
+						<li class="nav-item">
+							<a href="/login" id="login-navi" class="nav-link nav-item"><i class="fa fa-sign-in" aria-hidden="true"></i> Login </a>
+						</li>
+					<% } if(user) { %>
+						<li class="nav-item" id="account-navi">
+							<a class="nav-link" href="/changepassword"><i class="fa fa-lock" aria-hidden="true"></i> Change Password </a>
+						</li>
+						<% if(user.isadmin == "true") { %>
+							<li class="nav-item" id="adduser-navi">
+								<a class="nav-link" id="adduser" href="/signup"><i class="fa fa-user-plus" aria-hidden="true"></i> Add a user </a>
+							</li>
+							<li class="nav-item" id="planner-navi">
+								<a class="nav-link" id="planner" href="/planner"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Planner </a>
+							</li>
+						<% } %>
+						<li class="nav-item" id="logout-navi">
+							<a class="nav-link" id="logout" href="/auth/logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Logout </a>
+						</li>
+					<% } %>
+					<li class="nav-item" id="help-navi" >
+						<a class="nav-link" id="help" href="/help"><i class="fa fa-question-circle" aria-hidden="true"></i> Help </a>
+					</li>
+				</ul>
+			</div>
+		</nav>
+		<!--div class="errholder">
+			<h1 class="err"> Site is under maintanence. DO NOT USE IT. </h1>
+		</div--> 
+		<% if(error) { %> 
+			<div class="errholder">
+				<h1 class="err"> <%= error %> </h1>
+			</div> 
+		<% } %>
+		<div class="secondarybody"> <!--fades in everything -->
+			<%- body %>
+		</div>
+		<div class="text-center version-footer">
+			<small> Developed by Samuel Clarke, May-June 2018, for CumulusVFX <br/> Version 1.1.5 | Codename: phaser. </small>
+		</div>
+</body>
+</html>

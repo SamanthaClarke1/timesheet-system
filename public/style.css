@@ -1,0 +1,351 @@
+ /*  !i!i!i!i!i!i!i!i!i!i!i!i!i!i!i!i!i!
+     !i!i!i!i!i   style.css   i!i!i!i!i! 
+     !i!i!i!i!i!i!i!i!i!i!i!i!i!i!i!i!i!  */
+
+/* Code written by Samuel J. Clarke, May-June 2018, for CumulusVFX. */
+
+/* *====================*
+   * BODY AND BIG STUFF *
+   *====================* */
+
+body { min-height:100%; padding:0; margin:0; position:relative; }
+body::after{ content:''; display:block; height:100px; }
+html{ height:100%; }
+.fillcon {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+.mincon {
+  padding: 5%;
+  text-align: center;
+  font-family: 'Archivo', sans-serif;
+}
+.mcon {
+  padding: 0%;
+}
+.bordercon {
+  border-right: 1px solid #d9d9df;
+  border-left: 1px solid #d9d9df;
+  border-bottom: 1px solid #d9d9df;
+}
+.segment{
+  padding: 10% 25% 10% 25%;
+}
+.miniseg{
+  font-size:32px;
+}
+.minihidden{
+  display: none; 
+}
+.no-pad-right {
+  padding-left: 2px;
+  padding-right: 0px !important;
+  min-height: 35px;
+}
+.btext{
+  background-color: #e6e6ef;
+  color:green;
+}
+
+.errholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 2.6rem;
+  background: #ff4c7c;
+  animation: errholder-hider 4s;
+  height: 0vh;
+  padding-bottom: 0px;
+  margin-bottom: 0px;
+  opacity: 0;
+  overflow: hidden;
+}
+@keyframes errholder-hider {
+  0% {
+    height: 12vh;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    background: #ff4c7c;
+    opacity: 1;
+  }
+  40% {
+    background: #ff8fbf;
+    opacity: 0.9;
+  }
+  60% {
+    height: 12vh;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    opacity: 0.9;
+  }
+  100% {
+    height: 0vh;
+    background: #f9f9f9;
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+    opacity: 0;
+  }
+}
+
+
+/* *=======*
+   * INDEX *
+   *=======* */
+
+.avholder {
+  padding: 0px;
+  margin: 0px;
+  margin-right: 64px !important;
+}
+
+.missing-bar {
+  margin-top: 10px;
+  background: #df7878 !important;
+  text-align: center;
+}
+.total-day-bar {
+  margin-top: 10px;
+  background: #e9e9fd !important;
+  text-align: center;
+}
+.total-bar {
+  margin-top: 10px;
+  background: #d4d4e6 !important;
+  text-align: center;
+}
+.subnav-toggler {
+  background: #6c7980;
+  z-index:2;
+}
+.sub-nav {
+  text-align: center;
+  background: #6c7980;
+  padding: 5px;
+}
+.sub-nav-link.red {
+  color: #d34b4b !important;
+}
+.sub-nav-link.yellow {
+  color: #dfc554 !important;
+}
+.sub-nav-link.green {
+  color: #62ca00 !important;
+}
+.sub-nav-link.grey {
+  color: #c0c0d4 !important;
+}
+.sub-nav-link.red.active {
+  color: #ff7b7b !important;
+}
+.sub-nav-link.yellow.active {
+  color: #ffd495 !important;
+}
+.sub-nav-link.green.active {
+  color: #b3ff6c !important;
+}
+.sub-nav-link.grey.active {
+  color: #ffffff !important;
+}
+.version-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  padding: 1rem;
+  background-color: #e7f3ff;
+  text-align: center;
+}
+.section-title-container {
+  text-align: center;
+  padding-bottom: 24px;
+  font-family: 'Work Sans', sans-serif;
+}
+.ts-row {
+  background: rgb(232, 236, 236);
+  margin-bottom: 8px;
+  border-radius: 5px;
+}
+.ts-row.even {
+  background: rgb(228, 247, 252);
+}
+td.col-3 {
+  padding-left: 8px;
+  padding-right: 4px;
+  height: 4vh;
+  min-height: 30px;
+}
+td, th {
+  overflow:hidden;
+}
+
+
+/* *=========*
+   * ACCOUNT *
+   *=========* */
+
+.loginWith {
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: flex-start;
+}
+.btn {
+  cursor: pointer;
+}
+.formBox {
+  border: 2px solid #e3e3e3;
+  padding: 15px;
+}
+.loginWithGithub {
+  margin-top: 20px;
+  padding: 0;
+  background-color: #292b2c;
+  color: white;
+}
+
+/* *======*
+   * MISC *
+   *======* */
+
+.navbar-username-right-holder {
+  justify-content: center;
+  margin: auto;
+}
+.navbar-username-right {
+  color: #c0c0c0;
+  z-index: 3;
+}
+.dummy {
+  padding: 0;
+  margin: 0;
+}
+.icon32 {
+  height: 32px;
+  width: 32px;
+}
+.icon48 {
+  height: 48px;
+  width: 48px;
+}
+.icon64 {
+  height: 64px;
+  width: 64px;
+}
+
+/* *============*
+   * DEPRECATED *
+   *============* */
+
+.loginWithFacebook {
+  margin-top: 10px;
+  background: #3a5897;
+  color: white;
+  padding: 0;
+}
+.login-icon {
+  float: left;
+  margin: 5px;
+}
+.login-special-text {
+  text-align: left;
+  margin: auto 0;
+  margin-left: 5px;
+}
+.login-header {
+  padding: 5px;
+}
+.special-logins {
+  margin: 0 5px;
+  margin-bottom: 10px;
+}
+.manual-logins {
+  margin: 0 5px;
+  margin-bottom: 10px;
+}
+.acc-cont {
+  background: #ececec;
+}
+.acc-mbar {
+  height: 100%;
+}
+.acc-user-section {
+  background: #f9f9f9;
+}
+.acc-polls-section {
+  background: #f9f9f9;
+}
+.section-title {
+  padding: 0;
+  margin: 0;
+}
+.displayed-polls-container {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.poll-thumb {
+  height: 200px;
+  /*background-color: #245C95;*/
+  border-radius: 10px;
+  border: 4px solid black;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+.poll-thumb * {
+  margin: 0;
+  padding: 0;
+}
+.poll-thumb-question {
+  display: flex;
+  justify-content: center;
+  height: 65%;
+  padding: 5px 10px;
+  text-align: center;
+}
+.poll-thumb-question-text {
+  color: white;
+  -moz-transition: all .2s linear;
+  -o-transition: all .2s linear;
+  -webkit-transition: all .2s linear;
+  transition: all .2s linear;
+  align-self: center;
+}
+.poll-thumb-question-text:hover {
+  color: black;
+}
+.poll-thumb-userbar {
+  position: absolute;
+  bottom: 0;
+  padding: 7px 5px 5px;
+  background-color: rgba(255, 255, 255, 0.6);
+  height: 30%;
+  border-radius: 10px 10px 6px 6px;
+  margin-top: 5px;
+}
+.poll-thumb-icon {
+  width: 48px;
+  height: 48px;
+  margin-right: 5px;
+}
+.poll-thumb-spaceme {
+  margin: 5px;
+}
+#poll-thumb-group-bottom {
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+#viewall-container {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+}
+.poll-thumb-username {
+  font-size: 17px;
+}
