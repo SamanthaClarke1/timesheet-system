@@ -1,0 +1,29 @@
+{
+  "tasks": {
+    "default": [
+      "3d",
+      "Animation",
+      "Clean-Up",
+      "Comp",
+      "FX",
+      "Ingest",
+      "Misc",
+      "Paint",
+      "Precomp",
+      "Roto",
+      "Track"
+    ],
+    "admin": [
+      "Annual Leave",
+      "Engineering",
+      "Housekeeping",
+      "Idle",
+      "Meetings",
+      "Repairs",
+      "Sick Leave",
+      "Training"
+    ]
+  },
+  "projs": [
+  ]
+}

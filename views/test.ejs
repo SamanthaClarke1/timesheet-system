@@ -1,0 +1,18 @@
+<head>
+    <script>
+        $(function(){
+            $('#search').on('keyup', function(e){
+                if(e.keyCode === 13) {
+                    var parameters = { search: $(this).val() };
+                    $.get('/ajaxtest', parameters, function(data) {
+                        $('#results').html(data);
+                    });
+                };
+            });
+        });
+    </script>
+</head>
+<body>
+    <input id="search" type="search" placeholder="Ajax Echo">
+    <h2 id="results"></h2>
+</body>

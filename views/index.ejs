@@ -1,0 +1,175 @@
+
+<head>
+	<%
+	var days=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+	var dayhours={}; // stores the total of each job for each day.
+	var rdays = JSON.parse(JSON.stringify(days));
+	var totaltime=0;
+	if(targetdate == "Current") rdays.splice(new Date().getDay(), 7 - new Date().getDay());
+	if(new Date(targetdate).getTime() > new Date().getTime()) {
+		rdays.splice(0, 7);
+		editable = false;
+	}
+	
+	for(day of days) dayhours[day]=-1;
+	for(day of rdays) dayhours[day]=0;
+	for(job of timesheet.jobs) {
+		if(dayhours[job.day] != -1) {
+			dayhours[job.day] += parseFloat(job.time);
+		}
+		totaltime += parseFloat(job.time);
+	}
+	//console.log(dayhours);
+	%>
+	<script>
+		var fromSrv = { // some of the data sent from the ejs will get passed to the other scripts from here
+			"userIsAdmin": '<%= user.isadmin %>',
+			"userName": '<%= user.name %>',
+			"tuserName": '<% if(user.isadmin) { %><%= tuser.name %><% } %>',
+			"tdate": '<%= targetdate %>',
+			"editable": '<%= editable %>',
+			"tasks": <%- JSON.stringify(tasks) %>
+		}
+	</script>
+
+	<script src="./index.js"></script>
+</head>
+
+<body>
+	<nav class="navbar navbar-toggleable-md navbar-inverse sub-nav">
+		<!-- Navbar toggle button -->
+		<button class="subnav-toggler navbar-toggler navbar-toggler-right" type="button" 
+			data-toggle="collapse" data-target="#subnavContent" 
+			aria-controls="subnavContent" aria-expanded="false" 
+			aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+	
+		<div class="collapse navbar-collapse container text-center" id="subnavContent">
+			<ul class="navbar-nav nav-pills container mr-auto animated" role="tablist">
+				<% for(var day of days) { %>
+					<li class="nav-item mx-auto" id="<%= day %>-daylink"><a data-toggle="pill" href="#<%=day%>" class="nav-link sub-nav-link <% if(dayhours[day] == 0) { %>red <% } else if(dayhours[day] >= 8) { %>green <% } else if(dayhours[day] < 8 && dayhours[day] > 0) { %>yellow <% } else { %>grey <% } if(tday == day || (day == days[new Date().getDay() - 1]) && !tday) { %> active<% } else { %>def <% } %>"><%=day%></a></li>
+				<% } %>
+			</ul>
+		</div>
+	</nav>
+	
+	<div class="scroll-wrapper unselectable mac" style="overflow: hidden !important" tabindex="-1">
+	
+	<div class="mincon container" style="text-align: left;">
+		<!-- Recent polls -->
+		<div class="section-container">
+			<!--Section Title-->
+			<div class="section-title-container col-12">
+				<h3 class="text-center">
+					<% if(!user.isadmin) { %>
+						<%= user.displayName %>
+					<% } %>
+					<form action="/" method="GET">
+						<% if(user.isadmin) { %>
+							<select name="tuser" class="no-pad-right" onchange="this.form.submit()">
+								<% for(var ppuser of users) { %>
+									<option value="<%= ppuser.name %>" <% if(ppuser.name == tuser.name) { %>selected<% } %> ><%= ppuser.displayName %> </option>
+								<% } %>
+							</select>
+						<% } %>
+						<select name="tdate" class="no-pad-right" onchange="this.form.submit()">
+							<% for(var tsheet of timesheets) { %>
+								<option value="<%= tsheet.date %>" <% if(tsheet.date == targetdate) { %> selected <% } %> ><%= tsheet.date %></option>
+							<% } %>
+						</select>
+					</form>
+				</h3>
+				<p id="total-week-bar" class="col-12" style="color: #808080;"><%= totaltime %> hours logged this week</p>
+			</div>
+			
+			<div class="tab-content">
+				<% for (var day of days) { var daycp=day;%>
+					<div class="tab-pane container <% if(tday == day || (day == days[new Date().getDay() - 1]) && !tday) { %> active<% } else { %> fade <% } %>" id="<%= day %>">
+								<!--Displayed Jobs-->
+						<table class="ts-header col-12">
+							<tr class="col-12 row text-center">
+								<th class="col-3">Project</th>
+								<th class="col-3">Shot</th>
+								<th class="col-3">Task</th>
+								<th class="col-3">Hours</th>
+							</tr>
+						</table>
+						
+						<hr style="margin-top: 30px; margin-bottom: 30px;"/>
+						
+						<table class="ts-body col-12 job-table">
+							<% var cc = 0; for (var job of timesheet.jobs) { if(job.day == day) { %>
+								<tr class="ts-row row<% if(cc % 2 == 0) { %> even<% } %> no-gutters col-12 job-row">
+									<td class="col-3 job-proj"><%= job.proj %></td>
+									<td class="col-3 job-shot"><%= job.shot %></td>
+									<td class="col-3 job-task"><%= job.task %></td>
+									<td class="col-2 job-time"><%= job.time %></td>
+									<td class="col-1 job-del">
+										<form action="/code/deljob" method="POST">
+											<% if(user.isadmin) { %> <input name="jobuser" class="delj-user" value="<%= tuser.name %>" hidden /> <% } else { %> <input name="jobuser" class="delj-user" value="<%= user.name %>" hidden /> <% } %>
+											<input name="jobid" class="delj-id" value="<%= job.id %>" hidden />
+											<input name="day" class="delj-day" value="<%= day %>" hidden />
+											<input name="date" class="delj-date" value="<%= targetdate %>" hidden />
+											<button class="btn-delj" id="deljob-<%= job.id %>" type="submit" style="color: #e75045;" <% if(!editable) { %> disabled <% } %> >
+												<i class="fa fa-trash" aria-hidden="true"></i>
+											</button>
+										</form>
+									</td>
+								</tr>
+							<% cc++; } }
+							var totaldaytime = 0; for (var job of timesheet.jobs) {
+								if(job.day == day) totaldaytime += parseFloat(job.time);
+							} %>
+							<tr class="ts-row row no-gutters col-12 total-day-bar">
+								<td class="col-1 offset-9" style="text-align: left;"> <%= totaldaytime %> </td>
+								<td class="col-2">Total</td>
+							</tr>
+							<% for (day of []/*days {(removed, as per wills request.)} */) { %> 
+								<% if(dayhours[day] == 0) { %> 
+									<tr class="ts-row row no-gutters col-12 missing-bar"> <td class="col-12"> <%= day %> not filled in. </td> </tr> 
+								<% } %>
+							<% } %>
+						</table>
+	
+						<hr style="margin-top: 30px; margin-bottom: 30px;"/>
+	
+						<!-- sends data to /addjob, which adds the job to the list and redirects back here. -->
+						<form id="submitJobForm-<%=day%>" class="row no-gutters col-12 submitJobForm" action="/code/addjob" method="POST">
+							<div class="row no-gutters col-12">
+								<% if(user.isadmin) { %> <input name="jobuser" value="<%= tuser.name %>" hidden /> <% } else { %> <input name="jobuser" value="<%= user.name %>" hidden /> <% } %>
+								<input name="day" value="<%= daycp %>" hidden />
+								<input name="date" value="<%= targetdate %>" hidden />
+	
+								<div class="col-3">
+									<select name="project" class="col-12 no-pad-right proj-inpc">
+										<% for (var i in projs) { %>
+											<option value="<%= projs[i] %>"> <%= projs[i] %> </option>
+										<% } %>
+									</select>
+								</div>
+								<div class="col-3">
+									<input name="shotcode" type="text" class="col-12 no-pad-right shot-inpc" placeholder="shot code" required>
+								</div>
+								<div class="col-3">
+									<select name="task" class="col-12 no-pad-right task-inpc">
+										<!-- ill be filled up with jquery, its okay :) <% for (var i in tasks) { %>
+											<option value="<%= tasks[i] %>" <% if(i == new Date().getDay() - 1) { %>selected<% } %> > <%= tasks[i] %> </option>
+										<% } %>-->
+									</select>
+								</div>
+								<div class="col-3">
+									<input name="timespent" type="number" class="col-12 no-pad-right" value=1 step=.25 min=.25 max=<%=Math.min(24-dayhours[day], 24)%> placeholder="time spent (hours)" required>
+								</div>
+							</div>
+	
+							<button class="btn btn-success col-12 btn-inpc" style="margin-top: 20px;" <%if(dayhours[day] > 24 || !editable) {%>disabled <%}%>> Submit </button>
+						</form>
+					</div>
+				<% } %>
+			</div>
+		</div>
+	</div>
+	</div>
+	<div class="scrollBarContainer animate"><div class="scroll" data-scrollbar="1" style="height: 21.6216%;"> </div></div>
+</body>
