@@ -20,8 +20,7 @@
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" crossorigin="anonymous">
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" crossorigin="anonymous"></script>
 			<!-- Fonts & Icons-->
-		<link href="https://fonts.googleapis.com/css?family=Archivo" rel="stylesheet">
-		<link href="https://fonts.googleapis.com/css?family=Work+Sans:600" rel="stylesheet">
+			<link href="https://fonts.googleapis.com/css?family=Archivo|Noto+Sans:700" rel="stylesheet"> 
 		<script src="https://use.fontawesome.com/52160498ec.js"></script>
 			<!-- Our CSS/JS -->
 		<script src="/general.js"></script>
@@ -29,9 +28,9 @@
 	</head>
   
 	<body>
-		<nav class="navbar navbar-toggleable-md navbar-inverse bg-inverse">
+		<nav class="navbar navbar-toggleable-md navbar-inverse bg-inverse font-main">
 			<% if(user) { %>
-				<div class="navbar-toggler-right navbar-username-right-holder avholder">
+				<div class="navbar-toggler-right navbar-username-right-holder avholder font-big">
 					<p class="navbar-username-right"><%= user.displayName %></p>
 				</div>
 			<% } %>
@@ -72,6 +71,9 @@
 							<li class="nav-item" id="planner-navi">
 								<a class="nav-link" id="planner" href="/planner"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Planner </a>
 							</li>
+							<li class="nav-item" id="analytics-navi">
+								<a class="nav-link" id="analytics" href="/analytics"><i class="fa fa-line-chart"></i> Analytics </a>
+							</li>
 						<% } %>
 						<li class="nav-item" id="logout-navi">
 							<a class="nav-link" id="logout" href="/auth/logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Logout </a>
@@ -91,11 +93,11 @@
 				<h1 class="err"> <%= error %> </h1>
 			</div> 
 		<% } %>
-		<div class="secondarybody"> <!--fades in everything -->
+		<div class="secondarybody font-main"> <!-- fades in everything (but not actually because i removed that once i stopped liking it) -->
 			<%- body %>
 		</div>
-		<div class="text-center version-footer">
-			<small> Developed by Samuel Clarke, May-June 2018, for CumulusVFX <br/> Version 1.1.5 | Codename: phaser. </small>
+		<div class="text-center version-footer font-main">
+			<small> Developed by Samuel Clarke, May-June 2018, for CumulusVFX <br/> Version 1.2.6 | Codename: Dedicated Display </small>
 		</div>
 </body>
 </html>

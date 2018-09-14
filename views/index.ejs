@@ -19,6 +19,7 @@
 		}
 		totaltime += parseFloat(job.time);
 	}
+	totaltime = Math.round(totaltime * 100) / 100;
 	//console.log(dayhours);
 	%>
 	<script>
@@ -53,8 +54,6 @@
 			</ul>
 		</div>
 	</nav>
-	
-	<div class="scroll-wrapper unselectable mac" style="overflow: hidden !important" tabindex="-1">
 	
 	<div class="mincon container" style="text-align: left;">
 		<!-- Recent polls -->
@@ -170,6 +169,4 @@
 			</div>
 		</div>
 	</div>
-	</div>
-	<div class="scrollBarContainer animate"><div class="scroll" data-scrollbar="1" style="height: 21.6216%;"> </div></div>
 </body>

@@ -26,7 +26,8 @@ function calendarExtender (theInput) {
     //create the calendar html and events
     this.createCal = function () {
         //creating a container div around the input, the calendar will also be there
-        this.container = document.getElementById("calendarContainer");
+        this.container = this.theInput.parentNode;
+        //this.container = document.getElementById("calendarContainer");
         //this.container.className = 'calendarContainer';
         //this.container.style.display = 'inline-block';
         //this.theInput.parentNode.replaceChild(this.container, this.theInput);
@@ -45,9 +46,9 @@ function calendarExtender (theInput) {
         this.createMonthTable();
 
         //open the calendar when the input get focus, also on various click events to capture it in all corner cases
-        this.theInput.addEventListener('focus', function () { var fv = $("#fieldSelect").val(); if(fv == "Date" || fv == "Start" || fv == "End") {self.theCalDiv.style.display = ''; }});
-        this.theInput.addEventListener('mouseup', function () { var fv = $("#fieldSelect").val(); if(fv == "Date" || fv == "Start" || fv == "End") {self.theCalDiv.style.display = ''; }});
-        this.theInput.addEventListener('mousedown', function () { var fv = $("#fieldSelect").val(); if(fv == "Date" || fv == "Start" || fv == "End") {self.theCalDiv.style.display = ''; }});
+        this.theInput.addEventListener('focus', function () { var fv = $("#fieldSelect").val(); if(fv == "Date" || fv == "Start" || fv == "End" || !fv) {self.theCalDiv.style.display = ''; }});
+        this.theInput.addEventListener('mouseup', function () { var fv = $("#fieldSelect").val(); if(fv == "Date" || fv == "Start" || fv == "End" || !fv) {self.theCalDiv.style.display = ''; }});
+        this.theInput.addEventListener('mousedown', function () { var fv = $("#fieldSelect").val(); if(fv == "Date" || fv == "Start" || fv == "End" || !fv) {self.theCalDiv.style.display = ''; }});
 
         //update the calendar if the date changed manually in the input
         this.theInput.addEventListener('keyup', function () {

@@ -69,7 +69,7 @@ mongodb.connect(url, function (err, db) {
 			var thisdate = "Current";
 
 			if(req.user.isadmin) {//swjp
-				usersDB.find().toArray(function(err, users) { 
+				usersDB.find({}).project({'name': 1, 'displayName': 1}).toArray(function(err, users) { 
 					if(err) throw err;
 
 					var tuser = req.user;
@@ -80,7 +80,7 @@ mongodb.connect(url, function (err, db) {
 					usersDB.findOne({"name": (tuser.name ? tuser.name : tuser)}, function(err, dbuser) {
 						if(err) throw err;
 
-						timesheetDB.find({"user": dbuser.name}).toArray(function(err, timesheets) {
+						timesheetDB.find({"user": dbuser.name}, {"_id": 0, "date": 1}).toArray(function(err, timesheets) {
 							if(err) throw err;
 
 							timesheets.unshift({"user": dbuser.name, "jobs": dbuser.timesheet.jobs, "date": thisdate});
@@ -116,7 +116,7 @@ mongodb.connect(url, function (err, db) {
 					})
 				});
 			} else {
-				timesheetDB.find({"user": req.user.name}).toArray(function(err, timesheets) {
+				timesheetDB.find({"user": req.user.name}, {"_id": 0, "date": 1}).toArray(function(err, timesheets) {
 					if(err) throw err;
 
 					timesheets.unshift({"user": req.user.name, "jobs": req.user.timesheet.jobs, "date": thisdate});
@@ -155,6 +155,13 @@ mongodb.connect(url, function (err, db) {
 				});
 			}
 		});
+
+		app.get("/analytics", ensureAuthenticated, function(req, res) {
+			if(req.user.isadmin != "true") {
+				return res.redirect("/?err=You%20don't%20have%20permissions%20to%20use%20the%20planner");
+			}
+			res.render("analytics.ejs", {error: false, user: req.user})
+		})
 
 		app.get("/planner", ensureAuthenticated, function(req, res) {
 			if(req.user.isadmin != "true") {
@@ -398,6 +405,38 @@ mongodb.connect(url, function (err, db) {
 			res.render("help.ejs", {user: req.user, error: req.query.err});
 		});
 
+		app.get("/ajax/getanalyticsdata", ensureAJAXAuthenticated, function(req, res) {
+			if(req.user.isadmin != "true") return res.end({"err": "User does not have the permissions to use this function", "errcode": 403, "data": {}}, null, 2);
+			var fromdate = new Date(req.query.fromdate).getTime(), todate = new Date(req.query.todate).getTime();
+			var mongSearch = {"unix-date": {"$gt": fromdate, "$lt": todate}, "user": {"$in": req.query.user }};
+			if(!mongSearch.user["$in"]) delete mongSearch.user;
+			else if(!mongSearch.user["$in"].push) mongSearch.user = req.query.user // first way i could think of to test for an array, sorry about the ugliness
+
+			timesheetDB.find(mongSearch).toArray(function(err, timesheets) {
+				if(err) throw err;
+
+				return res.end(JSON.stringify({"err": "", "errcode": 200, "data": timesheets}, null, 2))
+			});
+		}) // /analytics?user=philippa&user=william&user=morgane&user=jee&fromdate=2018-06-07&todate=2018-06-12
+
+		app.get("/ajax/getallnames/:type", ensureAJAXAuthenticated, function(req, res) {
+			//req.params.type is the type.
+			var ttype = req.params.type;
+
+			if(ttype == "users") {
+				usersDB.find({}).project({'name': 1, 'displayName': 1}).toArray(function(err, users) { 
+					if(err) throw err;
+
+					return res.end(JSON.stringify({"err": "", "errcode": 200, "data": users}, null, 2));
+				});
+			} else if(ttype == "projs") {
+				return res.end(JSON.stringify({"err": "", "errcode": 200, "data": projs}, null, 2));
+			} else if(ttype == "tasks") {
+				return res.end(JSON.stringify({"err": "", "errcode": 200, "data": tasks}, null, 2));
+			} else { 
+				return res.end(JSON.stringify({"err": "Malformed request", "errcode": 400, "data": {}}, null, 2)); 
+			}
+		})
 
 		// ## AUTH SECTION ## //
 		
@@ -580,7 +619,7 @@ mongodb.connect(url, function (err, db) {
 				
 				usersDB.find().toArray(function(err, users) {
 					for(var tuser of users) {
-						var toIns = {"user": tuser.name, "jobs": tuser.timesheet.jobs, "date": thisdate};
+						var toIns = {"user": tuser.name, "jobs": tuser.timesheet.jobs, "date": thisdate, "unix-date": new Date(thisdate).getTime()};
 						console.log("timesheet insert called on " + tuser.name, thisdate);
 						timesheetDB.insert(toIns, function(err, data) {
 							if(err) throw err;
