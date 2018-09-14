@@ -1,9 +1,9 @@
 {
   "name": "timetable-manager",
-  "version": "1.5.6",
+  "version": "1.6.2",
   "description": "Manages the timetables for cmls. Recieves input from artists, that log their time, and stores it in a db.",
   "main": "server.js",
-  "codename": "Alert Analytic",
+  "codename": "White Wyvern",
   "dependencies": {
     "body-parser": "^1.18.3",
     "dotenv": "^5.0.1",
