@@ -3,7 +3,7 @@
   "version": "1.4.3",
   "description": "Manages the timetables for cmls. Recieves input from artists, that log their time, and stores it in a db.",
   "main": "server.js",
-  "codename": "Serene Sea",
+  "codename": "Excellent Information",
   "dependencies": {
     "body-parser": "^1.18.3",
     "dotenv": "^5.0.1",
