@@ -1,9 +1,9 @@
-// server.js
+/* Code written by Samuel J. Clarke, May-July 2018, for CumulusVFX. */
+//begin server.js
 
-/* Code written by Samuel J. Clarke, May-June 2018, for CumulusVFX. */
+"use strict";
 
-
-// ## init variables, imports etc ## //
+//#region imports ## init variables, imports etc ## //
 
 var express        = require('express');
 var fs             = require('fs');
@@ -23,7 +23,9 @@ var passport       = require('passport'),
 var mongodb        = require('mongodb').MongoClient;
 var url            = 'mongodb://guest:'+process.env.MONGO_PASS+'@ds016298.mlab.com:16298/timetable';  // Connection URL.
 
-// ## configuring express ## //
+//#endregion imports
+
+//#region importConfig ## configuring express ## //
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -38,60 +40,55 @@ app.use(express.static(__dirname + '/public'));
 app.use(passport.initialize());
 app.use(passport.session());
 
+//#endregion importConfig
 
+//#region ctrlBox ############ CONTROL BOX STARTS HERE ############ //
 
+//#region ev #### EASILY EDITABLE VARS START HERE #### //
 
+const tasks = {"default": ["Clean-Up", "Roto", "Precomp", "3d", "Comp", "Misc", "Track", "FX", "Paint", "Ingest", "Animation"].sort(function(a,b){return (a<b?-1:(a>b?1:0))}),
+			 "admin":   ["Annual Leave", "Sick Leave", "Idle", "Training", "Meetings", "Housekeeping", "Engineering", "Repairs"].sort(function(a,b){return (a<b?-1:(a>b?1:0))})};
+const projs = ["Kojo", "Preacher", "Back of the Net", "Occupation 2", "At Last", "2040", "Lamb Of God", "ram", "Chocolate Oyster", "2Wolves", "Predator", "Admin"].sort(function(a,b){return (a<b?-1:(a>b?1:0))});
+const daysdict={"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6};
+const RowEnum = {"id": 0, "user": 1, "start": 2, "end": 3, "proj": 4, "vacation": 5, "note": 6};
+const days=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-// ############ CONTROL BOX STARTS HERE ############ //
+//#endregion ev #### EASILY EDITABLE VARS END HERE #### //
 
+//#region dbv #### SYSTEM DEBUG VARS START HERE (BE CAREFUL) #### //
 
+const __DEBUG_FORCE_TS_NAMING_SCHEMA__ = false; // !i!i! CAREFUL !i!i!i  -  THIS WILL FORCE ALL OF THE TIMESHEET NAMES TO THE PROPER SCHEMA
+const __DEBUG_FORCEUNIX__ = false; // !i!i! CAREFUL !i!i!i  -  THIS WILL UPDATE ALL OF THE UNIX DATES TO WHATEVER THE STRING DATE IS. // i mean actually this one is not really all that dangerous but its ok
+const __DEBUG_FORCE_COSTS_TO_TEN_PH__ = false; // !i!i! CAREFUL !i!i!i - THIS WILL FORCE ALL UNDEFINED COSTS OF EACH USER TO TEN DOLLARS PER HOUR.
+const __DEBUG_UNTEAR_DATA__ = false; // !i!i CAREFUL !i!i!i - WILL REMOVE ALL DUPLICATES ON A CERTAIN DATE, WITH A BIAS TOWARDS MORE JOBS.
+const __DEBUG_KNOCK_FROM_TO__ = false; // !i!i CAREFUL !i!i!i - WILL CHANGE UNIX-DATES FROM A CERTAIN DATE TO ANOTHER DATE
 
-// #### EASILY EDITABLE VARS START HERE #### //
+const __DEBUG_UNTEAR_DATA_DATE__ = 1531058400000;
+const __DEBUG_KNOCK_FROM__ = 1534082400000;
+const __DEBUG_KNOCK_TO__ = 1531058400000;
 
-var tasks = {"default": ["Clean-Up", "Roto", "Precomp", "3d", "Comp", "Misc", "Track", "FX", "Paint", "Ingest", "Animation"],
-			 "admin":   ["Annual Leave", "Sick Leave", "Idle", "Training", "Meetings", "Housekeeping", "Engineering", "Repairs"]};
-var projs = ["Back of the Net", "Occupation 2", "At Last", "2040", "Lamb Of God", "ram", "Chocolate Oyster", "2Wolves", "Predator", "Admin"];
-var daysdict={"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6};
-var RowEnum = {"id": 0, "user": 1, "start": 2, "end": 3, "proj": 4, "vacation": 5, "note": 6};
-var days=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const __DEV_RELEASE__ = true;
 
-// #### EASILY EDITABLE VARS END HERE #### //
+//#endregion dbv #### SYSTEM DEBUG VARS END HERE (THANKS FOR BEING CAREFUL) #### //
 
+//#region qm #### 2+2=4, 4-1=3, QUICK MAFS #### //
 
+//console.log(hashOf("CMLS")); // default password to manually insert.
 
-// #### SYSTEM DEBUG VARS START HERE (BE CAREFUL) #### //
+//#endregion qm #### END QUICK MAFS #### //
 
-var __DEBUG_FORCEUNIX__ = false; // !i!i! CAREFUL !i!i!i  -  THIS WILL UPDATE ALL OF THE UNIX DATES TO WHATEVER THE STRING DATE IS. // i mean actually this one is not really all that dangerous but its ok
-var __DEBUG_FORCE_TS_NAMING_SCHEMA__ = false; // !i!i! CAREFUL !i!i!i  -  THIS WILL FORCE ALL OF THE TIMESHEET NAMES TO THE PROPER SCHEMA
+//#endregion ctrlBox ############ END CONTROL BOX ############ //
 
-// #### SYSTEM DEBUG VARS END HERE (THANKS FOR BEING CAREFUL) #### //
-
-
-
-// #### 2+2=4, 4-1=3, QUICK MAFS #### //
-
-console.log(hashOf("CMLS")); // default password to manually insert.
-
-// #### END QUICK MAFS #### //
-
-
-
-// ############ END CONTROL BOX ############ //
-
-
-
-
-
-
-Object.freeze(RowEnum);
-// ## page rendering in relation to the database ## //
-
+//#region mongoDB_connect
 // Use connect method to connect to the Server
 mongodb.connect(url, function (err, db) {
 	if (err) {
 		console.log('Unable to connect to the mongoDB server. Error:', err);
 	} else {
 		console.log('Connected to the mongoDB server. ' + url.split(process.env.MONGO_PASS).join("{SECRET_PASSWORD}"));
+		//#endregion mongoDB_connect
+
+		//#region dbSetup
 
 		var ttdb = db.db("timetable");
 
@@ -100,6 +97,9 @@ mongodb.connect(url, function (err, db) {
 		var plansDB = ttdb.collection('plans'); // this stores all of the auto-fill data. things like project defaults. its basically just a group of future 'jobs'. timesheets that "will" exist. organised by date { date: *date, user: *name, jobs: *jobs[] }
 		var parsedDB = ttdb.collection('parsed'); // this stores all of the parsed spreadsheet. atm just to work with some ajax on the planner page (remembering what their last spreadsheet was).
 
+		//#endregion
+
+		//#region debugFuncs
 		if(__DEBUG_FORCE_TS_NAMING_SCHEMA__) {
 			timesheetDB.find({}).toArray(function(err, data) {
 				if(err) throw err;
@@ -107,9 +107,9 @@ mongodb.connect(url, function (err, db) {
 					var original = JSON.parse(JSON.stringify(timesheet));
 					var now = new Date(timesheet['unix-date']);
 					timesheet['date'] = getThisDate(now);
+					console.log("updated ts date to:", timesheet["date"], "  from:", original.date);
 
-					console.log("updated ts date to:", timesheet["date"]);
-					timesheetDB.update({"user": original.user, "unix-date": original['unix-date']}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) {
+					timesheetDB.update({"user": original.user, "unix-date": original['unix-date']}, {$set: {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}}, function(err, data) {
 						if(err) throw err; //painfulpart
 						console.log("success i think");
 					});
@@ -134,6 +134,61 @@ mongodb.connect(url, function (err, db) {
 				}
 			})
 		}
+
+		if(__DEBUG_UNTEAR_DATA__) {
+			var untrdate = __DEBUG_UNTEAR_DATA_DATE__;
+			var peopleSeen = [];
+
+			timesheetDB.find({ "unix-date": untrdate }).toArray(function(err, data) {
+				if(err) throw err;
+				for(var timesheet of data) {
+					if(peopleSeen.indexOf(timesheet.user) != -1) {
+						peopleSeen.push(timesheet.user);
+					} else {
+						timesheetDB.remove({"_id": timesheet['_id']}, {justOne: true}, function(err, data) {
+							if(err) throw err; //painfulpart
+							console.log("success i think");
+						});
+					}
+				}
+			})
+		}
+
+		if(__DEBUG_KNOCK_FROM_TO__) {
+			var frmDate = __DEBUG_KNOCK_FROM__;
+			var toDate = new Date(__DEBUG_KNOCK_TO__);
+
+			timesheetDB.find({ "unix-date": frmDate }).toArray(function(err, data) {
+				if(err) throw err;
+				for(var timesheet of data) {
+					var original = JSON.parse(JSON.stringify(timesheet));
+					timesheet['date'] = getThisDate(toDate);
+					timesheet['unix-date'] = toDate.getTime();
+
+					timesheetDB.update({"user": original.user, "date": original.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) {
+						if(err) throw err; //painfulpart
+						console.log("knocked", getThisDate(new Date(frmDate)), "to", getThisDate(toDate));
+					});
+				}
+			});
+		}
+
+		if(__DEBUG_FORCE_COSTS_TO_TEN_PH__) {
+			usersDB.find({"cost": { $exists: false }}).toArray(function(err, data) {
+				if(err) throw err;
+
+				for(let user of data) {
+					usersDB.update({"name": user.name}, {$set: {"cost": 10}}, function(err, data) {
+						if(err) throw err;
+						console.log("done i think");
+					});
+				}
+			});
+		}
+
+		//#endregion
+
+		//#region displayHandlers
 
 		// http://expressjs.com/en/starter/basic-routing.html
 		app.get("/", ensureAuthenticatedSilently, function (req, res) {
@@ -205,7 +260,7 @@ mongodb.connect(url, function (err, db) {
 					}
 					
 					// editable logic
-					editable = true;
+					var editable = true;
 					var prevWeekUNIX = getNextWeek(new Date(), 10, -1).getTime();
 					var targWeekUNIX = new Date(targetdate).getTime();
 					if(targWeekUNIX < prevWeekUNIX) editable = false;
@@ -229,6 +284,10 @@ mongodb.connect(url, function (err, db) {
 			}
 		});
 
+		app.get("/usercosts", ensureAuthenticated, function(req, res) {
+			res.render("usercosts.ejs", {error: false, user: req.user});
+		})
+
 		app.get("/analytics", ensureAuthenticated, function(req, res) {
 			if(req.user.isadmin != "true") {
 				return res.redirect("/?err=You%20don't%20have%20permissions%20to%20use%20the%20planner");
@@ -242,6 +301,194 @@ mongodb.connect(url, function (err, db) {
 			}
 			return res.render("planner.ejs", {error: false, user: req.user});
 		});
+
+		app.get("/help", function (req, res) {
+			res.render("help.ejs", {user: req.user, error: req.query.err});
+		});
+
+		//#endregion
+		
+		//#region ajaxCode
+
+		//#region ajaxGetters
+
+		app.get("/ajax/getusercosts", ensureAJAXAuthenticated, function(req, res) {
+			if(req.user.isadmin != "true") return res.json({"err": "User does not have the permissions to use this function", "errcode": 403, "data": {}});
+			
+			usersDB.find({}).project({'name': 1, 'displayName': 1, 'cost': 1}).toArray(function(err, users) { 
+				if(err) throw err;
+				
+				return res.json({"err": "", "errcode": 200, "users": users, "data": users});
+			});
+		});
+		
+		app.get("/ajax/getanalyticsdata", ensureAJAXAuthenticated, function(req, res) {
+			if(req.user.isadmin != "true") return res.json({"err": "User does not have the permissions to use this function", "errcode": 403, "data": {}});
+			
+			var fromdate = new Date(req.query.fromdate).getTime(), todate = new Date(req.query.todate).getTime();
+			
+			if(req.query.searchtype == "proj") delete req.query.user;
+			
+			var mongSearch = {"unix-date": {"$gt": fromdate, "$lt": todate}, "user": {"$in": req.query.user }};
+			if(!mongSearch.user["$in"]) delete mongSearch.user;
+			else if(!mongSearch.user["$in"].push) mongSearch.user = req.query.user // first way i could think of to test for an array, sorry about the ugliness
+			
+			timesheetDB.find(mongSearch).toArray(function(err, timesheets) {
+				if(err) throw err;
+
+				usersDB.find({}).project({'name': 1, 'displayName': 1, 'cost': 1}).toArray(function(err, users) { 
+					if(err) throw err;
+					
+					return res.json({"err": "", "errcode": 200, "users": users, "data": timesheets});
+				});
+			});
+		}); // /analytics?user=philippa&user=william&user=morgane&user=jee&fromdate=2018-06-07&todate=2018-06-12
+
+		app.get("/ajax/getallnames/:type", ensureAJAXAuthenticated, function(req, res) {
+			//req.params.type is the type.
+			var ttype = req.params.type;
+
+			if(ttype == "users") {
+				usersDB.find({}).project({'name': 1, 'displayName': 1}).toArray(function(err, users) { 
+					if(err) throw err;
+
+					return res.json({"err": "", "errcode": 200, "data": users});
+				});
+			} else if(ttype == "projs") {
+				return res.json({"err": "", "errcode": 200, "data": projs});
+			} else if(ttype == "tasks") {
+				return res.json({"err": "", "errcode": 200, "data": tasks});
+			} else { 
+				return res.json({"err": "Malformed request", "errcode": 400, "data": {}}); 
+			}
+		});
+
+		app.get("/ajax/getplans", ensureAJAXAuthenticated, function(req, res) {
+			if(req.user.isadmin != "true") {
+				res.json({"err": "Insufficient permissions", "errcode": 403, "data": {}});
+			} else {
+				parsedDB.find().toArray(function(err, data) {
+					if(err) throw err;
+					res.json({"err": "", "errcode": 200, "data": data});
+				});;
+			}
+		});
+
+		//#endregion ajaxGetters
+
+		//#region ajaxSetters
+
+		app.post("/ajax/setusercost", ensureAJAXAuthenticated, function(req, res) {
+			var uname = req.body.uname;
+			var ucost = req.body.ucosts;
+
+			usersDB.findOne({"name": uname}, function(err, data) {
+				if(err) throw err;
+
+				if(!data) {
+					return res.json({"err": "Could not find a user.", "errcode": 400, "data": {}})
+				} else {
+					console.log("setting",uname,"'s cost to $"+ucost+"ph")
+					usersDB.update({"name": uname}, {$set: {"cost": ucost}});
+					data.cost = ucost;
+					return res.json({"err": "", "errcode": 200, "data": {"name": data.name, "cost": ucost, "displayName": data.displayName}});
+				}
+			})
+		});
+
+		app.post("/code/addjob", ensureAJAXAuthenticated, function(req, res) {
+			if(req.body.date != "Current" && new Date(req.body.date).getTime() > getPreviousMonday().getTime()) {// the target date is in the future, plans !i!i DONT !i!i get the scans
+				return res.json({"err": "Future weeks are read only.", "errcode": 403, "data": {}});
+			}
+
+			usersDB.findOne({"name": req.body.jobuser}, function(err, user) {
+				console.log("adding "+user.name+"'s job on date " + req.body.date + " day " + req.body.day, "NOW:", getThisDate());
+				timesheetDB.findOne({"user": user.name, "date": req.body.date}, function(err, timesheet) {
+					if(err) throw err;
+
+					var truets = true;
+					if(!timesheet) {
+						timesheet = user.timesheet;
+						truets = false;
+					}
+
+					var toIns = {
+						"day": req.body.day,
+						"shot": req.body.shotcode,
+						"proj": req.body.project,
+						"time": req.body.timespent,
+						"task": req.body.task,
+						"id": makeSlug(15, 15)
+					};
+					if(toIns.day.length && toIns.shot && toIns.proj && toIns.time && toIns.task) {
+						if(toIns.day.length  > 11) return res.json({"err": "Day too long", "errcode": 400, "data": ""});
+						if(toIns.shot.length > 35) return res.json({"err": "Shot code too long", "errcode": 400, "data": ""});
+						if(toIns.proj.length > 25) return res.json({"err": "Project too long", "errcode": 400, "data": ""});
+						if(toIns.task.length > 20) return res.json({"err": "Task too long", "errcode": 400, "data": ""});
+						if(toIns.day.length  <  2) return res.json({"err": "Day too short", "errcode": 400, "data": ""});
+						if(toIns.task.length <  1) return res.json({"err": "Task too short", "errcode": 400, "data": ""});
+						if(toIns.shot.length <  1) return res.json({"err": "Shot code too short", "errcode": 400, "data": ""})
+
+						timesheet.jobs.push(toIns);
+		
+						if(!truets) {
+							req.user.timesheet = timesheet;
+							usersDB.update({name: user.name}, {"name": user.name,"displayName": user.displayName,"dob": user.dob,"password": user.password,"isadmin": user.isadmin,"email": user.email,"timesheet": user.timesheet}, function(err, data) {
+								if(err) throw err;
+								return res.json({"err": "", "errcode": 200, "data": toIns}); //painfulpart
+							});
+						} else {
+							timesheetDB.update({"user": user.name, "date": req.body.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) {
+								if(err) throw err;
+								return res.json({"err": "", "errcode": 200, "data": toIns}); //painfulpart
+							});
+						}
+					} else {
+						return res.json({"err": "Missing input fields!", "errcode": 400, "data": {}});
+					}
+				});
+			});
+		});
+
+		app.post("/code/deljob", ensureAJAXAuthenticated, function(req, res) {
+			usersDB.findOne({"name": req.body.jobuser}, function(err, user) {
+				timesheetDB.findOne({"user": user.name, "date": req.body.date}, function(err, timesheet) {
+					if(err) throw err;
+					console.log("deleting " + req.body.jobuser + "'s job on date " + req.body.date);
+
+					var truets = true;
+					if(!timesheet) {
+						timesheet = user.timesheet;
+						truets = false;
+					}
+					
+					for(var i = 0; i < timesheet.jobs.length && i != -1; i++) {
+						if(timesheet.jobs[i].id == req.body.jobid) {
+							if(!truets) user.timesheet.jobs.splice(i, 1);
+							else timesheet.jobs.splice(i, 1);
+							
+							if(!truets) {
+								req.user.timesheet = timesheet;
+								usersDB.update({name: user.name}, {"name": user.name,"displayName": user.displayName,"dob": user.dob,"password": user.password,"isadmin": user.isadmin,"email": user.email,"timesheet": timesheet}, function(err, data) {
+									if(err) throw err;
+									return res.json({"err": "", "errcode": 200,}); //painfulpart
+								});
+								break;
+							} else {
+								timesheetDB.update({"user": user.name, "date": req.body.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) {
+									if(err) throw err;
+									return res.json({"err": "", "errcode": 200,}); //painfulpart
+								});
+								break;
+							}
+						} else if(i >= timesheet.jobs.length - 1) { // if its the last job, and its still not found anything, redirect them.
+							return res.json({"err": "Job Not Found", "errcode": 400});
+						}
+					}
+				});
+			});
+		});
+
 		app.post("/ajax/planviaspreadsheet", upload.single('file'), ensureAJAXAuthenticated, function(req, res) { // this ended up being such a large algorithm :/
 			// req.file is the spreadsheet file, loaded in memory. ty multer <3
 			if(req.user.isadmin != "true") {
@@ -349,9 +596,9 @@ mongodb.connect(url, function (err, db) {
 
 				sdjs.splice(i, toRemove);
 			}
-			delete sdjs; // sdjs aren't needed anymore, (even though it should be empty at this point), and are cleared.
+			//delete sdjs;//(technically a syntax error tho, thx strict mode.)// sdjs aren't needed anymore, (even though it should be empty at this point), and are cleared.
 
-			console.log("Planned timesheets snapshot (just the first 7):: \n", JSON.stringify(timesheets.slice(0, 7), null, 2));
+			//console.log("Planned timesheets snapshot (just the first 7):: \n", JSON.stringify(timesheets.slice(0, 7), null, 2));
 
 			// clear the db, and add the new timesheets
 			plansDB.remove({}).then(function() { // clear the db
@@ -366,158 +613,15 @@ mongodb.connect(url, function (err, db) {
 				});
 			});
 		});
-		app.get("/ajax/getplans", ensureAJAXAuthenticated, function(req, res) {
-			if(req.user.isadmin != "true") {
-				res.json({"err": "Insufficient permissions", "errcode": 403, "data": {}});
-			} else {
-				parsedDB.find().toArray(function(err, data) {
-					if(err) throw err;
-					res.json({"err": "", "errcode": 200, "data": data});
-				});;
-			}
-		});
-		/*app.get("/test", function(req, res) {
-			res.render("test.ejs", {user: false, error: false});
-		});
-		app.get("/ajaxtest", function(req, res) {
-			res.send(req.query.search + req.query.search);
-		});*/
-		app.post("/code/addjob", ensureAJAXAuthenticated, function(req, res) {
-			if(req.body.date != "Current" && new Date(req.body.date).getTime() > getPreviousMonday().getTime()) {// the target date is in the future, plans !i!i DONT !i!i get the scans
-				return res.json({"err": "Future weeks are read only.", "errcode": 403, "data": {}});
-			}
 
-			usersDB.findOne({"name": req.body.jobuser}, function(err, user) {
-				console.log("adding "+user.name+"'s job on date " + req.body.date + " day " + req.body.day, "NOW:", getThisDate());
-				timesheetDB.findOne({"user": user.name, "date": req.body.date}, function(err, timesheet) {
-					if(err) throw err;
+		//#endregion ajaxSetters
 
-					var truets = true;
-					if(!timesheet) {
-						timesheet = user.timesheet;
-						truets = false;
-					}
+		//#endregion ajaxCode
 
-					var toIns = {
-						"day": req.body.day,
-						"shot": req.body.shotcode,
-						"proj": req.body.project,
-						"time": req.body.timespent,
-						"task": req.body.task,
-						"id": makeSlug(15, 15)
-					};
-					if(toIns.day.length && toIns.shot && toIns.proj && toIns.time && toIns.task) {
-						if(toIns.day.length  > 11) return res.json({"err": "Day too long", "errcode": 400, "data": ""});
-						if(toIns.shot.length > 35) return res.json({"err": "Shot code too long", "errcode": 400, "data": ""});
-						if(toIns.proj.length > 25) return res.json({"err": "Project too long", "errcode": 400, "data": ""});
-						if(toIns.task.length > 20) return res.json({"err": "Task too long", "errcode": 400, "data": ""});
-						if(toIns.day.length  <  2) return res.json({"err": "Day too short", "errcode": 400, "data": ""});
-						if(toIns.task.length <  1) return res.json({"err": "Task too short", "errcode": 400, "data": ""});
-						if(toIns.shot.length <  1) return res.json({"err": "Shot code too short", "errcode": 400, "data": ""})
-
-						timesheet.jobs.push(toIns);
+		//#region auth ## AUTH SECTION ## //
 		
-						if(!truets) {
-							req.user.timesheet = timesheet;
-							usersDB.update({name: user.name}, {"name": user.name,"displayName": user.displayName,"dob": user.dob,"password": user.password,"isadmin": user.isadmin,"email": user.email,"timesheet": user.timesheet}, function(err, data) {
-								if(err) throw err;
-								return res.json({"err": "", "errcode": 200, "data": toIns}); //painfulpart
-							});
-						} else {
-							timesheetDB.update({"user": user.name, "date": req.body.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) {
-								if(err) throw err;
-								return res.json({"err": "", "errcode": 200, "data": toIns}); //painfulpart
-							});
-						}
-					} else {
-						return res.json({"err": "Missing input fields!", "errcode": 400, "data": {}});
-					}
-				});
-			});
-		});
+		//#region authDisplays
 
-		app.post("/code/deljob", ensureAJAXAuthenticated, function(req, res) {
-			usersDB.findOne({"name": req.body.jobuser}, function(err, user) {
-				timesheetDB.findOne({"user": user.name, "date": req.body.date}, function(err, timesheet) {
-					if(err) throw err;
-					console.log("deleting " + req.body.jobuser + "'s job on date " + req.body.date);
-
-					var truets = true;
-					if(!timesheet) {
-						timesheet = user.timesheet;
-						truets = false;
-					}
-					
-					for(var i = 0; i < timesheet.jobs.length && i != -1; i++) {
-						if(timesheet.jobs[i].id == req.body.jobid) {
-							if(!truets) user.timesheet.jobs.splice(i, 1);
-							else timesheet.jobs.splice(i, 1);
-							
-							if(!truets) {
-								req.user.timesheet = timesheet;
-								usersDB.update({name: user.name}, {"name": user.name,"displayName": user.displayName,"dob": user.dob,"password": user.password,"isadmin": user.isadmin,"email": user.email,"timesheet": timesheet}, function(err, data) {
-									if(err) throw err;
-									return res.json({"err": "", "errcode": 200,}); //painfulpart
-								});
-								break;
-							} else {
-								timesheetDB.update({"user": user.name, "date": req.body.date}, {"user": timesheet.user, "jobs": timesheet.jobs, "date": timesheet.date, "unix-date": timesheet["unix-date"]}, function(err, data) {
-									if(err) throw err;
-									return res.json({"err": "", "errcode": 200,}); //painfulpart
-								});
-								break;
-							}
-						} else if(i >= timesheet.jobs.length - 1) { // if its the last job, and its still not found anything, redirect them.
-							return res.json({"err": "Job Not Found", "errcode": 400});
-						}
-					}
-				});
-			});
-		});
-
-		app.get("/help", function (req, res) {
-			res.render("help.ejs", {user: req.user, error: req.query.err});
-		});
-
-		app.get("/ajax/getanalyticsdata", ensureAJAXAuthenticated, function(req, res) {
-			if(req.user.isadmin != "true") return res.json({"err": "User does not have the permissions to use this function", "errcode": 403, "data": {}});
-			
-			var fromdate = new Date(req.query.fromdate).getTime(), todate = new Date(req.query.todate).getTime();
-
-			if(req.query.searchtype == "proj") delete req.query.user;
-
-			var mongSearch = {"unix-date": {"$gt": fromdate, "$lt": todate}, "user": {"$in": req.query.user }};
-			if(!mongSearch.user["$in"]) delete mongSearch.user;
-			else if(!mongSearch.user["$in"].push) mongSearch.user = req.query.user // first way i could think of to test for an array, sorry about the ugliness
-
-			timesheetDB.find(mongSearch).toArray(function(err, timesheets) {
-				if(err) throw err;
-
-				return res.json({"err": "", "errcode": 200, "data": timesheets})
-			});
-		}) // /analytics?user=philippa&user=william&user=morgane&user=jee&fromdate=2018-06-07&todate=2018-06-12
-
-		app.get("/ajax/getallnames/:type", ensureAJAXAuthenticated, function(req, res) {
-			//req.params.type is the type.
-			var ttype = req.params.type;
-
-			if(ttype == "users") {
-				usersDB.find({}).project({'name': 1, 'displayName': 1}).toArray(function(err, users) { 
-					if(err) throw err;
-
-					return res.json({"err": "", "errcode": 200, "data": users});
-				});
-			} else if(ttype == "projs") {
-				return res.json({"err": "", "errcode": 200, "data": projs});
-			} else if(ttype == "tasks") {
-				return res.json({"err": "", "errcode": 200, "data": tasks});
-			} else { 
-				return res.json({"err": "Malformed request", "errcode": 400, "data": {}}); 
-			}
-		});
-
-		// ## AUTH SECTION ## //
-		
 		app.get("/login", function (req, res) {
 			res.render("login.ejs", {user: req.user, error: req.query.err});
 		});
@@ -532,6 +636,9 @@ mongodb.connect(url, function (err, db) {
 			res.render("changepassword.ejs", {user: req.user, error: req.query.err});
 		});
 
+		//#endregion authDisplays
+
+		//#region passportLibCode
 		// ## PASSPORT ## //
 		// Passport session setup.
 		//   To support persistent login sessions, Passport needs to be able to
@@ -563,6 +670,10 @@ mongodb.connect(url, function (err, db) {
 			});
 		}));
 
+		//#endregion passportLibCode
+
+		//#region authCodePages
+
 		app.post("/auth/signup", ensureAuthenticated, function(req, res) {
 			if(req.user.isadmin) {
 				if(req.body.username.length > 25 || req.body.password > 25 || req.body.confirmpassword > 25) res.redirect("/signup?err=Input%20Fields%20Too%20Long.");
@@ -580,6 +691,7 @@ mongodb.connect(url, function (err, db) {
 						"password": hashOf(req.body.password),
 						"isadmin": req.body.isadmin,
 						"email": req.body.email,
+						"cost": 10,
 						"timesheet": {"jobs": []}
 					};
 					usersDB.findOne({"name": toIns.name}, function(err, data) {
@@ -629,30 +741,36 @@ mongodb.connect(url, function (err, db) {
 			}
 		});
 
+		//#endregion authCodePages
+
+		//#endregion auth
+
+		//#region misc
 
 		//The 404 Route (ALWAYS Keep this as the last route)
 		app.get('*', function(req, res){
 			res.render('404.ejs', {user: req.user, error: req.query.err});
 		});
 
-		
-		// ## AUTO SUBMIT FUNCTION ## //
+		//#endregion misc
+
+		//#region autoSubm ## AUTO SUBMIT FUNCTION ## //
 
 		function callMeOnMonday(effective) {
 			var now = new Date();
-			//if(!effective) {now.setDate(10); now.setMonth(7);} // debug, makes it run once, just to force the user timesheets into the outdated bin.
-			nextMonday = getNextMonday(7); // run at next monday, 7am.
+			//if(!effective) {now.setDate(16); now.setMonth(7); now.setHours(7);} // debug, makes it run once, just to force the user timesheets into the outdated bin.
+			let nextMonday = getNextMonday(7); // run at next monday, 7am.
 			setTimeout(callMeOnMonday, nextMonday.getTime() - now.getTime(), true);
 
-			if(effective) {
-				//now.setDate(28); now.setMonth(4); // debug, sets the date to upload.
+			if(effective && !__DEV_RELEASE__) {
+				//now.setDate(16); now.setMonth(7); // debug, sets the date to upload.
 				console.log("It's a monday! Moving the timesheets! " + getThisDate(now));
 				var thisdate = getPreviousMonday(new Date(now.getTime() - (1000*60*60*24*2)), 0) // this is just inserting the previous weeks monday date. nothing to see here, move along.
 				
 				usersDB.find().toArray(function(err, users) {
 					for(var tuser of users) {
-						var toIns = {"user": tuser.name, "jobs": tuser.timesheet.jobs, "date": thisdate, "unix-date": new Date(thisdate).getTime()};
-						console.log("timesheet insert called on " + tuser.name, thisdate);
+						var toIns = {"user": tuser.name, "jobs": tuser.timesheet.jobs, "date": getThisDate(thisdate), "unix-date": new Date(thisdate).getTime()};
+						console.log("timesheet insert called on " + tuser.name, getThisDate(thisdate));
 						timesheetDB.insert(toIns, function(err, data) {
 							if(err) throw err;
 							console.log(data.ops[0].user + " has had his timesheets inserted into the timesheet db.");
@@ -663,7 +781,7 @@ mongodb.connect(url, function (err, db) {
 						tuser = users[ind];
 
 						console.log("attempting to find plans for " + tuser.name);
-						plansDB.findOne({"date": thisdate, "$text": {"$search": tuser.name, "$language": "english", "$caseSensitive": false}}, function(err, data) {
+						plansDB.findOne({"date": getThisDate(thisdate), "$text": {"$search": tuser.name, "$language": "english", "$caseSensitive": false}}, function(err, data) {
 							if(err) throw err;
 
 							console.log(thisdate);
@@ -689,11 +807,12 @@ mongodb.connect(url, function (err, db) {
 			}
 		}
 		callMeOnMonday(false);
+
+		//#endregion autoSubm
 	}
 });
 
-
-// ## server initialization ## //
+//#region serverFinalSetup ## server initialization ## //
 
 // http://expressjs.com/en/starter/static-files.html
 app.use(express.static('public'));
@@ -711,68 +830,32 @@ var sslOptions = {
 http.createServer(app).listen(process.env.HTTP_PORT, function() {console.log("Http is online on port " + process.env.HTTP_PORT);});
 https.createServer(sslOptions, app).listen(process.env.HTTPS_PORT, function() {console.log("Https is online on port " + process.env.HTTPS_PORT);});
 
+//#endregion serverFinalSetup
 
-// listen for requests :)
-/*var listener = app.listen(process.env.PORT, function () {
-	console.log('Your app is listening on port ' + listener.address().port);
-});*/
+//#region helperFuncs //
 
-
-// ## helper functions ## //
-
-function makeSlug(min, max) {
-	var t = "";
-	for(var i = 0; i < min + Math.floor(Math.random() * (max - min)); i++) {
-		var base = 65 + (Math.random() * 25);
-		if(Math.random() < 0.4) {
-		base += 32;
-		} else if (Math.random() < 0.3) {
-		base = 48 + Math.random() * 9;
-		} t += String.fromCharCode(base);
-	} 
-	return t;
-}
-
+//#region DATE-TIME HELPER FUNCS
+// function is1917(now=new Date()) { if(now.getMonth() == 2 && now.getDate() == 8) { return now.getYear() - 17; } else { return -1; } }
 function getThisDate(now=new Date()) {
 	return now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
 }
 
-/* gets the next monday, at the specified hours */
 function getNextMonday(hours) { 
 	var d = new Date();
 	d = new Date(d.setDate(d.getDate() + (7-d.getDay())%7+1));
 	d.setHours(hours); d.setMinutes(0); d.setSeconds(0); d.setMilliseconds(0);
 	return d;
 }
+
 function getNextWeek(now=new Date(), hours=10, mult=1) {
 	var nextWeek = new Date(now.getTime() + (mult * 7 * 24 * 60 * 60 * 1000));
 	return getPreviousMonday(nextWeek, hours);
 }
+
 function getPreviousMonday(prevMonday=new Date(), hours=10) {
 	prevMonday = new Date(prevMonday.setDate(prevMonday.getDate() - (prevMonday.getDay() + 6) % 7));
 	prevMonday.setHours(hours); prevMonday.setMinutes(0); prevMonday.setSeconds(0); prevMonday.setMilliseconds(0);
 	return prevMonday;
-}
-
-function displayNameToUsername(username) {
-	return username.split(' ').join('-').toLowerCase();
-}
-
-function hashOf(input) {
-	return passwordHash.generate(input);
-}
-
-function ensureAuthenticated(req, res, next) {
-	if (req.isAuthenticated()) { return next(); }
-	res.redirect('/login?err=Unable%20to%20authenticate%20user.')
-}
-function ensureAJAXAuthenticated(req, res, next) {
-	if (req.isAuthenticated()) { return next(); }
-	res.json({"err": "User Is Not Authenticated", "errcode": 403, "data": ""});
-}
-function ensureAuthenticatedSilently(req, res, next) {
-	if (req.isAuthenticated()) { return next(); }
-	res.redirect('/login')
 }
 
 Date.prototype.addDays = function(days) {
@@ -791,7 +874,49 @@ function getDates(startDate, stopDate) {
     return dateArray;
 }
 
+//#endregion DATE-TIME HELPER FUNCS
 
+//#region crypto funcs
+function displayNameToUsername(username) {
+	return username.split(' ').join('-').toLowerCase();
+}
+
+function hashOf(input) {
+	return passwordHash.generate(input);
+}
+
+function makeSlug(min, max) {
+	var t = "";
+	for(var i = 0; i < min + Math.floor(Math.random() * (max - min)); i++) {
+		var base = 65 + (Math.random() * 25);
+		if(Math.random() < 0.4) {
+		base += 32;
+		} else if (Math.random() < 0.3) {
+		base = 48 + Math.random() * 9;
+		} t += String.fromCharCode(base);
+	} 
+	return t;
+}
+//#endregion crypto funcs
+
+//#region passport funcs
+function ensureAuthenticated(req, res, next) {
+	if (req.isAuthenticated()) { return next(); }
+	res.redirect('/login?err=Unable%20to%20authenticate%20user.')
+}
+
+function ensureAJAXAuthenticated(req, res, next) {
+	if (req.isAuthenticated()) { return next(); }
+	res.json({"err": "User Is Not Authenticated", "errcode": 403, "data": ""});
+}
+
+function ensureAuthenticatedSilently(req, res, next) {
+	if (req.isAuthenticated()) { return next(); }
+	res.redirect('/login')
+}
+//#endregion passport funcs
+
+//#region data parsing
 // ref: http://stackoverflow.com/a/1293163/2343
 // This will parse a delimited string into an array of
 // arrays. The default delimiter is the comma, but this
@@ -855,10 +980,8 @@ function CSVToArray( strData, strDelimiter ){
 	// Return the parsed data.
 	return( arrData );
 }
+//#endregion data parsing
 
+//#endregion helperFuncs
 
-
-// function is1917(now=new Date()) { if(now.getMonth() == 2 && now.getDate() == 8) { return now.getYear() - 17; } else { return -1; } }
-
-
- // end server.js
+//end server.js

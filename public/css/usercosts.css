@@ -1,0 +1,18 @@
+
+#tables {
+    width: 100%;
+    height: 70vh;
+    overflow: scroll;
+    margin-top: 25px;
+}
+.big {
+    font-size: 4.5vw;
+    font-weight: bold;
+}
+.axisWhite path, .axisWhite line, .axisWhite text {
+    stroke: white;
+}
+
+#graph-params-form {
+    min-height: 100px;
+}

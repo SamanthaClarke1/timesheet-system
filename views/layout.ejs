@@ -10,7 +10,7 @@
 		<meta name="keywords" content="HTML,CSS,XML,JavaScript,Cumulus,CumulusVFX,VFX,Timesheets">
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<title>Timesheets!</title>
-		<link rel="shortcut icon" href="/favicon.ico?">
+		<link rel="shortcut icon" href="/res/favicon.ico?">
 			<!-- jQuery -->
 		<script src="./lib/jquery.js"></script>
 			<!-- jQuery Form Validator -->
@@ -25,9 +25,9 @@
 		<link href="https://fonts.googleapis.com/css?family=Archivo|Noto+Sans:700" rel="stylesheet"> 
 		<script src="https://use.fontawesome.com/52160498ec.js"></script>
 			<!-- Our CSS/JS -->
-		<script src="./general.js"></script>
-		<link rel="stylesheet" href="./style.css">
-		<link rel="stylesheet" href="./style.night.css">
+		<script src="./js/general.js"></script>
+		<link rel="stylesheet" href="./css/style.css">
+		<link rel="stylesheet" href="./css/style.night.css">
 	</head>
   
 	<body>
@@ -50,7 +50,7 @@
 			<!-- Navbar logo -->
 			<a class="navbar-brand" href="/">
 				<img class="img img-responsive icon48" alt="cmls logo"
-				     src="/CMLS_logo_noText_v001_small.png" />
+				     src="/res/CMLS_logo_noText_v001_small.png" />
 			</a>
 
 
@@ -79,6 +79,9 @@
 							<li class="nav-item" id="analytics-navi">
 								<a class="nav-link faded-grn-text dim" id="analytics" href="/analytics"><i class="fa fa-line-chart"></i> Analytics </a>
 							</li>
+							<li class="nav-item" id="usercosts-navi">
+								<a class="nav-link faded-grn-text dim" id="usercosts" href="/usercosts"><i class="fa fa-money"></i> User Costs </a>
+							</li>
 						<% } %>
 						<li class="nav-item" id="logout-navi">
 							<a class="nav-link faded-grn-text dim" id="logout" href="/auth/logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Logout </a>
@@ -92,7 +95,7 @@
 		</nav>
 		<!--div class="errholder">
 			<h1 class="err"> Site is under maintanence. DO NOT USE IT. </h1>
-		</div--> 
+		</div-->
 		<% if(error) { %> 
 			<div class="errholder">
 				<h1 class="err"> <%= error %> </h1>
@@ -102,7 +105,7 @@
 			<%- body %>
 		</div>
 		<div class="text-center version-footer font-main grn-text semi-dim">
-			<small> Developed by Samuel Clarke, May-July 2018, for CumulusVFX <br/> Version 1.5.3 | Codename: Alert Analytic </small>
+			<small> Developed by Samuel Clarke, May-July 2018, for CumulusVFX <br/> Version 1.6.2 | Codename: White Wyvern </small>
 		</div>
 </body>
 </html>

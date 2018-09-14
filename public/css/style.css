@@ -1,0 +1,266 @@
+ /*  !i!i!i!i!i!i!i!i!i!i!i!i!i!i!i!i!i!
+     !i!i!i!i!i   style.css   i!i!i!i!i! 
+     !i!i!i!i!i!i!i!i!i!i!i!i!i!i!i!i!i!  */
+
+/* Code written by Samuel J. Clarke, May-June 2018, for CumulusVFX. */
+
+/* *====================*
+   * BODY AND BIG STUFF *
+   *====================* */
+
+body { min-height:100%; padding:0; margin:0; position:relative; }
+body::after{ content:''; display:block; height:100px; }
+html{ height:100%; }
+.fillcon {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+.mincon {
+  padding: .5%;
+  padding-top: 4%;
+  text-align: center;
+  font-family: 'Archivo', sans-serif;
+}
+.font-big {
+  font-family: 'Noto Sans', sans-serif;
+}
+.font-main {
+  font-family: 'Archivo', sans-serif;
+}
+.mcon {
+  padding: 0%;
+  padding-top: 2%;
+  text-align: center;
+  font-family: 'Archivo', sans-serif;
+}
+.bordercon {
+  border-right: 1px solid #d9d9df;
+  border-left: 1px solid #d9d9df;
+  border-bottom: 1px solid #d9d9df;
+}
+.segment{
+  padding: 10% 25% 10% 25%;
+}
+.miniseg{
+  font-size:32px;
+}
+.minihidden{
+  display: none; 
+}
+.no-pad-right {
+  padding-left: 2px;
+  padding-right: 0px !important;
+  min-height: 35px;
+}
+.btext{
+  background-color: #e6e6ef;
+  color:green;
+}
+
+.errholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 2.6rem;
+  background: #ff4c7c;
+  animation: errholder-hider 4s;
+  height: 0vh;
+  padding-bottom: 0px;
+  margin-bottom: 0px;
+  opacity: 0;
+  overflow: hidden;
+
+  font-family: 'Noto Sans', sans-serif;
+}
+@keyframes errholder-hider {
+  0% {
+    height: 12vh;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    background: #ff4c7c;
+    opacity: 1;
+  }
+  40% {
+    background: #ff8fbf;
+    opacity: 0.9;
+  }
+  60% {
+    height: 12vh;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    opacity: 0.9;
+  }
+  100% {
+    height: 0vh;
+    background: #f9f9f9;
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+    opacity: 0;
+  }
+}
+
+.version-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  padding: 1rem;
+  background-color: #e7f3ff;
+  text-align: center;
+}
+.section-title-container {
+  text-align: center;
+  padding-bottom: 24px;
+  font-family: 'Noto Sans', sans-serif;
+}
+.ts-row {
+  background-color: rgb(232, 236, 236);
+  margin-bottom: 8px;
+  border-radius: 5px;
+  height: 2.5em;
+  overflow: hidden;
+  opacity: 1;
+  transition: height 0.7s, margin-bottom 0.7s, opacity 0.7s, background-color 0.7s;
+}
+.ts-row.shrinkme {
+  height: 0em;
+  margin-bottom: 0px;
+  opacity: 0;
+}
+.ts-row.even {
+  background-color: rgb(228, 247, 252);
+}
+td.col-3 {
+  padding-left: 8px;
+  padding-right: 4px;
+}
+td, th {
+  overflow:hidden;
+}
+
+
+/* *=========*
+   *   NAV   *
+   *=========* */
+
+.nav-item .nav-link {
+  transition: background .4s ease-in-out;
+}
+.nav-item .nav-link.active {
+  background: #0275d8;
+}
+
+/* *=========*
+   * ACCOUNT *
+   *=========* */
+
+.loginWith {
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: flex-start;
+}
+.btn {
+  cursor: pointer;
+  font-family: 'Noto Sans', sans-serif;
+}
+.formBox {
+  border: 2px solid #5c5c5c;
+  padding: 15px;
+}
+.loginWithGithub {
+  margin-top: 20px;
+  padding: 0;
+  background-color: #292b2c;
+  color: white;
+}
+.submitJobForm {
+  padding: 0px;
+}
+
+/* *======*
+   * MISC *
+   *======* */
+
+.navbar-username-right-holder {
+  justify-content: center;
+  margin: auto;
+}
+.navbar-username-right {
+  color: #c0c0c0;
+  z-index: 3;
+}
+.dummy {
+  padding: 0;
+  margin: 0;
+}
+.icon32 {
+  height: 32px;
+  width: 32px;
+}
+.icon48 {
+  height: 48px;
+  width: 48px;
+}
+.icon64 {
+  height: 64px;
+  width: 64px;
+}
+
+/* *============*
+   * DEPRECATED *
+   *============* */
+
+.loginWithFacebook {
+  margin-top: 10px;
+  background: #3a5897;
+  color: white;
+  padding: 0;
+}
+.login-icon {
+  float: left;
+  margin: 5px;
+}
+.login-special-text {
+  text-align: left;
+  margin: auto 0;
+  margin-left: 5px;
+}
+.login-header {
+  padding: 5px;
+}
+.special-logins {
+  margin: 0 5px;
+  margin-bottom: 10px;
+}
+.manual-logins {
+  margin: 0 5px;
+  margin-bottom: 10px;
+}
+.acc-cont {
+  background: #ececec;
+}
+.acc-mbar {
+  height: 100%;
+}
+.acc-user-section {
+  background: #f9f9f9;
+}
+.acc-polls-section {
+  background: #f9f9f9;
+}
+.section-title {
+  padding: 0;
+  margin: 0;
+}
+.displayed-polls-container {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}

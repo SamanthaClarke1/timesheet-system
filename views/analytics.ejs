@@ -18,27 +18,11 @@
     </div><br/>
 
     <form id="graph-params-form" class="col-12 row no-gutters" action="/analytics" method=GET> <!-- will be serialized through ajax, then load the timesheet tables through ajax + d3. -->
-        <!--div id="list1" class="col-3 dropdown-check-list" tabindex=1000>
-            <span class="anchor">Select Users</span>
-            <ul class="items">
-                <li><input class="check" type="checkbox" />Will be</li>
-                <li><input class="check" type="checkbox" />Filled with</li>
-                <li><input class="check" type="checkbox" />Ajax (Later)</li>
-            </ul>
-        </div--> <!-- deprecated, sorry past me. -->
+
         <input id="search-type-val" name="searchtype" type="text" hidden />
         <select id="user-list" name="user" class="col-3 form-control" multiple>
         </select>
-        <!--select id="fieldSelect" hidden value="Date">Date-->
-            <!-- Okay, so like, i know this looks random, and if you're trying to understand my code, this is the worst hack, so strap in.
-                    Basically, I had to hard code some stuff into the calendar-extender.js function, that would make it so that the calendar would only open if this was set to "Date" or something of the similar
-                    It's actually some great functionality on the planner page. But, if you port it elsewhere, of course it can't find "#fieldSelect".
-                    So I had three options, really, either I use a whole nother instance of that script just for the planner page (and another for this one etc)
-                    Or, I come up with a complex system to tell if it should read in field select, such as an additional class to the calendar extender or something. But I'm tired rn and dont give a f***
-                    Or, I do this, hold a random hidden fieldSelect that is always set to date. It's stupid, but it's a good hack for right now. So if future me / you are trying to move the calendar around, 
-                    make sure to move around the hidden fieldSelect as well. -->
-            <!-- Nevermind lol, it didnt work, then i realised that I could just check whether or not the value was null -->
-        <!--/select-->
+
         <div class="col-3">
             <input name="fromdate" type="date" id="from-date" class="col-12" placeholder="Start date" required/>
         </div>
@@ -51,17 +35,16 @@
     </form>
     
     <div id="tables" class="col-12"></div>
-    <div id="tooltip"></div>
-
-
+</div>
+<head>
     <!-- MOJS -->
     <script src="./lib/mo.js" crossorigin="anonymous"></script>
     <!-- D3 -->
-    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="./lib/d3.js"></script>
     <!-- CUSTOM -->
-    <link rel="stylesheet" href="./calendar-extender.css"></link>
-    <link rel="stylesheet" href="./analytics.css"></link>
-    <script src="./burstpack.anim.js"></script>
-    <script src="./analytics.js"></script>
-    <script src="./calendar-extender.js"></script>
-</div>
+    <link rel="stylesheet" href="./css/calendar-extender.css"></link>
+    <link rel="stylesheet" href="./css/analytics.css"></link>
+    <script src="./js/burstpack.anim.js"></script>
+    <script src="./js/analytics.js"></script>
+    <script src="./js/calendar-extender.js"></script>
+</head>

@@ -33,13 +33,12 @@
 		}
 	</script>
 
-
 	<!-- MOJS -->
     <script src="./lib/mo.js"></script>
-	<script src="./burstpack.anim.js"></script>
-	<script src="./index.js"></script>
-	<link rel="stylesheet" href="./index.css" />
-	<link rel="stylesheet" href="./index.night.css" />
+	<script src="./js/burstpack.anim.js"></script>
+	<script src="./js/index.js"></script>
+	<link rel="stylesheet" href="./css/index.css" />
+	<link rel="stylesheet" href="./css/index.night.css" />
 </head>
 
 <body>
@@ -170,7 +169,7 @@
 								</div>
 							</div>
 	
-							<button id="subm-btn" class="btn btn-outline-info btn-block btn-inpc" style="margin-top: 20px;" <%if(dayhours[day] > 24 || !editable) {%>disabled <%}%>> Submit </button>
+							<button id="subm-btn" class="btn btn-outline-info btn-block btn-inpc" style="margin-top: 20px; margin-bottom: 20px;" <%if(dayhours[day] > 24 || !editable) {%>disabled <%}%>> Submit </button>
 						</form>
 					</div>
 				<% } %>
