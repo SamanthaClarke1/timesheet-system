@@ -170,6 +170,9 @@ td, th {
   background-color: #292b2c;
   color: white;
 }
+.submitJobForm {
+  padding: 0px;
+}
 
 /* *======*
    * MISC *

@@ -1,6 +1,6 @@
 {
   "name": "timetable-manager",
-  "version": "1.4.1",
+  "version": "1.4.3",
   "description": "Manages the timetables for cmls. Recieves input from artists, that log their time, and stores it in a db.",
   "main": "server.js",
   "codename": "Serene Sea",

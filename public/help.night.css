@@ -1,0 +1,10 @@
+.card-header { 
+    background-color: #313B47 !important;
+}
+.card-block {
+    background-color: #434c57 !important;
+}
+.card {
+    border: 1px solid #445160 !important;
+    background-color: #445160 !important;
+}

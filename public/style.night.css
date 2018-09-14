@@ -2,6 +2,38 @@ body {
   background-color: #2e2f35;
   color: white;
 }
+.card a {
+  color: #58b19e;
+}
+a:hover, a:active {
+  color: #5a8d7d;
+}
+.grn-text {
+  color: #57bea8;
+  font-family: 'Noto Sans', sans-serif;
+}
+.grn-link-text {
+  color: #58b19e;
+}
+.grn-link-text:hover, .grn-link-text:active {
+  color: #5a8d7d;
+}
+.grn-text.dim {
+  color: #458073;
+}
+.grn-text.semi-dim {
+  color: #48a38f;
+}
+.faded-grn-text {
+  color: #73a89d !important;
+  font-family: 'Noto Sans', sans-serif;
+}
+.faded-grn-text.dim {
+  color: #62706d !important;
+}
+.faded-grn-text.semi-dim {
+  color: #667a76 !important;
+}
 .mincon {
   background: #2e2f35;
   color: white;
@@ -46,31 +78,41 @@ hr {
   background : rgb(70, 154, 202);
 }  
 .btn-delj {
-    background: #272831;
+  background: #272831;
 }
 .errholder {
-    background: #270b0b;
-    animation: errholder-hider 4s;
+  background: #270b0b;
+  animation: errholder-hider 4s;
+}
+@keyframes errholder-hider {
+  0% {
+    height: 12vh;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    background: #db2153;
+    opacity: 1;
   }
-  @keyframes errholder-hider {
-    0% {
-      height: 12vh;
-      padding-bottom: 16px;
-      margin-bottom: 16px;
-      background: #db2153;
-      opacity: 1;
-    }
-    60% {
-      background: #db2153;
-      height: 12vh;
-      padding-bottom: 16px;
-      margin-bottom: 16px;
-      opacity: 0.9;
-    }
-    100% {
-      background: #583535;
-      margin-bottom: 0px;
-      padding-bottom: 0px;
-      opacity: 0;
-    }
+  60% {
+    background: #db2153;
+    height: 12vh;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    opacity: 0.9;
   }
+  100% {
+    background: #583535;
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+    opacity: 0;
+  }
+}
+/* *========*
+   *  NAVS  *
+   *========* */
+
+.nav-item .nav-link {
+  transition: background .4s ease-in-out;
+}
+.nav-item .nav-link.active {
+  background: #434c57;
+}

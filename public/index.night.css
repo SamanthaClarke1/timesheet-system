@@ -2,10 +2,10 @@
     background: #4e2a2a !important;
 }
 .total-day-bar {
-    background: rgb(66, 117, 114) !important;
+    background: #4c7c6d !important;
 }
 .total-bar {
-    background: rgb(66, 117, 114) !important;
+    background: #4c7c6d !important;
 }
 .subnav-toggler {
     background: #2f363f;
@@ -25,7 +25,7 @@
     color: #FFD449 !important;
 }
 .sub-nav-link.green {
-    color: #4AFF68 !important;
+    color: rgb(74, 196, 94) !important;
 }
 .sub-nav-link.grey {
     color: #6a6a6e !important;
@@ -37,7 +37,7 @@
     color: #EDD578 !important;
 }
 .sub-nav-link.green.active {
-    color: #79ED97 !important;
+    color: rgb(115, 219, 143) !important;
 }
 .sub-nav-link.grey.active {
     color: #adadad !important;

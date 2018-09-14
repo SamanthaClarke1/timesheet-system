@@ -1,5 +1,22 @@
 <div class="mincon" style="text-align: left;">
 
+    <script>
+        var srvprojs = '<%= projs %>'.split(',');
+    </script>
+
+    <div class="bx-switch row no-gutters">
+        <span class="bx-opt active" id="usr-view-btn">
+            <span class="box col-12">User View</span>
+        </span>
+        <div class="seperator"></div>
+        <span class="bx-opt" id="proj-view-btn">
+            <span class="box col-12 active">Project View</span>
+        </span>
+    </div>
+    <div class="col-12 text-center">
+        <button id="flush-cache-btn" class="btn btn-outline-danger col-4 col-offset-4 inactive flush-cache">Refresh Cache</button>
+    </div><br/>
+
     <form id="graph-params-form" class="col-12 row no-gutters" action="/analytics" method=GET> <!-- will be serialized through ajax, then load the timesheet tables through ajax + d3. -->
         <!--div id="list1" class="col-3 dropdown-check-list" tabindex=1000>
             <span class="anchor">Select Users</span>
@@ -9,6 +26,7 @@
                 <li><input class="check" type="checkbox" />Ajax (Later)</li>
             </ul>
         </div--> <!-- deprecated, sorry past me. -->
+        <input id="search-type-val" name="searchtype" type="text" hidden />
         <select id="user-list" name="user" class="col-3 form-control" multiple>
         </select>
         <!--select id="fieldSelect" hidden value="Date">Date-->
@@ -22,10 +40,10 @@
             <!-- Nevermind lol, it didnt work, then i realised that I could just check whether or not the value was null -->
         <!--/select-->
         <div class="col-3">
-            <input name="fromdate" type="date" id="from-date" class="col-12" placeholder="Start date" />
+            <input name="fromdate" type="date" id="from-date" class="col-12" placeholder="Start date" required/>
         </div>
         <div class="col-3">
-            <input name="todate" type="date" id="to-date" class="col-12" placeholder="End date" />
+            <input name="todate" type="date" id="to-date" class="col-12" placeholder="End date" required/>
         </div>
         <div class="col-3">
             <button id="submit-btn" class="col-12 btn btn-outline-info">search</button>
@@ -40,5 +58,4 @@
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="./analytics.js"></script>
     <script src="./calendar-extender.js"></script>
-
 </div>

@@ -53,36 +53,36 @@
 
 			<!-- Some other navbar shit; mostly  -->
 			<div class="collapse navbar-collapse" id="navbarSupportedContent">
-				<ul class="navbar-nav mr-auto animated ">
+				<ul class="navbar-nav mr-auto animated">
 					<% if(user) { %>
 					<li class="nav-item" id="home-navi">
-						<a class="nav-link" href="/"><i class="fa fa-home" aria-hidden="true"></i> Home </a>
+						<a class="nav-link faded-grn-text dim" href="/"><i class="fa fa-home" aria-hidden="true"></i> Home </a>
 					</li>
 					<% } else { %>
-						<li class="nav-item">
-							<a href="/login" id="login-navi" class="nav-link nav-item"><i class="fa fa-sign-in" aria-hidden="true"></i> Login </a>
+						<li class="nav-item" id="login-navi">
+							<a class="nav-link faded-grn-text dim" href="/login"><i class="fa fa-sign-in" aria-hidden="true"></i> Login </a>
 						</li>
 					<% } if(user) { %>
 						<li class="nav-item" id="account-navi">
-							<a class="nav-link" href="/changepassword"><i class="fa fa-lock" aria-hidden="true"></i> Change Password </a>
+							<a class="nav-link faded-grn-text dim" href="/changepassword"><i class="fa fa-lock" aria-hidden="true"></i> Change Password </a>
 						</li>
 						<% if(user.isadmin == "true") { %>
 							<li class="nav-item" id="adduser-navi">
-								<a class="nav-link" id="adduser" href="/signup"><i class="fa fa-user-plus" aria-hidden="true"></i> Add a user </a>
+								<a class="nav-link faded-grn-text dim" id="adduser" href="/signup"><i class="fa fa-user-plus" aria-hidden="true"></i> Add a user </a>
 							</li>
 							<li class="nav-item" id="planner-navi">
-								<a class="nav-link" id="planner" href="/planner"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Planner </a>
+								<a class="nav-link faded-grn-text dim" id="planner" href="/planner"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Planner </a>
 							</li>
 							<li class="nav-item" id="analytics-navi">
-								<a class="nav-link" id="analytics" href="/analytics"><i class="fa fa-line-chart"></i> Analytics </a>
+								<a class="nav-link faded-grn-text dim" id="analytics" href="/analytics"><i class="fa fa-line-chart"></i> Analytics </a>
 							</li>
 						<% } %>
 						<li class="nav-item" id="logout-navi">
-							<a class="nav-link" id="logout" href="/auth/logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Logout </a>
+							<a class="nav-link faded-grn-text dim" id="logout" href="/auth/logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Logout </a>
 						</li>
 					<% } %>
 					<li class="nav-item" id="help-navi" >
-						<a class="nav-link" id="help" href="/help"><i class="fa fa-question-circle" aria-hidden="true"></i> Help </a>
+						<a class="nav-link faded-grn-text dim" id="help" href="/help"><i class="fa fa-question-circle" aria-hidden="true"></i> Help </a>
 					</li>
 				</ul>
 			</div>
@@ -98,8 +98,8 @@
 		<div class="secondarybody font-main"> <!-- fades in everything (but not actually because i removed that once i stopped liking it) -->
 			<%- body %>
 		</div>
-		<div class="text-center version-footer font-main">
-			<small> Developed by Samuel Clarke, May-June 2018, for CumulusVFX <br/> Version 1.4.1 | Codename: Serene Sea </small>
+		<div class="text-center version-footer font-main grn-text semi-dim">
+			<small> Developed by Samuel Clarke, May-July 2018, for CumulusVFX <br/> Version 1.5.1 | Codename: Excellent Information </small>
 		</div>
 </body>
 </html>

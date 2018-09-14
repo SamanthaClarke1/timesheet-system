@@ -5,37 +5,37 @@
 		
 		<form class="formBox rounded col-12 text-center manual-logins" action="/auth/signup" method="post">
 			<div class="login-header">
-				<h2> Add a user </h2>
+				<h2 class="grn-text font-big"> Add a user </h2>
 				<hr class="title-underline">
 			</div>
 
 			<!--Username-->
 			<div class="form-group">
-				<label class="col-12" for="in-username"> Username </label>
-				<small class="col-12">Please note that the closer to their shotgun name this is, the more likely it is to work.</small>
+				<label class="col-12 grn-text semi-dim" for="in-username"> Username </label>
+				<small class="col-12 grn-text dim">Please note that the closer to their shotgun name this is, the more likely it is to work.</small>
 				<input type="username" class="form-control" name="username" id="in-username" placeholder="Alpha-numeric only (a-z, 0-9)" required>
 			</div>
 
 			<!--Email-->
 			<div class="form-group">
-				<label for="in-username"> Email </label>
+				<label class="grn-text semi-dim" for="in-username"> Email </label>
 				<input type="email" class="form-control" name="email" id="in-email" placeholder="johndoe@cumulusvfx.com" required>
 			</div>
 
 			<!--Password-->
 			<div class="form-group">
-				<label for="in-password"> Password </label>
+				<label class="grn-text semi-dim" for="in-password"> Password </label>
 				<input type="password" class="form-control" name="password" id="in-password" placeholder="Password" required>
 			</div>
 
 			<!--Password-->
 			<div class="form-group">
-				<label for="in-password"> Confirm Password </label>
+				<label class="grn-text semi-dim" for="in-password"> Confirm Password </label>
 				<input type="password" class="form-control" name="confirmpassword" id="in-confirmpassword" placeholder="Confirm Password" required>
 			</div>
 			
 			<div class="row">
-				<input type="submit" value="Submit" class="btn btn-success col-8 offset-2"/>
+				<input type="submit" value="Submit" class="btn btn-outline-info col-8 offset-2"/>
 				<div class="col-2" style="margin:auto;">
 					<small class="col-12">Is Admin</small>
 					<input class="col-12" type="checkbox" name="isadmin" id="in-isadmin" value="true">

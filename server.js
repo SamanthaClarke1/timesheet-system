@@ -39,7 +39,7 @@ app.set('view engine', 'ejs');
 app.use(partials());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(session({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
+app.use(session({ secret: 'keyboard cat 1917', resave: false, saveUninitialized: false }));
 app.use(express.static(__dirname + '/public'));
 
 // Initialize Passport!  Also use passport.session() middleware, to support
@@ -48,7 +48,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 var __DEBUG_KNOCKBACK__ = false; // NEVER EVER SET THIS TO TRUE UNLESS YOU 100% KNOW WHAT YOU ARE DOING. IT WILL KNOCKBACK ALL OF THE TIMESHEETS BY A WEEK.
-var __DEBUG_FORCEUNIX__ = false; // NEVER EVER SET THIS TO TRUE UNLESS YOU 100% KNOW WHAT YOU ARE DOING. IT WILL UPDATE ALL OF THE UNIX DATES TO WHATEVER THE STRING DATE IS.
+var __DEBUG_FORCEUNIX__ = false; // NEVER EVER SET THIS TO TRUE UNLESS YOU 100% KNOW WHAT YOU ARE DOING. IT WILL UPDATE ALL OF THE UNIX DATES TO WHATEVER THE STRING DATE IS. // i mean actually this one is not really all that dangerous but its ok
 
 // ## page rendering in relation to the database ## //
 
@@ -102,7 +102,7 @@ mongodb.connect(url, function (err, db) {
 		}
 
 		// http://expressjs.com/en/starter/basic-routing.html
-		app.get("/", ensureAuthenticated, function (req, res) {
+		app.get("/", ensureAuthenticatedSilently, function (req, res) {
 			var thisdate = "Current";
 
 			if(req.user.isadmin) {//swjp
@@ -120,6 +120,7 @@ mongodb.connect(url, function (err, db) {
 						timesheetDB.find({"user": dbuser.name}, {"_id": 0, "date": 1}).toArray(function(err, timesheets) {
 							if(err) throw err;
 
+							timesheets.sort((a, b) => { return b["unix-date"] - a["unix-date"]; })
 							timesheets.unshift({"user": dbuser.name, "jobs": dbuser.timesheet.jobs, "date": thisdate});
 							for(var i = 1; i <= 4; i++) {
 								timesheets.unshift({"user": dbuser.name, "jobs": [], "date": getThisDate(getNextWeek(new Date(), 10, i))});
@@ -155,7 +156,8 @@ mongodb.connect(url, function (err, db) {
 			} else {
 				timesheetDB.find({"user": req.user.name}, {"_id": 0, "date": 1}).toArray(function(err, timesheets) {
 					if(err) throw err;
-
+					
+					timesheets.sort((a, b) => { return b["unix-date"] - a["unix-date"]; });
 					timesheets.unshift({"user": req.user.name, "jobs": req.user.timesheet.jobs, "date": thisdate});
 					for(var i = 1; i <= 4; i++) {
 						timesheets.unshift({"user": req.user.name, "jobs": [], "date": getThisDate(getNextWeek(new Date(), 10, i))});
@@ -197,7 +199,7 @@ mongodb.connect(url, function (err, db) {
 			if(req.user.isadmin != "true") {
 				return res.redirect("/?err=You%20don't%20have%20permissions%20to%20use%20the%20planner");
 			}
-			res.render("analytics.ejs", {error: false, user: req.user})
+			res.render("analytics.ejs", {error: false, user: req.user, projs: projs})
 		})
 
 		app.get("/planner", ensureAuthenticated, function(req, res) {
@@ -243,8 +245,8 @@ mongodb.connect(url, function (err, db) {
 					var pmon = new Date(getPreviousMonday(new Date(date.getTime()), 10)).getTime();
 					if(pmon >= getNextMonday(10).getTime()) { // if its not coming in this week
 						if(date.getDay() != 6 && date.getDay() != 0) { // if its not saturday or sunday.
-							sdjs.push({"user": row[RowEnum.user], "monday": getThisDate(new Date(pmon)), "unix-date": date.getTime(), "proj": (row[RowEnum.proj] ? row[RowEnum.proj] : "-"), 
-										"hours": 8, "shot": (row[RowEnum.note] ? row[RowEnum.note] : "-"), "task": (row[RowEnum.vacation] == "x" ? "Absent" : "Misc")});
+							sdjs.push({"user": row[RowEnum.user], "monday": getThisDate(new Date(pmon)), "unix-date": date.getTime(), "proj": (row[RowEnum.proj] ? row[RowEnum.proj] : "Admin"), 
+										"hours": 8, "shot": (row[RowEnum.note] ? row[RowEnum.note] : "Admin"), "task": (row[RowEnum.vacation] == "x" ? "Annual Leave" : "Misc")});
 						}
 					} else {
 						//console.log(getNextMonday(10).getTime(), " ", pmon);
@@ -371,13 +373,14 @@ mongodb.connect(url, function (err, db) {
 						"id": makeSlug(15, 15)
 					};
 					if(toIns.day.length && toIns.shot && toIns.proj && toIns.time && toIns.task) {
-						if(toIns.day.length  > 11) return res.end(JSON.stringify({"err": "Day Length too Long!", "errcode": 400, "data": ""}, null, 2));
-						if(toIns.shot.length > 35) return res.end(JSON.stringify({"err": "Shot code too long!", "errcode": 400, "data": ""}, null, 2));
-						if(toIns.proj.length > 25) return res.end(JSON.stringify({"err": "Project code too long", "errcode": 400, "data": ""}, null, 2));
+						if(toIns.day.length  > 11) return res.end(JSON.stringify({"err": "Day too long", "errcode": 400, "data": ""}, null, 2));
+						if(toIns.shot.length > 35) return res.end(JSON.stringify({"err": "Shot code too long", "errcode": 400, "data": ""}, null, 2));
+						if(toIns.proj.length > 25) return res.end(JSON.stringify({"err": "Project too long", "errcode": 400, "data": ""}, null, 2));
 						if(toIns.task.length > 20) return res.end(JSON.stringify({"err": "Task too long", "errcode": 400, "data": ""}, null, 2));
 						if(toIns.day.length  <  2) return res.end(JSON.stringify({"err": "Day too short", "errcode": 400, "data": ""}, null, 2));
 						if(toIns.task.length <  1) return res.end(JSON.stringify({"err": "Task too short", "errcode": 400, "data": ""}, null, 2));
-		
+						if(toIns.shot.length <  1) return res.end(JSON.stringify({"err": "Shot code too short", "errcode": 400, "data": ""}, null, 2))
+
 						timesheet.jobs.push(toIns);
 		
 						if(!truets) {
@@ -444,7 +447,11 @@ mongodb.connect(url, function (err, db) {
 
 		app.get("/ajax/getanalyticsdata", ensureAJAXAuthenticated, function(req, res) {
 			if(req.user.isadmin != "true") return res.end({"err": "User does not have the permissions to use this function", "errcode": 403, "data": {}}, null, 2);
+			
 			var fromdate = new Date(req.query.fromdate).getTime(), todate = new Date(req.query.todate).getTime();
+
+			if(req.query.searchtype == "proj") delete req.query.user;
+
 			var mongSearch = {"unix-date": {"$gt": fromdate, "$lt": todate}, "user": {"$in": req.query.user }};
 			if(!mongSearch.user["$in"]) delete mongSearch.user;
 			else if(!mongSearch.user["$in"].push) mongSearch.user = req.query.user // first way i could think of to test for an array, sorry about the ugliness
@@ -473,7 +480,7 @@ mongodb.connect(url, function (err, db) {
 			} else { 
 				return res.end(JSON.stringify({"err": "Malformed request", "errcode": 400, "data": {}}, null, 2)); 
 			}
-		})
+		});
 
 		// ## AUTH SECTION ## //
 		
@@ -521,52 +528,6 @@ mongodb.connect(url, function (err, db) {
 				return done(null, user);
 			});
 		}));
-
-		// TODO: hook this up to the google api // in the end, maybe not? we'll see.
-		/*
-		
-		// ## GOOGLE PASSPORT STRATEGY ## //
-
-		passport.use(new GoogleStrategy({
-			clientID:     process.env.GOOGLE_CLIENT_ID,
-			clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-			callbackURL: "http://myurl:8000/auth/googlefunction getPreviousMonday(prevMonday=new Date(), hours=10) {
-	prevMonday = new Date(prevMonday.setDate(prevMonday.getDate() - (prevMonday.getDay() + 6) % 7));
-	prevMonday.setHours(hours); prevMonday.setMinutes(0); prevMonday.setSeconds(0); prevMonday.setMilliseconds(0);
-	return prevMonday;
-}
-			passReqToCallback: true
-		  },
-		  function(request, accessToken, refreshToken, function getPreviousMonday(prevMonday=new Date(), hours=10) {
-	prevMonday = new Date(prevMonday.setDate(prevMonday.getDate() - (prevMonday.getDay() + 6) % 7));
-	prevMonday.setHours(hours); prevMonday.setMinutes(0); prevMonday.setSeconds(0); prevMonday.setMilliseconds(0);
-	return prevMonday;
-}
-			User.findOrCreate({ googleId: profile.id },function getPreviousMonday(prevMonday=new Date(), hours=10) {
-	prevMonday = new Date(prevMonday.setDate(prevMonday.getDate() - (prevMonday.getDay() + 6) % 7));
-	prevMonday.setHours(hours); prevMonday.setMinutes(0); prevMonday.setSeconds(0); prevMonday.setMilliseconds(0);
-	return prevMonday;
-}
-			  return done(err, user);
-			});
-		  }
-		));
-
-		app.get('/auth/google',
-			passport.authenticate('google', { scope: [ function getPreviousMonday(prevMonday=new Date(), hours=10) {
-	prevMonday = new Date(prevMonday.setDate(prevMonday.getDate() - (prevMonday.getDay() + 6) % 7));
-	prevMonday.setHours(hours); prevMonday.setMinutes(0); prevMonday.setSeconds(0); prevMonday.setMilliseconds(0);
-	return prevMonday;
-}
-				'https://www.googleapis.com/auth/plus.login',
-				'https://www.googleapis.com/auth/plus.profile.emails.read' 
-		]}));
-
-		app.get( '/auth/google/callback',
-			passport.authenticate( 'google', {
-				successRedirect: '/auth/google/success',
-				failureRedirect: '/auth/google/failure'
-		}));*/
 
 		app.post("/auth/signup", ensureAuthenticated, function(req, res) {
 			if(req.user.isadmin) {
@@ -687,8 +648,8 @@ mongodb.connect(url, function (err, db) {
 								if(++ind < users.length) updateUsers(ind); // if its not looping outside of the max users, update the next user.
 							});
 							console.log("exiting updateUsers");
-						});						
-					} 
+						});				
+					}
 					updateUsers(0);
 				});
 			}
@@ -774,6 +735,10 @@ function ensureAuthenticated(req, res, next) {
 function ensureAJAXAuthenticated(req, res, next) {
 	if (req.isAuthenticated()) { return next(); }
 	res.end(JSON.stringify({"err": "User Is Not Authenticated", "errcode": 403, "data": ""}))
+}
+function ensureAuthenticatedSilently(req, res, next) {
+	if (req.isAuthenticated()) { return next(); }
+	res.redirect('/login')
 }
 
 Date.prototype.addDays = function(days) {
