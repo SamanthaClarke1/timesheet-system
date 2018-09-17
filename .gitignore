@@ -35,12 +35,16 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+.goutputstream*
 
 # Settings and secrets #
 ########################
 *.vscode
 *.env
 *.git.bfg-report*
+*.pem
+cert.pem
+key.pem
 
 # Logs
 logs

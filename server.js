@@ -33,7 +33,7 @@ app.set('view engine', 'ejs');
 app.use(partials());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(session({ secret: 'keyboard cat 1917', resave: false, saveUninitialized: false }));
+app.use(session({ secret: process.env.SECRET, resave: false, saveUninitialized: false }));
 app.use(express.static(__dirname + '/public'));
 
 // Initialize Passport!  Also use passport.session() middleware, to support
@@ -72,7 +72,6 @@ var selectList = getSelectList();
 var tasks = selectList.tasks;
 var projs = selectList.projs;
 
-const daysdict = {"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6};
 const RowEnum = {"id": 0, "user": 1, "start": 2, "end": 3, "proj": 4, "vacation": 5, "note": 6};
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const url = 'mongodb://guest:'+process.env.MONGO_PASS+'@ds016298.mlab.com:16298/timetable';  // Connection URL.
@@ -83,15 +82,15 @@ const url = 'mongodb://guest:'+process.env.MONGO_PASS+'@ds016298.mlab.com:16298/
 
 const __DEBUG_FORCE_TS_NAMING_SCHEMA__ = false; // !i!i! CAREFUL !i!i!i  -  THIS WILL FORCE ALL OF THE TIMESHEET NAMES TO THE PROPER SCHEMA
 const __DEBUG_FORCEUNIX__ = false; // !i!i! CAREFUL !i!i!i  -  THIS WILL UPDATE ALL OF THE UNIX DATES TO WHATEVER THE STRING DATE IS. // i mean actually this one is not really all that dangerous but its ok
-const __DEBUG_FORCE_COSTS_TO_TEN_PH__ = false; // !i!i! CAREFUL !i!i!i - THIS WILL FORCE ALL UNDEFINED COSTS OF EACH USER TO TEN DOLLARS PER HOUR.
-const __DEBUG_UNTEAR_DATA__ = false; // !i!i CAREFUL !i!i!i - WILL REMOVE ALL DUPLICATES ON A CERTAIN DATE, WITH A BIAS TOWARDS MORE JOBS.
-const __DEBUG_KNOCK_FROM_TO__ = false; // !i!i CAREFUL !i!i!i - WILL CHANGE UNIX-DATES FROM A CERTAIN DATE TO ANOTHER DATE
+const __DEBUG_FORCE_COSTS_TO_TEN_PH__ = false; // !i!i! CAREFUL !i!i!i  -  THIS WILL FORCE ALL UNDEFINED COSTS OF EACH USER TO TEN DOLLARS PER HOUR.
+const __DEBUG_UNTEAR_DATA__ = false; // !i!i CAREFUL !i!i!i  -  WILL REMOVE ALL DUPLICATES ON A CERTAIN DATE, WITH A BIAS TOWARDS MORE JOBS.
+const __DEBUG_KNOCK_FROM_TO__ = false; // !i!i CAREFUL !i!i!i  -  WILL CHANGE UNIX-DATES FROM A CERTAIN DATE TO ANOTHER DATE
 
 const __DEBUG_UNTEAR_DATA_DATE__ = 1531058400000;
 const __DEBUG_KNOCK_FROM__ = 1534082400000;
 const __DEBUG_KNOCK_TO__ = 1531058400000;
 
-const __DEV_RELEASE__ = false;
+const __DEV_RELEASE__ = process.env.DEV_RELEASE;
 
 //#endregion dbv #### SYSTEM DEBUG VARS END HERE (THANKS FOR BEING CAREFUL) #### //
 
@@ -531,7 +530,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 					if(row_name[0] != "!") {
 						var row = CSVToArray(sheet[row_name].v);
 						rows.push(row[0].splice(0, 7)); // explaining the splice: the last two variables are the date it was updated, and who it was updated by. 
-						                                //the first we dont care about, the second we also dont care about, and its always going to be 'CumulusVFX' anyway.
+														// the first we dont care about, the second we also dont care about, and its always going to be 'CumulusVFX' anyway.
 					}
 				}
 			}
@@ -569,20 +568,21 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 			// for intersecting days, get the other intersecting days with the same user, and divide its hours by the amount found. (this is the largest the data will ever get, promise)
 			for(var i in sdjs) {
-				var same_day_jobs = 0;
-				var targetdate = sdjs[i]["unix-date"];
-				var targetuser = sdjs[i].user;
-				for(var j = i; j < sdjs.length && sdjs[j]["unix-date"] == targetdate; j++) { // since it's already sorted, we can just walk through it.
+				let same_day_jobs = 0;
+				let targetdate = sdjs[i]["unix-date"];
+				let targetuser = sdjs[i].user;
+				for(var si = i; sdjs[si]["unix-date"] == targetdate; si--) /* find the first index of this date, by walking backwards, since its been sorted, this is much more efficient */;
+				for(let j = si; j < sdjs.length && sdjs[Math.max(j - 1, 0)]["unix-date"] == targetdate; j++) { // since it's already sorted, we can just walk through it.
 					if(sdjs[j].user == targetuser) same_day_jobs += 1;
 				}
 
 				if(sdjs[i].hours == 8) { // should always be true, just a fail-safe to not divide twice
 					sdjs[i].hours /= same_day_jobs;
 				} else { // also, yes, i know its way more inefficient to do it one at a time, but this whole thing shouldnt be being called often at all, and it runs smooth enough anyway. ill leave that as a stretch goal.
-					console.log("Something went wrong, somethings starting with, like, " + sdjs[i].hours + " hours, this should only ever be 8   >:(");
+					console.log("\n=========\nSomething went wrong, somethings starting with, like, " + sdjs[i].hours + " hours, this should only ever be 8   >:(\n=========\n");
 				}
 			} 
-			sdjs.sort( (a, b) => { // sort by monday, then by user.
+			sdjs.sort((a, b) => { // sort by monday, then by user.
 				if(a["monday"] < b["monday"]) return -1;
 				else if(a["monday"] > b["monday"]) return +1;
 				else if(a["user"] < b["user"]) return -1;
@@ -754,6 +754,28 @@ mongodb.connect(url, function mongConnect(err, db) {
 				return res.redirect("/changepassword?err=Your%20New%20Password%20Cant%20Be%20That%20Long.");
 			}
 
+			let passwordIsBlocked = false;
+			for (let bpass of selectList.bpass) {
+				if(req.body.newpassword == bpass) passwordIsBlocked = true;
+			}
+			if(passwordIsBlocked) {
+				return res.redirect("/changepassword?err=Your%20New%20Password%20Cant%20Be%20That.");
+			}
+
+			let nums = req.body.newpassword.replace(/[^0-9]/g,"").length;
+			let syms = req.body.newpassword.replace(/[a-zA-Z\d\s:]/g,"").length;
+			let lowerCase = req.body.newpassword.replace(/[^a-z]/g,"").length;
+			let upperCase = req.body.newpassword.replace(/[^A-Z]/g,"").length;
+
+			if(nums < 2) return res.redirect("/changepassword?err=You%20Must%20Have%20At%20Least%20Two%20Numbers!");
+			if(syms < 1) return res.redirect("/changepassword?err=You%20Must%20Have%20At%20Least%20One%20Symbol!");
+			if(lowerCase < 2) return res.redirect("/changepassword?err=You%20Must%20Have%20At%20Least%20Two%20Lower%20Case%20Letters!");
+			if(upperCase < 1) return res.redirect("/changepassword?err=You%20Must%20Have%20At%20Least%20One%20Upper%20Case%20Letter!");
+
+			for(let upart in req.user.name.toLowerCase().split(' ')) {
+				if(req.body.newpassword.toLowerCase().indexOf(upart) != -1) return res.redirect("/changepassword?err=Your%20Password%20Cant%20Contain%20Your%20Username!");
+			}
+
 			if(passwordHash.verify(req.body.oldpassword, req.user.password)) {
 				req.user.password = hashOf(req.body.newpassword); 
 				var user = req.user;
@@ -912,9 +934,8 @@ rl.on('line', (input) => {
 			onQuitAttempt();
 			break;
 		case "change-selections":
-			//#TODO: gotta make code that will update the (task) and (proj) vars, when this is said to it.
 			if(params[0] != "add" && params[0] != "remove") params.splice(0, 0, "add")
-			if(params[1] != "task" && params[1] != "proj") params.splice(1, 0, 'proj');
+			if(params[1] != "task" && params[1] != "proj" && params[1] != "bpass") params.splice(1, 0, 'proj');
 			if(params[2] != "admin" && params[2] != "default") params.splice(2, 0, "default");
 			params[3] = params.slice(3, params.length).join(' ');
 			params.splice(4, params.length - 4);
@@ -926,12 +947,14 @@ rl.on('line', (input) => {
 					tasks[params[2]].push(params[3]);
 					tasks[params[2]] = tasks[params[2]].sort(function(a,b){return (a<b?-1:(a>b?1:0))});
 					process.stdout.write(intrPRFX+" Success adding task '"+params[3]+"'");
-				} else {
+				} else if (params[1] == "proj") {
 					projs.push(params[3]);
 					projs = projs.sort(function(a,b){return (a<b?-1:(a>b?1:0))});
 					process.stdout.write(intrPRFX+" Success adding project '"+params[3]+"'");
+				} else if (params[1] == "bpass") {
+					selectList.bpass.push(params[3]);
 				}
-			} else {
+			} else if(params[0] == "remove") {
 				if(params[1] == "task") {
 					let ind = tasks[params[2]].indexOf(params[3]);
 					if(ind != -1) {
@@ -940,7 +963,7 @@ rl.on('line', (input) => {
 					} else {
 						process.stdout.write(intrPRFX+" Couldn't find task '"+params[3]+"'");
 					}
-				} else {
+				} else if(params[1] == "proj") {
 					let ind = projs.indexOf(params[3]);
 					if(ind != -1) {
 						projs.splice(ind, 1);
@@ -1263,3 +1286,4 @@ function CSVToArray( strData, strDelimiter ){
 //#endregion helperFuncs
 
 //end server.js
+
