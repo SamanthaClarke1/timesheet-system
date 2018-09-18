@@ -875,17 +875,20 @@ mongodb.connect(url, function mongConnect(err, db) {
 app.use(express.static('public'));
 
 
-var http = require('http');
-var https = require('https');
-
-var sslOptions = {
-	'passphrase': process.env.HTTPS_PASS,
-	'key': fs.readFileSync(__dirname + '/certs/key.pem'),
-	'cert': fs.readFileSync(__dirname + '/certs/cert.pem')
-};  
+const http = require('http');
+const https = require('https');
 
 http.createServer(app).listen(process.env.HTTP_PORT, function() {console.log("Http is online on port " + process.env.HTTP_PORT);});
-https.createServer(sslOptions, app).listen(process.env.HTTPS_PORT, function() {console.log("Https is online on port " + process.env.HTTPS_PORT);});
+
+if(process.env.HTTPS_ENABLED) {
+	var sslOptions = {
+		'passphrase': process.env.HTTPS_PASS,
+		'key': fs.readFileSync(__dirname + '/certs/key.pem'),
+		'cert': fs.readFileSync(__dirname + '/certs/cert.pem')
+	};
+
+	https.createServer(sslOptions, app).listen(process.env.HTTPS_PORT, function() {console.log("Https is online on port " + process.env.HTTPS_PORT);});
+}
 
 //#endregion serverFinalSetup
 
