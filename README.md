@@ -11,7 +11,7 @@ Once you are sure that you have node installed, install the dependencies with `n
 First, create / fill in your [.env](https://github.com/motdotla/dotenv). The one that's supplied is just a template/placeholder.
 ```bash
 # Example .env file.
-MONGO_PASS="pass" # set to blank if not using passwords. Its basically MONGO_URL_BODY. It just gets sandwiched.
+MONGO_URL_BODY="<pass>" # set to blank if not using passwords. Its basically MONGO_URL_BODY. It just gets sandwiched.
 MONGO_URL_PREFIX="mongodb://guest:"
 MONGO_URL_SUFFIX="@ds016298.mlab.com:<port>/<table>"
 HTTP_PORT=8000
