@@ -74,7 +74,7 @@ var projs = selectList.projs;
 
 const RowEnum = {"id": 0, "user": 1, "start": 2, "end": 3, "proj": 4, "vacation": 5, "note": 6};
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const url = 'mongodb://guest:'+process.env.MONGO_PASS+'@ds016298.mlab.com:16298/timetable';  // Connection URL.
+const url = process.env.MONGO_URL_PREFIX+process.env.MONGO_URL_BODY+process.env.MONGO_URL_SUFFIX;  // Connection URL.
 
 //#endregion ev #### EASILY EDITABLE VARS END HERE #### //
 

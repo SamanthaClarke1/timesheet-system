@@ -1,6 +1,6 @@
 {
   "name": "timetable-manager",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "description": "Manages the timetables for cmls. Recieves input from artists, that log their time, and stores it in a db.",
   "main": "server.js",
   "codename": "Colorful Crustacean",
