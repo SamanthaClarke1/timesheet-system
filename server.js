@@ -4,27 +4,27 @@
 //#region imports ## init variables, imports etc ## //
 
 // requires
-const express = require('express');
-const fs = require('fs');
-const util = require('util');
-const session = require('express-session');
-const passwordHash = require('password-hash');
-const bodyParser = require('body-parser');
-const partials = require('express-partials');
-const XLSX = require('xlsx');
-const multer = require('multer');
-const readline = require('readline');
-const passport = require('passport'),
-	LocalStrategy = require('passport-local').Strategy;
-const mongodb = require('mongodb').MongoClient;
+const express		= require('express');
+const fs			= require('fs');
+const util			= require('util');
+const session		= require('express-session');
+const passwordHash	= require('password-hash');
+const bodyParser	= require('body-parser');
+const partials		= require('express-partials');
+const XLSX			= require('xlsx');
+const multer		= require('multer');
+const readline		= require('readline');
+const passport		= require('passport'),
+	LocalStrategy	= require('passport-local').Strategy;
+const mongodb		= require('mongodb').MongoClient;
 
 //#endregion imports
 
 //#region importConfig ## configuring express ## //
 
 // inits
-const app = express();
-const upload = multer({inMemory: true});
+const app 			= express();
+const upload 		= multer({inMemory: true});
 
 // app.set/use
 app.set('views', __dirname + '/views');
@@ -534,7 +534,7 @@ mongodb.connect(url, function mongConnect(err, db){
 								},
 								function(err, data){
 									if (err) throw err;
-									return res.json({err: '', errcode: 200, data: toIns}); //painfulpart
+									return res.json({err: '', errcode: 200, data: toIns}); //painfulpart // why wont the glorious spread operator come yet?
 								}
 							);
 						} else {
