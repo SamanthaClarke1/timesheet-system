@@ -1,29 +1,66 @@
 /* Code written by Samuel J. Clarke, May-July 2018, for CumulusVFX. */
 //begin server.js
 
+//#region optionParsing ## parses the options, and acts on *some* of them. ## //
+require('dotenv').config();
+
+const optionDefinitions = [
+	{ name: 'test', alias: 't', type: Boolean	 },
+	{ name: 'dburl', alias: 'u', type: String	 },
+	{ name: 'help', alias: 'h', type: Boolean	 },
+	{ name: 'version', alias: 'v', type: Boolean }
+];
+
+const boxen 			= require('boxen');
+const commandLineArgs	= require('command-line-args');
+const options			= commandLineArgs(optionDefinitions);
+const pjson 			= require('./package.json');
+
+if (options.help) {
+	console.log(boxen(`Timesheets! - Hosts the timesheet server,
+    Serves the GUI AND creates a CLI for sysadmins.
+
+Usage: node -r dotenv/config ./server.js [options]
+    -t --test           tests different services and a status report.
+    -u --dburl <url>    specifies the database to load (from an url)
+    -h --help           displays this help message
+    -v --version        displays the version number
+`, { backgroundColor: 'black', float: 'center', align: 'left', padding: 1, margin: 1, borderStyle: 'classic', borderColor: 'magenta' }));
+	return 0;
+} else if (options.version) {
+	console.log(boxen('Timesheets!\n\nv' + pjson.version + '\n~\nCodeName: ' + pjson.codename, { backgroundColor: 'black', float: 'center', align: 'center', 
+		padding: 1, margin: 1, borderStyle: 'classic', borderColor: 'magenta' }));
+	return 0;
+} else if (options.test) {
+	console.log("This function is being implemented. Please refrain from using it right now.");
+	return 0;
+}
+
+//#endregion optionParsing
+
 //#region imports ## init variables, imports etc ## //
 
 // requires
-const express		= require('express');
-const fs			= require('fs');
-const session		= require('express-session');
-const passwordHash	= require('password-hash');
-const bodyParser	= require('body-parser');
-const partials		= require('express-partials');
-const XLSX			= require('xlsx');
-const multer		= require('multer');
-const readline		= require('readline');
-const passport		= require('passport'),
-	LocalStrategy	= require('passport-local').Strategy;
-const mongodb		= require('mongodb').MongoClient;
+const express			= require('express');
+const fs				= require('fs');
+const session			= require('express-session');
+const passwordHash		= require('password-hash');
+const bodyParser		= require('body-parser');
+const partials			= require('express-partials');
+const XLSX				= require('xlsx');
+const multer			= require('multer');
+const readline			= require('readline');
+const passport			= require('passport'),
+	LocalStrategy		= require('passport-local').Strategy;
+const mongodb			= require('mongodb').MongoClient;
 
 //#endregion imports
 
 //#region importConfig ## configuring express ## //
 
 // inits
-const app 			= express();
-const upload 		= multer({inMemory: true});
+const app 				= express();
+const upload 			= multer({inMemory: true});
 
 // app.set/use
 app.set('views', __dirname + '/views');
@@ -43,9 +80,10 @@ app.use(passport.session());
 
 //#region pre-code
 
-const promptr = '[\033[01m\033[38;2;70;242;221m] >> \033[38;2;0;176;255m';
-const srvrPRFX = '[\033[00m\033[38;2;153;95;178m] SRVR: '; // server title. eg ${srvrPRFX} Connected to the mongoDB server.
-const intrPRFX = '[\033[00m\033[38;2;125;163;230m] INTR: '; // interface title
+const promptr	= '[\033[01m\033[38;2;70;242;221m] >> \033[38;2;0;176;255m';
+const srvrPRFX	= '[\033[00m\033[38;2;153;95;178m] SRVR: '; // server title. eg ${srvrPRFX} Connected to the mongoDB server.
+const intrPRFX	= '[\033[00m\033[38;2;125;163;230m] INTR: '; // interface title
+const url		= options.dburl || (process.env.MONGO_URL_PREFIX + process.env.MONGO_URL_BODY + process.env.MONGO_URL_SUFFIX); // Connection URL.
 
 const exit = function(exitCode){
 	process.stdout.write('\033[00m\n');
@@ -66,14 +104,12 @@ printLoader('Server in startup ');
 
 //#region ev #### EASILY EDITABLE VARS START HERE #### //
 
-var selectList = getSelectList();
+var selectList	= getSelectList();
+var tasks		= selectList.tasks;
+var projs		= selectList.projs;
 
-var tasks = selectList.tasks;
-var projs = selectList.projs;
-
-const RowEnum = {id: 0, user: 1, start: 2, end: 3, proj: 4, vacation: 5, note: 6};
-const days = [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday' ];
-const url = process.env.MONGO_URL_PREFIX + process.env.MONGO_URL_BODY + process.env.MONGO_URL_SUFFIX; // Connection URL.
+const RowEnum	= {id: 0, user: 1, start: 2, end: 3, proj: 4, vacation: 5, note: 6};
+const days		= [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday' ];
 
 //#endregion ev #### EASILY EDITABLE VARS END HERE #### //
 
@@ -867,9 +903,7 @@ mongodb.connect(url, function mongConnect(err, db){
 		});
 
 		app.post('/auth/login', passport.authenticate('local', {failureRedirect: '/login?err=Login%20details%20incorrect.'}), function slashAuthLoginPOST(
-			req,
-			res
-		){
+			req, res){
 			return res.redirect('/');
 		});
 
@@ -1022,10 +1056,8 @@ mongodb.connect(url, function mongConnect(err, db){
 		//#endregion autoSubm
 
 		//#region post-load-code
-		setTimeout(function(){
-			loaderShouldBePrinting = false;
-			console.log('Finished Loading.');
-		}, 1500 + Math.random() * 2000); //yes, im making the load time longer on purpose, but i have a spinny thing to compensate.
+		loaderShouldBePrinting = false;
+		console.log('Finished Loading.');
 		//#endregion post-load-code
 	}
 });
@@ -1058,19 +1090,26 @@ if (process.env.HTTPS_ENABLED) {
 
 //#region createCommandLineInterface
 const correctionArr = [
-	[
-		[ 'add', 'ontribut', 'rm', 'del', 'ubtrac', 'gain', 'plus', 'pdate', 'task', 'proj', 'electio' ],
-		'change-selections [remove|@add] [task|@proj] [admin|@default] {selection}',
-		'change-selections',
-	],
-	[ [ 'save', 'store', 'electio', 'task', 'proj', 'onfirm' ], 'save-selections', 'save-selections' ],
-	[ [ 'quit', 'xit', 'terminate', 'leave', 'end', 'fin' ], 'exit', 'exit' ],
-	[ [ 'big', 'boy', 'me me' ], 'memebigboy', 'memebigboy' ],
-	[ [ 'lear', 'cls', 'c;ear', 'wipe' ], 'clear', 'clear' ],
-	[ [ 'hash', 'get pass', 'password' ], 'get-hash-of {password}', 'get-hash-of' ],
-	[ [ 'java', 'script', 'math', 'val', 'calc' ], 'eval {cmd}', 'eval' ],
-	//[["os", "sys", "calc", "run", "cmd", "ash"], "bash {cmd}"],
-	[ [ 'elp', 'how', '?', 'man', 'anua' ], 'help', 'help' ],
+	[['add', 'ontribut', 'rm', 'del', 'ubtrac', 'gain', 'plus', 'pdate', 'task', 'proj', 'electio' ], 
+		'change-selections [remove|@add] [task|@proj] [admin|@default] {selection}', 'change-selections'],
+	[['add', 'user', 'person', 'client', 'admin'], 
+		'add-user {username} {password}', 'add-user'],
+	[ [ 'save', 'store', 'electio', 'task', 'proj', 'onfirm' ], 
+		'save-selections', 'save-selections' ],
+	[ [ 'quit', 'xit', 'terminate', 'leave', 'end', 'fin' ], 
+		'exit', 'exit' ],
+	[ [ 'big', 'boy', 'me me' ], 
+		'memebigboy', 'memebigboy' ],
+	[ [ 'lear', 'cls', 'c;ear', 'wipe' ], 
+		'clear', 'clear' ],
+	[ [ 'hash', 'get pass', 'password' ], 
+		'get-hash-of {password}', 'get-hash-of' ],
+	[ [ 'java', 'script', 'math', 'val', 'calc' ], 
+		'eval {cmd}', 'eval' ],
+	//[["os", "sys", "calc", "run", "cmd", "ash"], 
+	//	"bash {cmd}"],
+	[ [ 'elp', 'how', '?', 'man', 'anua' ],
+		 'help', 'help' ],
 ];
 
 const rl = readline.createInterface({
@@ -1096,6 +1135,8 @@ rl.on('line', input => {
 	funcReq = input.split(' ')[0].toLowerCase();
 	params = input.split(' ').slice(1, input.split(' ').length);
 	switch (funcReq) {
+		case 'add-user':
+
 		case 'memebigboy':
 			process.stdout.write(intrPRFX + 'go away josh');
 			break;
@@ -1300,6 +1341,12 @@ function getDates(startDate, stopDate){
 //#endregion DATE-TIME HELPER FUNCS
 
 //#region crypto funcs
+
+function verifyPassword(password){
+
+	return "";
+}
+
 function displayNameToUsername(username){
 	return username.split(' ').join('-').toLowerCase();
 }
