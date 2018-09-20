@@ -1,115 +1,117 @@
 body {
-  background-color: #2e2f35;
-  color: white;
+	background-color: #2e2f35;
+	color: white;
 }
 .card a {
-  color: #58b19e;
+	color: #58b19e;
 }
-a:hover, a:active {
-  color: #5a8d7d;
+a:hover,
+a:active {
+	color: #5a8d7d;
 }
 .grn-text {
-  color: #57bea8;
-  font-family: 'Noto Sans', sans-serif;
+	color: #57bea8;
+	font-family: 'Noto Sans', sans-serif;
 }
 .grn-link-text {
-  color: #58b19e;
+	color: #58b19e;
 }
-.grn-link-text:hover, .grn-link-text:active {
-  color: #5a8d7d;
+.grn-link-text:hover,
+.grn-link-text:active {
+	color: #5a8d7d;
 }
 .grn-text.dim {
-  color: #458073;
+	color: #458073;
 }
 .grn-text.semi-dim {
-  color: #48a38f;
+	color: #48a38f;
 }
 .faded-grn-text {
-  color: #73a89d !important;
-  font-family: 'Noto Sans', sans-serif;
+	color: #73a89d !important;
+	font-family: 'Noto Sans', sans-serif;
 }
 .faded-grn-text.dim {
-  color: #62706d !important;
+	color: #62706d !important;
 }
 .faded-grn-text.semi-dim {
-  color: #667a76 !important;
+	color: #667a76 !important;
 }
 .mincon {
-  background: #2e2f35;
-  color: white;
+	background: #2e2f35;
+	color: white;
 }
 .mcon {
-  background: #2e2f35;
-  color: white;
+	background: #2e2f35;
+	color: white;
 }
 .bordercon {
-  border-right: 1px solid #282829;
-  border-left: 1px solid #282829;
-  border-bottom: 1px solid #282829;
+	border-right: 1px solid #282829;
+	border-left: 1px solid #282829;
+	border-bottom: 1px solid #282829;
 }
 hr {
-  background: rgb(166, 173, 175);
+	background: rgb(166, 173, 175);
 }
 .version-footer {
-  background-color: #272831;
-  color: white;
+	background-color: #272831;
+	color: white;
 }
 .ts-row {
-  background-color: rgb(67,76,87);
-  color: #d8d8d8;
-  transition: height 0.7s, margin-bottom 0.7s, opacity 0.7s, background-color 0.7s;
+	background-color: rgb(67, 76, 87);
+	color: #d8d8d8;
+	transition: height 0.7s, margin-bottom 0.7s, opacity 0.7s, background-color 0.7s;
 }
 .ts-row.even {
-  background-color: rgb(49,59,71);
+	background-color: rgb(49, 59, 71);
 }
 /* *==========*
    *   BTNS   *
    *==========* */
 .navbar.navbar-toggleable-md.navbar-inverse.bg-inverse {
-  background-color: #242830 !important;
+	background-color: #242830 !important;
 }
 .btn.btn-outline-info:hover {
-  background : rgb(70, 154, 202);
+	background: rgb(70, 154, 202);
 }
 .btn.btn-outline-info:active {
-  background : rgb(70, 154, 202);
-}  
+	background: rgb(70, 154, 202);
+}
 .btn-delj {
-  background: #272831;
+	background: #272831;
 }
 .errholder {
-  background: #270b0b;
-  animation: errholder-hider 4s;
+	background: #270b0b;
+	animation: errholder-hider 4s;
 }
 @keyframes errholder-hider {
-  0% {
-    height: 12vh;
-    padding-bottom: 16px;
-    margin-bottom: 16px;
-    background: #db2153;
-    opacity: 1;
-  }
-  60% {
-    background: #db2153;
-    height: 12vh;
-    padding-bottom: 16px;
-    margin-bottom: 16px;
-    opacity: 0.9;
-  }
-  100% {
-    background: #583535;
-    margin-bottom: 0px;
-    padding-bottom: 0px;
-    opacity: 0;
-  }
+	0% {
+		height: 12vh;
+		padding-bottom: 16px;
+		margin-bottom: 16px;
+		background: #db2153;
+		opacity: 1;
+	}
+	60% {
+		background: #db2153;
+		height: 12vh;
+		padding-bottom: 16px;
+		margin-bottom: 16px;
+		opacity: 0.9;
+	}
+	100% {
+		background: #583535;
+		margin-bottom: 0px;
+		padding-bottom: 0px;
+		opacity: 0;
+	}
 }
 /* *========*
    *  NAVS  *
    *========* */
 
 .nav-item .nav-link {
-  transition: background .4s ease-in-out;
+	transition: background .4s ease-in-out;
 }
 .nav-item .nav-link.active {
-  background: #434c57;
+	background: #434c57;
 }
