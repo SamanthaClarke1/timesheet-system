@@ -6,7 +6,6 @@
 // requires
 const express		= require('express');
 const fs			= require('fs');
-const util			= require('util');
 const session		= require('express-session');
 const passwordHash	= require('password-hash');
 const bodyParser	= require('body-parser');
@@ -80,17 +79,17 @@ const url = process.env.MONGO_URL_PREFIX + process.env.MONGO_URL_BODY + process.
 
 //#region dbv #### SYSTEM DEBUG VARS START HERE (BE CAREFUL) #### //
 
-const __DEBUG_FORCE_TS_NAMING_SCHEMA__ = false; // !i!i! CAREFUL !i!i!i  -  THIS WILL FORCE ALL OF THE TIMESHEET NAMES TO THE PROPER SCHEMA
-const __DEBUG_FORCEUNIX__ = false; // !i!i! CAREFUL !i!i!i  -  THIS WILL UPDATE ALL OF THE UNIX DATES TO WHATEVER THE STRING DATE IS. // i mean actually this one is not really all that dangerous but its ok
-const __DEBUG_FORCE_COSTS_TO_TEN_PH__ = false; // !i!i! CAREFUL !i!i!i  -  THIS WILL FORCE ALL UNDEFINED COSTS OF EACH USER TO TEN DOLLARS PER HOUR.
-const __DEBUG_UNTEAR_DATA__ = false; // !i!i CAREFUL !i!i!i  -  WILL REMOVE ALL DUPLICATES ON A CERTAIN DATE, WITH A BIAS TOWARDS MORE JOBS.
-const __DEBUG_KNOCK_FROM_TO__ = false; // !i!i CAREFUL !i!i!i  -  WILL CHANGE UNIX-DATES FROM A CERTAIN DATE TO ANOTHER DATE
+const __DEBUG_FORCE_TS_NAMING_SCHEMA__	= false; // !i!i! CAREFUL !i!i!i  -  THIS WILL FORCE ALL OF THE TIMESHEET NAMES TO THE PROPER SCHEMA
+const __DEBUG_FORCEUNIX__				= false; // !i!i! CAREFUL !i!i!i  -  THIS WILL UPDATE ALL OF THE UNIX DATES TO WHATEVER THE STRING DATE IS. // i mean actually this one is not really all that dangerous but its ok
+const __DEBUG_FORCE_COSTS_TO_TEN_PH__	= false; // !i!i! CAREFUL !i!i!i  -  THIS WILL FORCE ALL UNDEFINED COSTS OF EACH USER TO TEN DOLLARS PER HOUR.
+const __DEBUG_UNTEAR_DATA__				= false; // !i!i CAREFUL !i!i!i  -  WILL REMOVE ALL DUPLICATES ON A CERTAIN DATE, WITH A BIAS TOWARDS MORE JOBS.
+const __DEBUG_KNOCK_FROM_TO__			= false; // !i!i CAREFUL !i!i!i  -  WILL CHANGE UNIX-DATES FROM A CERTAIN DATE TO ANOTHER DATE
 
-const __DEBUG_UNTEAR_DATA_DATE__ = 1531058400000;
-const __DEBUG_KNOCK_FROM__ = 1534082400000;
-const __DEBUG_KNOCK_TO__ = 1531058400000;
+const __DEBUG_UNTEAR_DATA_DATE__		= 1531058400000;
+const __DEBUG_KNOCK_FROM__				= 1534082400000;
+const __DEBUG_KNOCK_TO__				= 1531058400000;
 
-const __DEV_RELEASE__ = process.env.DEV_RELEASE;
+const __DEV_RELEASE__					= process.env.DEV_RELEASE;
 
 //#endregion dbv #### SYSTEM DEBUG VARS END HERE (THANKS FOR BEING CAREFUL) #### //
 
