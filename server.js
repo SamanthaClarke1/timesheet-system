@@ -1086,9 +1086,9 @@ if (process.env.HTTPS_ENABLED) {
 //#region createCommandLineInterface
 const correctionArr = [
 	[['add', 'ontribut', 'rm', 'del', 'ubtrac', 'gain', 'plus', 'pdate', 'task', 'proj', 'electio' ], 
-		'change-selections [remove|@add] [task|@proj] [admin|@default] {selection}', 'change-selections'],
+		'change-selections [remove|@add] [task|@proj] [admin|@default] <selection>', 'change-selections'],
 	[['add', 'user', 'person', 'client', 'admin'], 
-		'add-user {username} {password}', 'add-user'],
+		'add-user <username> <password>', 'add-user'],
 	[[ 'save', 'store', 'electio', 'task', 'proj', 'onfirm' ], 
 		'save-selections', 'save-selections' ],
 	[[ 'quit', 'xit', 'terminate', 'leave', 'end', 'fin' ], 
@@ -1098,9 +1098,9 @@ const correctionArr = [
 	[[ 'lear', 'cls', 'c;ear', 'wipe' ], 
 		'clear', 'clear' ],
 	[[ 'hash', 'get pass', 'password' ], 
-		'get-hash-of {password}', 'get-hash-of' ],
+		'get-hash-of <password>', 'get-hash-of' ],
 	[[ 'java', 'script', 'math', 'val', 'calc' ], 
-		'eval {cmd}', 'eval' ],
+		'eval <cmd>', 'eval' ],
 	//[["os", "sys", "calc", "run", "cmd", "ash"], 
 	//	"bash {cmd}"],
 	[[ 'elp', 'how', '?', 'man', 'anua' ],
@@ -1210,7 +1210,7 @@ rl.on('line', input => {
 				if (correctionArr[i]) process.stdout.write('\t-- ' + correctionArr[i][1] + '\n');
 			}
 			process.stdout.write(
-				"\nPS: I use standard arg formatting. IE: \t\n-- params are space seperated. \t\n-- args surrounded by `[]` mean they are optional \t\n-- `|` indicates an 'or' choice \t\n-- `*` is a wild card, eg, it represents 'anything' \t\n-- `@` implies it is the default choice. \t\n-- `{}` indicates a variable, eg {name} \t\n-- `#` indicates a number \t\n-- `&` specifies that if the first arg is passed, the other must be as well. \t\n-- `()` groups logic. eg. `3/(3*2)=0.5`, or `[address | (state & country)]` \t\n-- `{#..#}` indicates a number range, eg, `{0..5}` = 0 to 5 \n\nPPS: Only parameters are case-sensitive."
+				"\nPS: I use standard arg formatting. IE: \t\n-- params are space seperated. \t\n-- args surrounded by `[]` mean they are optional \t\n-- `|` indicates an 'or' choice \t\n-- `*` is a wild card, eg, it represents 'anything' \t\n-- `@` implies it is the default choice. \t\n-- `<x>` indicates a variable, eg {name} \t\n-- `#` indicates a number \t\n-- `&` specifies that if the first arg is passed, the other must be as well. \t\n-- `()` groups logic. eg. `3/(3*2)=0.5`, or `[address | (state & country)]` \t\n-- `{#..#}` indicates a number range, eg, `{0..5}` = 0 to 5 \n\nPPS: Only parameters are case-sensitive."
 			);
 			break;
 		default:
