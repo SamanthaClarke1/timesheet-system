@@ -4,7 +4,7 @@
 This timesheet system was originally created for CumulusVFX. It is made to allow users to log their hours, and for administrators to monitor how much everyone is working.
 Just run the local server on a server somewhere, and have people visit it in their browsers.
 
-*Version*: 1.7.4, *Codename*: Colorful Crustacean.
+**Version**: 1.7.4, **Codename**: Colorful Crustacean.
 
 # Installation
 
