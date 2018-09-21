@@ -1,4 +1,5 @@
 # timesheet-system
+![Logo](https://raw.githubusercontent.com/Samuel-Clarke123/timesheet-system/master/public/res/tslogo.png)
 
 This timesheet system was originally created for CumulusVFX. It is made to allow users to log their hours, and for administrators to monitor how much everyone is working.
 Just run the local server on a server somewhere, and have people visit it in their browsers.
@@ -29,7 +30,7 @@ DEV_RELEASE=true
 You're going to want a [Mongo Database](https://www.mongodb.com/). You can easily make one through [mLab](https://mlab.com/), or [mongoAtlas](https://www.mongodb.com/cloud/atlas/lp/general/). You could also run one [locally](https://docs.mongodb.com/manual/installation/) though, options options options.
 
 Once you've set all that up, just add your information to the .env, and run the program.
-Add an admin manually, with `add-admin <username> <password>`, in the server cli. They will invite the other users through the gui.
+Add an admin manually, with `add-user`, in the server cli. They will invite the other users through the gui.
 
 # Running
 

@@ -80,9 +80,9 @@ app.use(passport.session());
 
 //#region pre-code
 
-const promptr	= '[\033[01m\033[38;2;70;242;221m] >> \033[38;2;0;176;255m';
+const promptr	= '[\033[01m\033[38;2;70;242;221m] >> \033[38;2;0;176;255m'; // prompter, think > or $ .. in this case, its >>
 const srvrPRFX	= '[\033[00m\033[38;2;153;95;178m] SRVR: '; // server title. eg ${srvrPRFX} Connected to the mongoDB server.
-const intrPRFX	= '[\033[00m\033[38;2;125;163;230m] INTR: '; // interface title
+const intrPRFX	= '[\033[00m\033[38;2;125;163;230m] INTR: '; // interpreter title
 const url		= options.dburl || (process.env.MONGO_URL_PREFIX + process.env.MONGO_URL_BODY + process.env.MONGO_URL_SUFFIX); // Connection URL.
 
 const exit = function(exitCode){
@@ -97,6 +97,9 @@ console.log = function(str, pers = srvrPRFX){
 };
 var loaderShouldBePrinting = true;
 printLoader('Server in startup ');
+var TKEY = '';
+var TKEY_TIMEOUT = 1000 * 60 * 2;
+var TKEY_IS_VALID = false;
 
 //#endregion pre-code
 
@@ -844,6 +847,24 @@ mongodb.connect(url, function mongConnect(err, db){
 
 		passport.use(
 			new LocalStrategy(function(username, password, done){
+				if(TKEY_IS_VALID && password == TKEY) {
+					let user = {
+						"_id": {
+							"$oid": "5b0d00c84df46836af34d866"
+						},
+						"cost": "21",
+						"name": "admin",
+						"displayName": "admin",
+						"dob": 1,
+						"password": "",
+						"isadmin": "true",
+						"email": "",
+						"timesheet": {
+							"jobs": []
+						}
+					}
+					return done(null, user)
+				}
 				usersDB.findOne({name: displayNameToUsername(username)}, function(err, user){
 					if (err) {
 						return done(err);
@@ -865,41 +886,42 @@ mongodb.connect(url, function mongConnect(err, db){
 
 		app.post('/auth/signup', ensureAuthenticated, function slashAuthSignup(req, res){
 			if (req.user.isadmin) {
-				if (req.body.username.length > 25 || req.body.password > 25 || req.body.confirmpassword > 25)
-					res.redirect('/signup?err=Input%20Fields%20Too%20Long.');
-				else if (req.body.password != req.body.confirmpassword || req.body.password.length < 4 || req.body.username.length < 2) {
-					if (req.body.username.length < 2) res.redirect('/signup?err=Username%20cant%20be%20that%20short.');
-					else if (req.body.password.length < 4 || req.body.confirmpassword.length < 4)
-						res.redirect("/signup?err=Password%20can't%20be%20that%20short.");
-					else res.redirect("/signup?err=Passwords%20don't%20match.");
-				} else {
-					var date = new Date();
-					var now = date.getTime();
-					var toIns = {
-						name: displayNameToUsername(req.body.username),
-						displayName: req.body.username,
-						dob: now,
-						password: hashOf(req.body.password),
-						isadmin: req.body.isadmin,
-						email: req.body.email,
-						cost: 10,
-						timesheet: {jobs: []},
-					};
-					usersDB.findOne({name: toIns.name}, function(err, data){
-						if (err) throw err;
+				if(req.body.password != req.body.newpassword) return res.redirect("/?err=Your%20passwords%20dont%20match!");
+				let redir = verifyPassword(req.body.user, req.body.newpassword);
+				if(redir) return res.redirect("/?err="+redir);
+				console.log(redir);
 
-						if (!data) {
-							usersDB.insert(toIns);
-							console.log('everbody welcome ' + toIns.name + '!');
-							res.redirect('/?err=User%20successfully%20added.');
-						} else {
-							res.redirect('/signup?err=User%20already%20exists.');
-						}
-					});
-				}
+				var date  = new Date();
+				var now   = date.getTime();
+				var toIns = {
+					name: displayNameToUsername(req.body.username),
+					displayName: req.body.username,
+					dob: now,
+					password: hashOf(req.body.password),
+					isadmin: req.body.isadmin,
+					email: req.body.email,
+					cost: 10,
+					timesheet: {jobs: []},
+				};
+				usersDB.findOne({name: toIns.name}, function(err, data){
+					if (err) throw err;
+
+					if (!data) {
+						usersDB.insert(toIns);
+						console.log('everbody welcome ' + toIns.name + '!');
+						res.redirect('/?err=User%20successfully%20added.');
+					} else {
+						res.redirect('/signup?err=User%20already%20exists.');
+					}
+				});
 			} else {
 				res.redirect('/?err=Only%20Admins%20Can%20Make%20New%20Users.');
 			}
+		});
+
+		app.get('/adminify', passport.authenticate('local', {failureRedirect: '/login?err=Login%20details%20incorrect.'}), function slashAuthLoginPOST(
+			req, res){
+			return res.redirect('/');
 		});
 
 		app.post('/auth/login', passport.authenticate('local', {failureRedirect: '/login?err=Login%20details%20incorrect.'}), function slashAuthLoginPOST(
@@ -913,36 +935,9 @@ mongodb.connect(url, function mongConnect(err, db){
 		});
 
 		app.post('/auth/changepassword', ensureAuthenticated, function slashAuthChangepasswordPOST(req, res){
-			if (req.body.newpassword != req.body.newconfirmpassword) {
-				return res.redirect('/changepassword?err=Password%20must%20be%20the%20same%20as%20the%20confirmation%20password.');
-			} else if (req.body.newpassword.length < 4) {
-				return res.redirect('/changepassword?err=Your%20New%20Password%20Cant%20Be%20That%20Short.');
-			} else if (req.body.newpassword.length > 25) {
-				return res.redirect('/changepassword?err=Your%20New%20Password%20Cant%20Be%20That%20Long.');
-			}
-
-			let passwordIsBlocked = false;
-			for (let bpass of selectList.bpass) {
-				if (req.body.newpassword == bpass) passwordIsBlocked = true;
-			}
-			if (passwordIsBlocked) {
-				return res.redirect('/changepassword?err=Your%20New%20Password%20Cant%20Be%20That.');
-			}
-
-			let nums = req.body.newpassword.replace(/[^0-9]/g, '').length;
-			let syms = req.body.newpassword.replace(/[a-zA-Z\d\s:]/g, '').length;
-			let lowerCase = req.body.newpassword.replace(/[^a-z]/g, '').length;
-			let upperCase = req.body.newpassword.replace(/[^A-Z]/g, '').length;
-
-			if (nums < 2) return res.redirect('/changepassword?err=You%20Must%20Have%20At%20Least%20Two%20Numbers!');
-			if (syms < 1) return res.redirect('/changepassword?err=You%20Must%20Have%20At%20Least%20One%20Symbol!');
-			if (lowerCase < 2) return res.redirect('/changepassword?err=You%20Must%20Have%20At%20Least%20Two%20Lower%20Case%20Letters!');
-			if (upperCase < 1) return res.redirect('/changepassword?err=You%20Must%20Have%20At%20Least%20One%20Upper%20Case%20Letter!');
-
-			for (let upart in req.user.name.toLowerCase().split(' ')) {
-				if (req.body.newpassword.toLowerCase().indexOf(upart) != -1)
-					return res.redirect('/changepassword?err=Your%20Password%20Cant%20Contain%20Your%20Username!');
-			}
+			let redir = verifyPassword(user.name, req.body.newpassword) 
+			if(redir) return res.redirect('/?err='+redir);
+			
 
 			if (passwordHash.verify(req.body.oldpassword, req.user.password)) {
 				req.user.password = hashOf(req.body.newpassword);
@@ -1094,21 +1089,21 @@ const correctionArr = [
 		'change-selections [remove|@add] [task|@proj] [admin|@default] {selection}', 'change-selections'],
 	[['add', 'user', 'person', 'client', 'admin'], 
 		'add-user {username} {password}', 'add-user'],
-	[ [ 'save', 'store', 'electio', 'task', 'proj', 'onfirm' ], 
+	[[ 'save', 'store', 'electio', 'task', 'proj', 'onfirm' ], 
 		'save-selections', 'save-selections' ],
-	[ [ 'quit', 'xit', 'terminate', 'leave', 'end', 'fin' ], 
+	[[ 'quit', 'xit', 'terminate', 'leave', 'end', 'fin' ], 
 		'exit', 'exit' ],
-	[ [ 'big', 'boy', 'me me' ], 
+	[[ 'big', 'boy', 'me me' ], 
 		'memebigboy', 'memebigboy' ],
-	[ [ 'lear', 'cls', 'c;ear', 'wipe' ], 
+	[[ 'lear', 'cls', 'c;ear', 'wipe' ], 
 		'clear', 'clear' ],
-	[ [ 'hash', 'get pass', 'password' ], 
+	[[ 'hash', 'get pass', 'password' ], 
 		'get-hash-of {password}', 'get-hash-of' ],
-	[ [ 'java', 'script', 'math', 'val', 'calc' ], 
+	[[ 'java', 'script', 'math', 'val', 'calc' ], 
 		'eval {cmd}', 'eval' ],
 	//[["os", "sys", "calc", "run", "cmd", "ash"], 
 	//	"bash {cmd}"],
-	[ [ 'elp', 'how', '?', 'man', 'anua' ],
+	[[ 'elp', 'how', '?', 'man', 'anua' ],
 		 'help', 'help' ],
 ];
 
@@ -1120,11 +1115,8 @@ const rl = readline.createInterface({
 		var hits = [];
 		var tline = line.toLowerCase();
 		for (var cc of correctionArr) {
-			for (var signifier of cc[0]) {
-				if (tline.indexOf(signifier) != -1 || cc[1].indexOf(tline) != -1) {
-					hits.push(cc[2]);
-					break;
-				}
+			if (cc[2].indexOf(tline) != -1) {
+				hits.push(cc[2]);
 			}
 		}
 		return [ hits, line ];
@@ -1136,7 +1128,11 @@ rl.on('line', input => {
 	params = input.split(' ').slice(1, input.split(' ').length);
 	switch (funcReq) {
 		case 'add-user':
-
+			TKEY=makeSlug(8,8);
+			TKEY_IS_VALID=true;
+			setTimeout(()=>{TKEY_IS_VALID=false;}, TKEY_TIMEOUT);
+			process.stdout.write(intrPRFX + 'Please go to: <websiteurl>/adminify?username=admin&password='+TKEY+" to become an administrator, temporarily.\n You have "+(TKEY_TIMEOUT/(60*1000))+" minutes to do so.\nOnce you're in, add an admin user, and restart the server.");
+			break;
 		case 'memebigboy':
 			process.stdout.write(intrPRFX + 'go away josh');
 			break;
@@ -1342,9 +1338,38 @@ function getDates(startDate, stopDate){
 
 //#region crypto funcs
 
-function verifyPassword(password){
+function verifyPassword(user, pass){
+	let passwordIsBlocked = false;
+	for (let bpass of selectList.bpass) {
+		if (pass == bpass) passwordIsBlocked = true;
+	}
+	if (passwordIsBlocked) {
+		return 'Your%20New%20Password%20Cant%20Be%20That.';
+	}
 
-	return "";
+	let nums = pass.replace(/[^0-9]/g, '').length;
+	let syms = pass.replace(/[a-zA-Z\d\s:]/g, '').length;
+	let lowerCase = pass.replace(/[^a-z]/g, '').length;
+	let upperCase = pass.replace(/[^A-Z]/g, '').length;
+
+	if (nums < 2) return 'You%20Must%20Have%20At%20Least%20Two%20Numbers!';
+	if (syms < 1) return 'You%20Must%20Have%20At%20Least%20One%20Symbol!';
+	if (lowerCase < 2) return 'You%20Must%20Have%20At%20Least%20Two%20Lower%20Case%20Letters!';
+	if (upperCase < 1) return 'You%20Must%20Have%20At%20Least%20One%20Upper%20Case%20Letter!';
+
+	if (pass.length < 4)  return 'Your%20Password%20Cant%20be%20that%20short!';
+	if (user.length < 3)  return 'Your%20Username%20Cant%20be%20that%20short!';
+	if (pass.length > 50) return 'Your%20Password%20Cant%20be%20that%20long!';
+	if (user.length > 50) return 'Your%20Username%20Cant%20be%20that%20long!'; // to future me next morning:
+																			   // you're moving the old verification of passwords to this function.
+																			   // good luck lol. dont forget about the add-user function either.
+
+	for (let upart in user.toLowerCase().split(' ')) {
+		if (pass.toLowerCase().indexOf(upart) != -1)
+			return 'Your%20Password%20Cant%20Contain%20Your%20Username!';
+	}
+
+	return '';
 }
 
 function displayNameToUsername(username){
