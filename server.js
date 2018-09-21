@@ -31,9 +31,6 @@ Usage: node -r dotenv/config ./server.js [options]
 	console.log(boxen('Timesheets!\n\nv' + pjson.version + '\n~\nCodeName: ' + pjson.codename, { backgroundColor: 'black', float: 'center', align: 'center', 
 		padding: 1, margin: 1, borderStyle: 'classic', borderColor: 'magenta' }));
 	return 0;
-} else if (options.test) {
-	console.log("This function is being implemented. Please refrain from using it right now.");
-	return 0;
 }
 
 //#endregion optionParsing
@@ -118,11 +115,11 @@ const days		= [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturda
 
 //#region dbv #### SYSTEM DEBUG VARS START HERE (BE CAREFUL) #### //
 
-const __DEBUG_FORCE_TS_NAMING_SCHEMA__	= false; // !i!i! CAREFUL !i!i!i  -  THIS WILL FORCE ALL OF THE TIMESHEET NAMES TO THE PROPER SCHEMA
-const __DEBUG_FORCEUNIX__				= false; // !i!i! CAREFUL !i!i!i  -  THIS WILL UPDATE ALL OF THE UNIX DATES TO WHATEVER THE STRING DATE IS. // i mean actually this one is not really all that dangerous but its ok
-const __DEBUG_FORCE_COSTS_TO_TEN_PH__	= false; // !i!i! CAREFUL !i!i!i  -  THIS WILL FORCE ALL UNDEFINED COSTS OF EACH USER TO TEN DOLLARS PER HOUR.
-const __DEBUG_UNTEAR_DATA__				= false; // !i!i CAREFUL !i!i!i  -  WILL REMOVE ALL DUPLICATES ON A CERTAIN DATE, WITH A BIAS TOWARDS MORE JOBS.
-const __DEBUG_KNOCK_FROM_TO__			= false; // !i!i CAREFUL !i!i!i  -  WILL CHANGE UNIX-DATES FROM A CERTAIN DATE TO ANOTHER DATE
+const __DEBUG_FORCE_TS_NAMING_SCHEMA__	= false; // !i!i! CAREFUL !i!i!  -  THIS WILL FORCE ALL OF THE TIMESHEET NAMES TO THE PROPER SCHEMA
+const __DEBUG_FORCEUNIX__				= false; // !i!i! CAREFUL !i!i!  -  THIS WILL UPDATE ALL OF THE UNIX DATES TO WHATEVER THE STRING DATE IS. // i mean actually this one is not really all that dangerous but its ok
+const __DEBUG_FORCE_COSTS_TO_TEN_PH__	= false; // !i!i! CAREFUL !i!i!  -  THIS WILL FORCE ALL UNDEFINED COSTS OF EACH USER TO TEN DOLLARS PER HOUR.
+const __DEBUG_UNTEAR_DATA__				= false; // !i!i! CAREFUL !i!i!  -  WILL REMOVE ALL DUPLICATES ON A CERTAIN DATE, WITH A BIAS TOWARDS MORE JOBS.
+const __DEBUG_KNOCK_FROM_TO__			= false; // !i!i! CAREFUL !i!i!  -  WILL CHANGE UNIX-DATES FROM A CERTAIN DATE TO ANOTHER DATE
 
 const __DEBUG_UNTEAR_DATA_DATE__		= 1531058400000;
 const __DEBUG_KNOCK_FROM__				= 1534082400000;
@@ -1046,7 +1043,7 @@ mongodb.connect(url, function mongConnect(err, db){
 				});
 			}
 		}
-		callMeOnMonday(false); //SET TO TRUE TO RUN ONCE, INCASE THE SERVER GETS RESTARTED OR WHATEVS.
+		callMeOnMonday(false); //SET TO TRUE TO RUN ONCE, INCASE THE SERVER GETS RESTARTED OR WHATEVS. NOTE: remember to check that it inserts the right date.
 
 		//#endregion autoSubm
 

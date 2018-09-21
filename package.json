@@ -25,7 +25,6 @@
   },
   "devDependencies": {},
   "scripts": {
-	"test": "node server.js --test",
 	"help": "node server.js --help",
 	"version": "node server.js --version",
 	"run": "node server.js"
