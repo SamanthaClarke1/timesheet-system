@@ -4,6 +4,8 @@
 This timesheet system was originally created for CumulusVFX. It is made to allow users to log their hours, and for administrators to monitor how much everyone is working.
 Just run the local server on a server somewhere, and have people visit it in their browsers.
 
+*Version*: 1.7.4, *Codename*: Colorful Crustacean.
+
 # Installation
 
 To install the timesheet system, simply download the repo (either by git clone, or through github).
@@ -43,3 +45,20 @@ node ./server.js
 node ./server.js --help
 ```
 
+# TODO
+
+This part is just a roadmap of all the things I have left to do on the next version of the timesheet system.
+(That version is 1.8.1, from 1.7.1, right now. Version 1.8.1 is more focused on back end things than before, but that's alright. :smile:)
+
+- [x] Cleaning up old files
+- [ ] Cleaning up old console.logs
+- [ ] Logs
+- [ ] Customizable log paths (probably from the .env)
+- [x] Better command line options
+- [x] Refactoring
+- [x] New Icon
+- [x] Changing the way urls were passed to the server.
+- [x] Letting servers create a temporary admin (via add-user in the cmd)
+- [x] Better README
+
+#### Made by Samuel Clarke, 2018, for CumulusVFX.
