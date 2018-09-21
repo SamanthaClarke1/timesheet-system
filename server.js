@@ -20,7 +20,7 @@ if (options.help) {
 	console.log(boxen(`Timesheets! - Hosts the timesheet server,
     Serves the GUI AND creates a CLI for sysadmins.
 
-Usage: node -r dotenv/config ./server.js [options]
+Usage: node ./server.js [options]
     -t --test           tests different services and a status report.
     -u --dburl <url>    specifies the database to load (from an url)
     -h --help           displays this help message
