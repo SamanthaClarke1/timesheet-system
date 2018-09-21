@@ -1210,7 +1210,7 @@ rl.on('line', input => {
 				if (correctionArr[i]) process.stdout.write('\t-- ' + correctionArr[i][1] + '\n');
 			}
 			process.stdout.write(
-				"\nPS: I use standard arg formatting. IE: \t\n-- params are space seperated. \t\n-- args surrounded by `[]` mean they are optional \t\n-- `|` indicates an 'or' choice \t\n-- `*` is a wild card, eg, it represents 'anything' \t\n-- `@` implies it is the default choice. \t\n-- `<x>` indicates a variable, eg {name} \t\n-- `#` indicates a number \t\n-- `&` specifies that if the first arg is passed, the other must be as well. \t\n-- `()` groups logic. eg. `3/(3*2)=0.5`, or `[address | (state & country)]` \t\n-- `{#..#}` indicates a number range, eg, `{0..5}` = 0 to 5 \n\nPPS: Only parameters are case-sensitive."
+				"\nPS: I use standard arg formatting. IE: \t\n-- params are space seperated. \t\n-- args surrounded by `[]` mean they are optional \t\n-- `|` indicates an 'or' choice \t\n-- `*` is a wild card, eg, it represents 'anything' \t\n-- `@` implies it is the default choice. \t\n-- `<>` indicates a variable, eg <name> \t\n-- `#` indicates a number \t\n-- `&` specifies that if the first arg is passed, the other must be as well. \t\n-- `()` groups logic. eg. `3/(3*2)=0.5`, or `[address | (state & country)]` \t\n-- `{#..#}` indicates a number range, eg, `{0..5}` = 0 to 5 \n\nPPS: Only parameters are case-sensitive."
 			);
 			break;
 		default:
