@@ -5,10 +5,10 @@
 require('dotenv').config();
 
 const optionDefinitions = [
-	{ name: 'test', alias: 't', type: Boolean	 },
-	{ name: 'dburl', alias: 'u', type: String	 },
-	{ name: 'help', alias: 'h', type: Boolean	 },
-	{ name: 'version', alias: 'v', type: Boolean }
+	{ name: 'dburl', alias: 'u', type: String		},
+	{ name: 'help', alias: 'h', type: Boolean		},
+	{ name: 'version', alias: 'v', type: Boolean	},
+	{ name: 'quickpush', alias: 'q', type: Boolean	}
 ];
 
 const boxen 			= require('boxen');
@@ -21,10 +21,10 @@ if (options.help) {
     Serves the GUI AND creates a CLI for sysadmins.
 
 Usage: node ./server.js [options]
-    -t --test           tests different services and a status report.
     -u --dburl <url>    specifies the database to load (from an url)
     -h --help           displays this help message
-    -v --version        displays the version number
+	-v --version        displays the version number
+	-q --quickpush      pushes this week into the past week
 `, { backgroundColor: 'black', float: 'center', align: 'left', padding: 1, margin: 1, borderStyle: 'classic', borderColor: 'magenta' }));
 	return 0;
 } else if (options.version) {
@@ -989,7 +989,8 @@ mongodb.connect(url, function mongConnect(err, db){
 			if (effective && !__DEV_RELEASE__) {
 				//now.setDate(16); now.setMonth(7); // debug, sets the date to upload.
 				console.log("It's a monday! Moving the timesheets! " + getThisDate(now));
-				var thisdate = getPreviousMonday(new Date(now.getTime() - 1000 * 60 * 60 * 24 * 2), 0); // this is just inserting the previous weeks monday date. nothing to see here, move along.
+				var thisdate = getPreviousMonday(new Date(now.getTime() - 1000 * 60 * 60 * 24 * 5), 0); // this is just inserting the previous weeks monday date.
+				// note: only works if it is less than 5 days since the last monday, otherwise, it will insert this weeks date.
 
 				usersDB.find().toArray(function(err, users){
 					for (var tuser of users) {
@@ -1043,7 +1044,7 @@ mongodb.connect(url, function mongConnect(err, db){
 				});
 			}
 		}
-		callMeOnMonday(false); //SET TO TRUE TO RUN ONCE, INCASE THE SERVER GETS RESTARTED OR WHATEVS. NOTE: remember to check that it inserts the right date.
+		callMeOnMonday((options.quickpush == true));
 
 		//#endregion autoSubm
 
