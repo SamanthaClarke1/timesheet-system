@@ -1,9 +1,9 @@
 {
   "name": "timetable-manager",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "description": "Manages the timetables for cmls. Recieves input from artists, that log their time, and stores it in a db.",
   "main": "server.js",
-  "codename": "Colorful Crustacean",
+  "codename": "Red Rocket",
   "dependencies": {
     "body-parser": "^1.18.3",
     "boxen": "^2.0.0",
@@ -29,7 +29,7 @@
 	"version": "node server.js --version",
 	"run": "node server.js"
   },
-  "repository": "https://github.com/Samuel-Clarke123/timetable-manager",
+  "repository": "https://github.com/Samuel-Clarke123/timesheet-system",
   "keywords": [
     "cmls",
     "timetables",
