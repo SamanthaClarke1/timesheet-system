@@ -111,3 +111,9 @@ typings/
 # Modules #
 ###########
 node_modules
+
+#custom
+gitenv
+*.pem
+certs/cert.pem
+certs/key.pem

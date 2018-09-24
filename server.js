@@ -125,7 +125,7 @@ const __DEBUG_UNTEAR_DATA_DATE__		= 1531058400000;
 const __DEBUG_KNOCK_FROM__				= 1534082400000;
 const __DEBUG_KNOCK_TO__				= 1531058400000;
 
-const __DEV_RELEASE__					= process.env.DEV_RELEASE;
+const __DEV_RELEASE__					= (process.env.DEV_RELEASE == 'true');
 
 //#endregion dbv #### SYSTEM DEBUG VARS END HERE (THANKS FOR BEING CAREFUL) #### //
 
