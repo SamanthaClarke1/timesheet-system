@@ -1,46 +1,46 @@
 
 <body>
-    <div class="mincon container" style="text-align: left;">
-        <form id="file-upload-form" action="/code/planviaspreadsheet" method="POST" enctype=multipart/form-data>
-            <input id="file-upload" accept=".csv" type="file" name="file" />
-            <label for="file-upload" id="file-drag">
-                Select a file to upload
-                <br />OR
-                <br />Drag a file into this box
-                
-                <br /><br /><span id="file-upload-btn" class="button">Add a file</span>
-            </label>
-            
-            <progress id="file-progress" value="0">
-                <span>0</span>%
-            </progress>
-            
-            <output for="file-upload" id="messages"></output>
-    
-            <input id="submitFileWithAjax" type="button" class="btn btn-block btn-outline-info" value="Submit">
-        </form>
-    
-        <div style="margin-top: 70px; margin-bottom: 70px;"/>
-    
-        <div class="col-12 row no-gutters" style="margin-top: 30px; margin-bottom: 30px;">
-            <div id="calendarContainer" class="col-sm-8 col-12" style="display: inline-block;">
-                <input type="date" id="filterSearch" class="col-12" placeholder="Search the plans by..." />
-            </div>
-            <select id="fieldSelect" class="col-sm-4 col-12"></select>
-        </div>
-    
-        <div id="plansHolder">
-    
-        </div>
-    </div>
+	<div class="mincon container" style="text-align: left;">
+		<form id="file-upload-form" action="/code/planviaspreadsheet" method="POST" enctype=multipart/form-data>
+			<input id="file-upload" accept=".csv" type="file" name="file" />
+			<label for="file-upload" id="file-drag">
+				Select a file to upload
+				<br />OR
+				<br />Drag a file into this box
+				
+				<br /><br /><span id="file-upload-btn" class="button">Add a file</span>
+			</label>
+			
+			<progress id="file-progress" value="0">
+				<span>0</span>%
+			</progress>
+			
+			<output for="file-upload" id="messages"></output>
+	
+			<input id="submitFileWithAjax" type="button" class="btn btn-block btn-outline-info" value="Submit">
+		</form>
+	
+		<div style="margin-top: 70px; margin-bottom: 70px;"/>
+	
+		<div class="col-12 row no-gutters" style="margin-top: 30px; margin-bottom: 30px;">
+			<div id="calendarContainer" class="col-sm-8 col-12" style="display: inline-block;">
+				<input type="date" id="filterSearch" class="col-12" placeholder="Search the plans by..." />
+			</div>
+			<select id="fieldSelect" class="col-sm-4 col-12"></select>
+		</div>
+	
+		<div id="plansHolder">
+	
+		</div>
+	</div>
 </body>
 
 <head>
-    <link rel="stylesheet" href="./css/planner.css"></link>
-    <link rel="stylesheet" href="./css/planner.night.css"></link>
-    <link rel="stylesheet" href="./css/calendar-extender.css"></link>
-    <script src="./lib/mo.js"></script>
-    <script src="./js/loader.anim.js"></script>
-    <script src="./js/planner.js"></script>
-    <script src="./js/calendar-extender.js"></script>
+	<link rel="stylesheet" href="./css/planner.css"></link>
+	<link rel="stylesheet" href="./css/planner.night.css"></link>
+	<link rel="stylesheet" href="./css/calendar-extender.css"></link>
+	<script src="./lib/mo.js"></script>
+	<script src="./js/loader.anim.js"></script>
+	<script src="./js/planner.js"></script>
+	<script src="./js/calendar-extender.js"></script>
 </head>

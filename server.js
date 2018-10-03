@@ -21,8 +21,8 @@ if (options.help) {
     Serves the GUI AND creates a CLI for sysadmins.
 
 Usage: node ./server.js [options]
-    -u --dburl <url>    specifies the database to load (from an url)
-    -h --help           displays this help message
+	-u --dburl <url>    specifies the database to load (from an url)
+	-h --help           displays this help message
 	-v --version        displays the version number
 	-q --quickpush      pushes this week into the past week
 `, { backgroundColor: 'black', float: 'center', align: 'left', padding: 1, margin: 1, borderStyle: 'classic', borderColor: 'magenta' }));
@@ -300,7 +300,7 @@ mongodb.connect(url, function mongConnect(err, db){
 								plansDB.findOne({date: targetdate, $text: {$search: dbuser.name, $language: 'english', $caseSensitive: false}}, function(
 									err,
 									data
-								){
+								) {
 									if (err) throw err;
 									if (!data) {
 										console.log('unable to find plan for user ' + req.user.name + ' on date ' + targetdate);
@@ -320,6 +320,8 @@ mongodb.connect(url, function mongConnect(err, db){
 										timesheet: ttsheet,
 										projs: projs,
 										tasks: tasks,
+										sgHttpServer: process.env.SGHTTP_SERVER,
+										sgHttpEnabled: process.env.SGHTTP_ENABLED
 									});
 								});
 							} else {
@@ -335,6 +337,8 @@ mongodb.connect(url, function mongConnect(err, db){
 									timesheet: ttsheet,
 									projs: projs,
 									tasks: tasks,
+									sgHttpServer: process.env.SGHTTP_SERVER,
+									sgHttpEnabled: process.env.SGHTTP_ENABLED
 								});
 							}
 						});
@@ -385,6 +389,8 @@ mongodb.connect(url, function mongConnect(err, db){
 								timesheet: ttsheet,
 								projs: projs,
 								tasks: tasks,
+								sgHttpServer: process.env.SGHTTP_SERVER,
+								sgHttpEnabled: process.env.SGHTTP_ENABLED
 							});
 						});
 					} else {
@@ -398,6 +404,8 @@ mongodb.connect(url, function mongConnect(err, db){
 							timesheet: ttsheet,
 							projs: projs,
 							tasks: tasks,
+							sgHttpServer: process.env.SGHTTP_SERVER,
+							sgHttpEnabled: process.env.SGHTTP_ENABLED
 						});
 					}
 				});

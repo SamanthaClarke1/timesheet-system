@@ -4,7 +4,7 @@
 This timesheet system was originally created for CumulusVFX. It is made to allow users to log their hours, and for administrators to monitor how much everyone is working.
 Just run the local server on a server somewhere, and have people visit it in their browsers.
 
-**Version**: 1.7.4, **Codename**: Colorful Crustacean.
+**Version**: 1.7.5, **Codename**: Red Rocket.
 
 # Installation
 
@@ -50,6 +50,8 @@ node ./server.js --help
 This part is just a roadmap of all the things I have left to do on the next version of the timesheet system.
 (That version is 1.8.1, from 1.7.1, right now. Version 1.8.1 is more focused on back end things than before, but that's alright. :smile:)
 
+- [ ] Turn shot field into a dropdown instead of an input (using sg-http)
+- [ ] Maybe making some proper sg-http js bindings? Idk, http seems g to me tbh.
 - [x] Cleaning up old files
 - [ ] Cleaning up old console.logs
 - [ ] Logs

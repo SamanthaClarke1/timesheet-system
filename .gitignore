@@ -115,5 +115,6 @@ node_modules
 #custom
 gitenv
 *.pem
+/certs
 certs/cert.pem
 certs/key.pem

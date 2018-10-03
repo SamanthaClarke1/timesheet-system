@@ -1,37 +1,37 @@
 <!-- 
-    this will be the page to edit the cost of users per hour. 
-    It will use ajax to get its data, and update it.
-    It may use d3 to create a bar graph in reference to how much
-    each of the users in the dataset is making per hour.
-    ( Horiz = $ph, Vert = {user} )
-    It will use a one-line form where you input the username,
-    and the new pay-rate, in order to update the database.
-    Graphical updates to the d3 app will happen on json response
-    from the server.
+	this will be the page to edit the cost of users per hour. 
+	It will use ajax to get its data, and update it.
+	It may use d3 to create a bar graph in reference to how much
+	each of the users in the dataset is making per hour.
+	( Horiz = $ph, Vert = {user} )
+	It will use a one-line form where you input the username,
+	and the new pay-rate, in order to update the database.
+	Graphical updates to the d3 app will happen on json response
+	from the server.
 -->
 
 
 <body>
-    <div class="container">
-        <div class="mcon">
-            <form id="uc-mform" class="uc-inp col-12 row no-gutters" method=POST>
-                <div class="col-4">
-                    <input required placeholder="John Smith" type="name" class="col-12" name="uname" id="uname-inp" />
-                </div>
-                <div class="col-4 row">
-                    <div class="col-1 dummy"></div> 
-                    <b class="col-1" style="font-size: 22px;">$</b>
-                    <input value="15.00" required placeholder="15.00" type="number" step="0.25" min="0.00" class="col-9" name="ucosts" id="ucosts-inp" />
-                </div>
-                <div class="col-4">
-                    <button class="btn btn-outline-info btn-inpc col-12" type="submit" name="usave" id="usubm-btn"> Submit </button>
-                </div>
-            </form>
-        </div>
-        <div class="mcon">
-            <div id="tables"></div>
-        </div>
-    </div>
+	<div class="container">
+		<div class="mcon">
+			<form id="uc-mform" class="uc-inp col-12 row no-gutters" method=POST>
+				<div class="col-4">
+					<input required placeholder="John Smith" type="name" class="col-12" name="uname" id="uname-inp" />
+				</div>
+				<div class="col-4 row">
+					<div class="col-1 dummy"></div> 
+					<b class="col-1" style="font-size: 22px;">$</b>
+					<input value="15.00" required placeholder="15.00" type="number" step="0.25" min="0.00" class="col-9" name="ucosts" id="ucosts-inp" />
+				</div>
+				<div class="col-4">
+					<button class="btn btn-outline-info btn-inpc col-12" type="submit" name="usave" id="usubm-btn"> Submit </button>
+				</div>
+			</form>
+		</div>
+		<div class="mcon">
+			<div id="tables"></div>
+		</div>
+	</div>
 </body>
 <head>
     <!-- MOJS -->
