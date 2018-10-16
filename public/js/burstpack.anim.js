@@ -1,3 +1,5 @@
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
+
 const RADIUS = 28;
 
 const littleburst = new mojs.Burst({
@@ -127,3 +129,5 @@ const sparkflowr = new mojs.Burst({
 });
 const sparkflowr_timeline = new mojs.Timeline({speed: 1.5});
 sparkflowr_timeline.add(sparkflowr);
+
+// @license-end

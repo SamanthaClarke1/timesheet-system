@@ -1,3 +1,5 @@
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
+
 /* Code written by Samuel J. Clarke, May-July 2018, for CumulusVFX. */
 //begin server.js
 
@@ -15,6 +17,8 @@ const boxen 			= require('boxen');
 const commandLineArgs	= require('command-line-args');
 const options			= commandLineArgs(optionDefinitions);
 const pjson 			= require('./package.json');
+
+const request = require('request');
 
 if (options.help) {
 	console.log(boxen(`Timesheets! - Hosts the timesheet server,
@@ -81,6 +85,9 @@ const promptr	= '[\033[01m\033[38;2;70;242;221m] >> \033[38;2;0;176;255m'; // pr
 const srvrPRFX	= '[\033[00m\033[38;2;153;95;178m] SRVR: '; // server title. eg ${srvrPRFX} Connected to the mongoDB server.
 const intrPRFX	= '[\033[00m\033[38;2;125;163;230m] INTR: '; // interpreter title
 const url		= options.dburl || (process.env.MONGO_URL_PREFIX + process.env.MONGO_URL_BODY + process.env.MONGO_URL_SUFFIX); // Connection URL.
+const SHOTUPDATEFREQ = 1000 * 60 * 10;
+
+let SHOTCACHE = {};
 
 const exit = function(exitCode){
 	process.stdout.write('\033[00m\n');
@@ -256,6 +263,8 @@ mongodb.connect(url, function mongConnect(err, db){
 			});
 		}
 
+		
+
 		//#endregion
 
 		//#region displayHandlers
@@ -263,6 +272,11 @@ mongodb.connect(url, function mongConnect(err, db){
 		// http://expressjs.com/en/starter/basic-routing.html
 		app.get('/', ensureAuthenticatedSilently, function slashRootGET(req, res){
 			var thisdate = 'Current';
+			var tmp_sghttpurl = process.env.SGHTTP_SERVER;
+
+			if(process.env.SGHTTP_RETRIEVER == "server") {
+				tmp_sghttpurl = "/sghttp/";
+			}
 
 			if (req.user.isadmin) {
 				//swjp
@@ -320,8 +334,10 @@ mongodb.connect(url, function mongConnect(err, db){
 										timesheet: ttsheet,
 										projs: projs,
 										tasks: tasks,
-										sgHttpServer: process.env.SGHTTP_SERVER,
-										sgHttpEnabled: process.env.SGHTTP_ENABLED
+										sgHttpServer: tmp_sghttpurl,
+										sgHttpEnabled: process.env.SGHTTP_ENABLED,
+										sgHttpRetriever: process.env.SGHTTP_RETRIEVER,
+										sgHttpCache: SHOTCACHE
 									});
 								});
 							} else {
@@ -337,8 +353,10 @@ mongodb.connect(url, function mongConnect(err, db){
 									timesheet: ttsheet,
 									projs: projs,
 									tasks: tasks,
-									sgHttpServer: process.env.SGHTTP_SERVER,
-									sgHttpEnabled: process.env.SGHTTP_ENABLED
+									sgHttpServer: tmp_sghttpurl,
+									sgHttpEnabled: process.env.SGHTTP_ENABLED,
+									sgHttpRetriever: process.env.SGHTTP_RETRIEVER,
+									sgHttpCache: SHOTCACHE
 								});
 							}
 						});
@@ -389,8 +407,10 @@ mongodb.connect(url, function mongConnect(err, db){
 								timesheet: ttsheet,
 								projs: projs,
 								tasks: tasks,
-								sgHttpServer: process.env.SGHTTP_SERVER,
-								sgHttpEnabled: process.env.SGHTTP_ENABLED
+								sgHttpServer: tmp_sghttpurl,
+								sgHttpEnabled: process.env.SGHTTP_ENABLED,
+								sgHttpRetriever: process.env.SGHTTP_RETRIEVER,
+								sgHttpCache: SHOTCACHE
 							});
 						});
 					} else {
@@ -404,8 +424,10 @@ mongodb.connect(url, function mongConnect(err, db){
 							timesheet: ttsheet,
 							projs: projs,
 							tasks: tasks,
-							sgHttpServer: process.env.SGHTTP_SERVER,
-							sgHttpEnabled: process.env.SGHTTP_ENABLED
+							sgHttpServer: tmp_sghttpurl,
+							sgHttpEnabled: process.env.SGHTTP_ENABLED,
+							sgHttpRetriever: process.env.SGHTTP_RETRIEVER,
+							sgHttpCache: SHOTCACHE
 						});
 					}
 				});
@@ -1054,6 +1076,60 @@ mongodb.connect(url, function mongConnect(err, db){
 		}
 		callMeOnMonday((options.quickpush == true));
 
+		function updateShotCache() {
+
+			function sendOffProj(callback=()=>{}, i=0) {
+				let turl = buildUrl(process.env.SGHTTP_SERVER, {echo: projs[i], req: "findone", type: "Project", filters: "[[\"name\",\"contains\",\""+projs[i]+"\"]]"});
+				//console.log("(updateShotCache) -> turl: " + turl);
+				request(turl, function(err, res, body) {
+					if(!err && res.statusCode == 200) {
+						let jres = JSON.parse(body);
+						for(let j in jres.result) {
+							jres.result[j].type = jres.result[j].stype;
+							delete jres.result[j].stype;
+
+							let turl = buildUrl(process.env.SGHTTP_SERVER, {echo: jres.echo, req: "find", type: "Shot", fields: "[\"code\",\"id\"]",
+																			filters: "[[\"project\",\"is\","+JSON.stringify(jres.result[j])+"]]"});
+							//console.log("(updateShotCache) -> shot req -> GET: " + turl);
+							request(turl, function(err, res, body) {
+								if(err) throw err;
+								if(res.statusCode == 200) {
+									let jres = JSON.parse(body); //jres.echo at this point is the original project passed through
+									jres.echo = jres.echo.toString().split('"').join('').toLowerCase();
+									console.log("(updateShotCache) -> shot req: " + jres.echo + " successfully returned")
+									SHOTCACHE[jres.echo] = jres.result;
+									//console.log(body);
+								} else {
+									console.log("(updateShotCache) -> shot req -> res failed with code: " + res.statusCode);
+								}
+							});
+						}
+					} else if (err) {
+						console.log(err);
+					} else {
+						console.log("(updateShotCache) -> res failed with code: " + res.statusCode);
+					}
+				});
+				//console.log(projs[i]);
+
+				if(i < projs.length - 1) {
+					setTimeout(sendOffProj, 1500, callback, i+1);
+					// since the shotgun api is somewhat unstable, i found that giving it more time in between api calls helped it not seg fault.
+					// if your sghttp server keeps seg faulting, up this timeout.
+				}
+				else {
+					setTimeout(callback, 1500); // delayed to let the last project finish
+				}
+			} 
+			sendOffProj(function() {
+				console.log("\nProjects updated!\n");
+			});
+
+			setTimeout(updateShotCache, SHOTUPDATEFREQ);
+		}
+		if(process.env.SGHTTP_RETRIEVER == "server") updateShotCache();
+		
+
 		//#endregion autoSubm
 
 		//#region post-load-code
@@ -1062,6 +1138,7 @@ mongodb.connect(url, function mongConnect(err, db){
 		//#endregion post-load-code
 	}
 });
+
 
 //#region serverFinalSetup ## server initialization ## //
 
@@ -1278,6 +1355,18 @@ console.log(`SAMts Interface Initiated.`);
 //#endregion createCommandLineInterface
 
 //#region helperFuncs //
+
+function buildUrl(base, dict) {
+	if(base[base.length - 1] != "/") base += "/";
+	let i = 0;
+	for(key in dict) {
+		let pref = "&";
+		if(i == 0) pref = "?";
+		base += pref + key + "=" + encodeURIComponent(dict[key]);
+		i += 1;
+	}
+	return base;
+}
 
 //#region DATE-TIME HELPER FUNCS
 // function is1917(now=new Date()) { if(now.getMonth() == 2 && now.getDate() == 8) { return now.getYear() - 17; } else { return -1; } }
@@ -1557,3 +1646,5 @@ function CSVToArray(strData, strDelimiter){
 //#endregion helperFuncs
 
 //end server.js
+
+// @license-end

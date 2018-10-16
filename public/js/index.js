@@ -1,3 +1,5 @@
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
+
 // yeah, yeah, the whole idea of using ajax came in half way through development, so my code looks like sphagetti.
 // but, yknow, whatever, i could go some pasta, so who's the real winner here?
 
@@ -129,18 +131,22 @@ function makeShotSelect(shotel) {
 					<!-- I'll be filled up with jquery, its okay :) -->
 				</select>`;
 
-	$(shotel).replaceWith(sel);
+	if (!$(shotel).is("select") && fromSrv.sgHttpEnabled) {
+		$(shotel).replaceWith(sel);
+	}
 }
 
 function makeShotInp(shotel) {
 	let inp = `<input name="shotcode" placeholder="shot code" class="col-12 no-pad-right shot-inpc" required>`;
 
-	$(shotel).replaceWith(inp);
+	if(!$(shotel).is("input") && fromSrv.sgHttpEnabled) {
+		$(shotel).replaceWith(inp);
+	}
 }
 
 function projCheckerFunc(projel) {
 	let taskel = $(projel).parent().parent().find('.task-inpc');
-	let shotel = $(projel).parent().parent().find('.shot-inpc').html('');
+	let shotel = $(projel).parent().parent().find('.shot-inpc');
 	let tval   = $(projel).val().toLowerCase();
 
 	if (tval == 'admin') {
@@ -149,41 +155,62 @@ function projCheckerFunc(projel) {
 		updateTasks(fromSrv.tasks.default, taskel);
 	}
 
-	if(tval == 'admin' || tval == 'marketing') {
-		makeShotInp(shotel);
-	} else {
-		makeShotSelect(shotel);
-		//console.log("projCheckerFunc",tval)
-		if(!shotCache[tval]) {
-			if(!projCache[tval]) {
-				getProj(shotel, tval, onProjAJAXReturn);
-			} else {
-				getShots(shotel, tval, onShotAJAXReturn);
-			}
+	if(fromSrv.sgHttpEnabled == 'true' && fromSrv.sgHttpRetriever == 'client') {
+		if(tval == 'admin' || tval == 'marketing') {
+			makeShotInp(shotel);
 		} else {
+			makeShotSelect(shotel);
+			//console.log("projCheckerFunc",tval)
+			if(!shotCache[tval]) {
+				if(!projCache[tval]) {
+					getProj(shotel, tval, onProjAJAXReturn);
+				} else {
+					getShots(shotel, tval, onShotAJAXReturn);
+				}
+			} else {
+				updateShots(shotCache[tval], shotel);
+			}
+		}
+	} else if(fromSrv.sgHttpEnabled == 'true' && fromSrv.sgHttpRetriever == 'server') {
+		shotCache = fromSrv.sgHttpCache;
+		console.log("attempting to update",tval);
+		console.log(shotCache[tval]);
+		if(shotCache[tval]) {
+			makeShotSelect(shotel);
+			console.log("updating",tval);
 			updateShots(shotCache[tval], shotel);
+		} else {
+			makeShotInp(shotel);
 		}
 	}
 }
 
 function onShotAJAXReturn(shotel, projName, data) {
-	shotCache[projName] = data;
-	console.log("onShotAjaxReturn", projName);
-	console.log("SHOTEL",$(shotel).html(''));
-	updateShots(data, shotel);
+	if(data) {
+		shotCache[projName] = data;
+		console.log("onShotAjaxReturn", projName);
+		console.log("SHOTEL",$(shotel).html(''));
+		updateShots(data, shotel);
+	} else {
+		console.log("Server returned empty data.");
+	}
 }
 
 function onProjAJAXReturn(shotel, projName, data) {
-	projCache[projName] = data[0];
-	console.log("onProjAjaxReturn", projCache[projName], projName);
-	getShots(shotel, projName, onShotAJAXReturn);
+	if(data) {
+		projCache[projName] = data[0];
+		console.log("onProjAjaxReturn", projCache[projName], projName);
+		getShots(shotel, projName, onShotAJAXReturn);
+	} else {
+		console.log("Server returned empty data.");
+	}
 }
 
 function getProj(shotel, projName, callback) {
 	if(!projName || !callback) return false;
 
 	let URL=fromSrv.sgHttpServer+"?req=find&limit=1&type=Project&fields=[%22name%22,%22id%22]&filters=[[%22name%22,%22contains%22,%22"+projName+"%22]]";
-	//console.log("getProj", URL);
+	console.log("getProj - GET: ", URL);
 	
 	$.ajax({
 		url: URL,
@@ -220,7 +247,6 @@ function getShots(shotel, projName, callback) {
 }
 
 function updateShots(tshots, shotel) {
-	console.log("updateShots", tshots);
 	let htmlToIns = "<option value=\"general\">general</option>";
 	for(let i in tshots) {
 		htmlToIns += "<option value=\""+tshots[i].code+"\">"+tshots[i].code+"</option>";
@@ -347,3 +373,5 @@ function updateShading(tableEl) {
 		cc++;
 	});
 }
+
+// @license-end

@@ -1,3 +1,5 @@
+// @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&dn=expat.txt Expat-License
+
 /*
  Copyright (C) Federico Zivolo 2017
  Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
@@ -885,3 +887,5 @@
 	);
 });
 //# sourceMappingURL=popper.min.js.map
+
+// @license-end

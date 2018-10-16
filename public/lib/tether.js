@@ -1,3 +1,4 @@
+// @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&dn=expat.txt Expat License
 !(function(t, e){
 	'function' == typeof define && define.amd ? define(e) : 'object' == typeof exports ? (module.exports = e(require, exports, module)) : (t.Tether = e());
 })(this, function(t, e, o){
@@ -1059,3 +1060,5 @@
 		$
 	);
 });
+
+// @license-end

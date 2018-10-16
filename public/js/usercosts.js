@@ -1,3 +1,5 @@
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
+
 var users = [];
 var marg = {lbar: 150, top: 20, right: 20, bot: 20, left: 20, barspacing: 2};
 
@@ -145,3 +147,5 @@ $(document).ready(function(){
 		return usrbar;
 	}
 });
+
+// @license-end

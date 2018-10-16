@@ -12,8 +12,8 @@
 		editable = false;
 	}
 	
-	for(let day of days) dayhours[day]=-1;
-	for(let day of rdays) dayhours[day]=0;
+	for(let day of days)  dayhours[day] = -1;
+	for(let day of rdays) dayhours[day] =  0;
 	for(let job of timesheet.jobs) {
 		if(dayhours[job.day] != -1) {
 			dayhours[job.day] += parseFloat(job.time);
@@ -32,7 +32,9 @@
 			"editable": '<%= editable %>',
 			"tasks": <%- JSON.stringify(tasks) %>,
 			"sgHttpServer": '<%= sgHttpServer %>',
-			"sgHttpEnabled": '<%= sgHttpEnabled %>'
+			"sgHttpEnabled": '<%= sgHttpEnabled %>',
+			"sgHttpCache": <%- JSON.stringify(sgHttpCache) %>,
+			"sgHttpRetriever": '<%= sgHttpRetriever %>'
 		}
 	</script>
 
@@ -159,7 +161,7 @@
 											<!-- I'll be filled up with jquery, its okay :) -->
 										</select>
 									<% } else { %>
-										<input name="shotcode" placeholder="shot code" class="col-12 no-pad-right shot-inpc" required>
+										<input name="shotcode" placeholder="shot code" class="col-12 no-pad-right shot-inpc" required />
 									<% } %>
 								</div>
 								<div class="col-3">

@@ -1,4 +1,5 @@
-/*!
+// @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&dn=expat.txt Expat License
+/*
  * Bootstrap v4.0.0-alpha.6 (https://getbootstrap.com)
  * Copyright 2011-2017 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
@@ -1900,3 +1901,4 @@ if ('undefined' == typeof jQuery) throw new Error("Bootstrap's JavaScript requir
 			);
 		})(jQuery);
 	})();
+// @license-end

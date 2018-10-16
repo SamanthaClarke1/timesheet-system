@@ -118,3 +118,6 @@ gitenv
 /certs
 certs/cert.pem
 certs/key.pem
+
+rustic-theme
+.yo-rc.json
