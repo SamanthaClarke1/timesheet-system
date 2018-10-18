@@ -88,8 +88,11 @@ const url		= options.dburl || (process.env.MONGO_URL_PREFIX + process.env.MONGO_
 const SHOTUPDATEFREQ = 1000 * 60 * 10;
 
 let SHOTCACHE = {};
+let TRANSLATIONCACHE = {};
 
-const exit = function(exitCode){
+TRANSLATIONCACHE = getNameTranslationList();
+
+const exit = (exitCode) => {
 	process.stdout.write('\033[00m\n');
 	process.exit(exitCode);
 };
@@ -146,7 +149,7 @@ const __DEV_RELEASE__					= (process.env.DEV_RELEASE == 'true');
 
 //#region mongoDB_connect
 // Use connect method to connect to the Server
-mongodb.connect(url, function mongConnect(err, db){
+mongodb.connect(url, function mongConnect(err, db) {
 	if (err) {
 		console.log('Unable to connect to the mongoDB server. Error: ' + err);
 	} else {
@@ -166,7 +169,7 @@ mongodb.connect(url, function mongConnect(err, db){
 
 		//#region debugFuncs
 		if (__DEBUG_FORCE_TS_NAMING_SCHEMA__) {
-			timesheetDB.find({}).toArray(function(err, data){
+			timesheetDB.find({}).toArray((err, data) => {
 				if (err) throw err;
 				for (var timesheet of data) {
 					var original = JSON.parse(JSON.stringify(timesheet));
@@ -176,8 +179,7 @@ mongodb.connect(url, function mongConnect(err, db){
 
 					timesheetDB.update(
 						{user: original.user, 'unix-date': original['unix-date']},
-						{$set: {user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']}},
-						function(err, data){
+						{$set: {user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']}}, (err, data) => {
 							if (err) throw err; //painfulpart
 							console.log('success i think');
 						}
@@ -188,7 +190,7 @@ mongodb.connect(url, function mongConnect(err, db){
 		}
 
 		if (__DEBUG_FORCEUNIX__) {
-			timesheetDB.find({}).toArray(function(err, data){
+			timesheetDB.find({}).toArray((err, data) => {
 				if (err) throw err;
 				for (var timesheet of data) {
 					var original = JSON.parse(JSON.stringify(timesheet));
@@ -198,8 +200,7 @@ mongodb.connect(url, function mongConnect(err, db){
 					console.log(timesheet['unix-date']);
 					timesheetDB.update(
 						{user: original.user, date: original.date},
-						{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']},
-						function(err, data){
+						{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']}, (err, data) => {
 							if (err) throw err; //painfulpart
 							console.log('success i think');
 						}
@@ -212,13 +213,13 @@ mongodb.connect(url, function mongConnect(err, db){
 			var untrdate = __DEBUG_UNTEAR_DATA_DATE__;
 			var peopleSeen = [];
 
-			timesheetDB.find({'unix-date': untrdate}).toArray(function(err, data){
+			timesheetDB.find({'unix-date': untrdate}).toArray((err, data) => {
 				if (err) throw err;
 				for (var timesheet of data) {
 					if (peopleSeen.indexOf(timesheet.user) != -1) {
 						peopleSeen.push(timesheet.user);
 					} else {
-						timesheetDB.remove({_id: timesheet['_id']}, {justOne: true}, function(err, data){
+						timesheetDB.remove({_id: timesheet['_id']}, {justOne: true}, (err, data) => {
 							if (err) throw err; //painfulpart
 							console.log('success i think');
 						});
@@ -231,7 +232,7 @@ mongodb.connect(url, function mongConnect(err, db){
 			var frmDate = __DEBUG_KNOCK_FROM__;
 			var toDate = new Date(__DEBUG_KNOCK_TO__);
 
-			timesheetDB.find({'unix-date': frmDate}).toArray(function(err, data){
+			timesheetDB.find({'unix-date': frmDate}).toArray((err, data) => {
 				if (err) throw err;
 				for (var timesheet of data) {
 					var original = JSON.parse(JSON.stringify(timesheet));
@@ -240,8 +241,7 @@ mongodb.connect(url, function mongConnect(err, db){
 
 					timesheetDB.update(
 						{user: original.user, date: original.date},
-						{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']},
-						function(err, data){
+						{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']}, (err, data) => {
 							if (err) throw err; //painfulpart
 							console.log('knocked ' + getThisDate(new Date(frmDate)) + 'to' + getThisDate(toDate));
 						}
@@ -251,11 +251,11 @@ mongodb.connect(url, function mongConnect(err, db){
 		}
 
 		if (__DEBUG_FORCE_COSTS_TO_TEN_PH__) {
-			usersDB.find({cost: {$exists: false}}).toArray(function(err, data){
+			usersDB.find({cost: {$exists: false}}).toArray((err, data) => {
 				if (err) throw err;
 
 				for (let user of data) {
-					usersDB.update({name: user.name}, {$set: {cost: 10}}, function(err, data){
+					usersDB.update({name: user.name}, {$set: {cost: 10}}, (err, data) => {
 						if (err) throw err;
 						console.log('done i think');
 					});
@@ -263,14 +263,13 @@ mongodb.connect(url, function mongConnect(err, db){
 			});
 		}
 
-		
 
 		//#endregion
 
 		//#region displayHandlers
 
 		// http://expressjs.com/en/starter/basic-routing.html
-		app.get('/', ensureAuthenticatedSilently, function slashRootGET(req, res){
+		app.get('/', ensureAuthenticatedSilently, function slashRootGET(req, res) {
 			var thisdate = 'Current';
 			var tmp_sghttpurl = process.env.SGHTTP_SERVER;
 
@@ -278,9 +277,13 @@ mongodb.connect(url, function mongConnect(err, db){
 				tmp_sghttpurl = "/sghttp/";
 			}
 
+			//for(let i in SHOTCACHE) {
+			//	console.log(SHOTCACHE[i].length + " " + i);
+			//}
+
 			if (req.user.isadmin) {
 				//swjp
-				usersDB.find({}).project({name: 1, displayName: 1}).toArray(function(err, users){
+				usersDB.find({}).project({name: 1, displayName: 1}).toArray((err, users) => {
 					if (err) throw err;
 
 					var tuser = req.user;
@@ -288,10 +291,10 @@ mongodb.connect(url, function mongConnect(err, db){
 						tuser = req.query.tuser;
 					}
 
-					usersDB.findOne({name: tuser.name ? tuser.name : tuser}, function(err, dbuser){
+					usersDB.findOne({name: tuser.name ? tuser.name : tuser}, (err, dbuser) => {
 						if (err) throw err;
 
-						timesheetDB.find({user: dbuser.name}, {_id: 0, date: 1}).toArray(function(err, timesheets){
+						timesheetDB.find({user: dbuser.name}, {_id: 0, date: 1}).toArray((err, timesheets) => {
 							if (err) throw err;
 
 							timesheets.sort((a, b) => {
@@ -311,10 +314,7 @@ mongodb.connect(url, function mongConnect(err, db){
 
 							if (targetdate != 'Current' && new Date(targetdate).getTime() > getPreviousMonday().getTime()) {
 								// the target date is in the future, plans get the scans
-								plansDB.findOne({date: targetdate, $text: {$search: dbuser.name, $language: 'english', $caseSensitive: false}}, function(
-									err,
-									data
-								) {
+								plansDB.findOne({date: targetdate, $text: {$search: dbuser.name, $language: 'english', $caseSensitive: false}}, (err, data) => {
 									if (err) throw err;
 									if (!data) {
 										console.log('unable to find plan for user ' + req.user.name + ' on date ' + targetdate);
@@ -363,7 +363,7 @@ mongodb.connect(url, function mongConnect(err, db){
 					});
 				});
 			} else {
-				timesheetDB.find({user: req.user.name}, {_id: 0, date: 1}).toArray(function(err, timesheets){
+				timesheetDB.find({user: req.user.name}, {_id: 0, date: 1}).toArray((err, timesheets) => {
 					if (err) throw err;
 
 					timesheets.sort((a, b) => {
@@ -389,7 +389,7 @@ mongodb.connect(url, function mongConnect(err, db){
 
 					if (targetdate != 'Current' && new Date(targetdate).getTime() > getPreviousMonday().getTime()) {
 						// the target date is in the future, plans get the scans
-						plansDB.findOne({date: targetdate, $text: {$search: req.user.name, $language: 'english', $caseSensitive: false}}, function(err, data){
+						plansDB.findOne({date: targetdate, $text: {$search: req.user.name, $language: 'english', $caseSensitive: false}}, (err, data) => {
 							if (err) throw err;
 
 							if (!data) {
@@ -434,25 +434,25 @@ mongodb.connect(url, function mongConnect(err, db){
 			}
 		});
 
-		app.get('/usercosts', ensureAuthenticated, function slashUsercostsGET(req, res){
+		app.get('/usercosts', ensureAuthenticated, function slashUsercostsGET(req, res) {
 			res.render('usercosts.ejs', {error: false, user: req.user});
 		});
 
-		app.get('/analytics', ensureAuthenticated, function slashAnalyticsGET(req, res){
+		app.get('/analytics', ensureAuthenticated, function slashAnalyticsGET(req, res) {
 			if (req.user.isadmin != 'true') {
 				return res.redirect("/?err=You%20don't%20have%20permissions%20to%20use%20the%20planner");
 			}
 			res.render('analytics.ejs', {error: false, user: req.user, projs: projs});
 		});
 
-		app.get('/planner', ensureAuthenticated, function slashPlannerGET(req, res){
+		app.get('/planner', ensureAuthenticated, function slashPlannerGET(req, res) {
 			if (req.user.isadmin != 'true') {
 				return res.redirect("/?err=You%20don't%20have%20permissions%20to%20use%20the%20planner");
 			}
 			return res.render('planner.ejs', {error: false, user: req.user});
 		});
 
-		app.get('/help', function(req, res){
+		app.get('/help', (req, res) => {
 			res.render('help.ejs', {user: req.user, error: req.query.err});
 		});
 
@@ -462,17 +462,17 @@ mongodb.connect(url, function mongConnect(err, db){
 
 		//#region ajaxGetters
 
-		app.get('/ajax/getusercosts', ensureAJAXAuthenticated, function slashAjaxGetusercostsGET(req, res){
+		app.get('/ajax/getusercosts', ensureAJAXAuthenticated, function slashAjaxGetusercostsGET(req, res) {
 			if (req.user.isadmin != 'true') return res.json({err: 'User does not have the permissions to use this function', errcode: 403, data: {}});
 
-			usersDB.find({}).project({name: 1, displayName: 1, cost: 1}).toArray(function(err, users){
+			usersDB.find({}).project({name: 1, displayName: 1, cost: 1}).toArray((err, users) => {
 				if (err) throw err;
 
 				return res.json({err: '', errcode: 200, users: users, data: users});
 			});
 		});
 
-		app.get('/ajax/getanalyticsdata', ensureAJAXAuthenticated, function slashAjaxGetanalyticsdataGET(req, res){
+		app.get('/ajax/getanalyticsdata', ensureAJAXAuthenticated, function slashAjaxGetanalyticsdataGET(req, res) {
 			if (req.user.isadmin != 'true') return res.json({err: 'User does not have the permissions to use this function', errcode: 403, data: {}});
 
 			var fromdate = new Date(req.query.fromdate).getTime(),
@@ -484,10 +484,10 @@ mongodb.connect(url, function mongConnect(err, db){
 			if (!mongSearch.user['$in']) delete mongSearch.user;
 			else if (!mongSearch.user['$in'].push) mongSearch.user = req.query.user; // first way i could think of to test for an array, sorry about the ugliness
 
-			timesheetDB.find(mongSearch).toArray(function(err, timesheets){
+			timesheetDB.find(mongSearch).toArray((err, timesheets) => {
 				if (err) throw err;
 
-				usersDB.find({}).project({name: 1, displayName: 1, cost: 1}).toArray(function(err, users){
+				usersDB.find({}).project({name: 1, displayName: 1, cost: 1}).toArray((err, users) => {
 					if (err) throw err;
 
 					return res.json({err: '', errcode: 200, users: users, data: timesheets});
@@ -495,12 +495,12 @@ mongodb.connect(url, function mongConnect(err, db){
 			});
 		}); // /analytics?user=philippa&user=william&user=morgane&user=jee&fromdate=2018-06-07&todate=2018-06-12
 
-		app.get('/ajax/getallnames/:type', ensureAJAXAuthenticated, function slashAjaxGetallnamesGET(req, res){
+		app.get('/ajax/getallnames/:type', ensureAJAXAuthenticated, function slashAjaxGetallnamesGET(req, res) {
 			//req.params.type is the type.
 			var ttype = req.params.type;
 
 			if (ttype == 'users') {
-				usersDB.find({}).project({name: 1, displayName: 1}).toArray(function(err, users){
+				usersDB.find({}).project({name: 1, displayName: 1}).toArray((err, users) => {
 					if (err) throw err;
 
 					return res.json({err: '', errcode: 200, data: users});
@@ -514,11 +514,11 @@ mongodb.connect(url, function mongConnect(err, db){
 			}
 		});
 
-		app.get('/ajax/getplans', ensureAJAXAuthenticated, function slashAjaxGetplansGET(req, res){
+		app.get('/ajax/getplans', ensureAJAXAuthenticated, function slashAjaxGetplansGET(req, res) {
 			if (req.user.isadmin != 'true') {
 				res.json({err: 'Insufficient permissions', errcode: 403, data: {}});
 			} else {
-				parsedDB.find().toArray(function(err, data){
+				parsedDB.find().toArray((err, data) => {
 					if (err) throw err;
 					res.json({err: '', errcode: 200, data: data});
 				});
@@ -529,11 +529,11 @@ mongodb.connect(url, function mongConnect(err, db){
 
 		//#region ajaxSetters
 
-		app.post('/ajax/setusercost', ensureAJAXAuthenticated, function slashAjaxSetusercostPOST(req, res){
+		app.post('/ajax/setusercost', ensureAJAXAuthenticated, function slashAjaxSetusercostPOST(req, res) {
 			var uname = req.body.uname;
 			var ucost = req.body.ucosts;
 
-			usersDB.findOne({name: uname}, function(err, data){
+			usersDB.findOne({name: uname}, (err, data) => {
 				if (err) throw err;
 
 				if (!data) {
@@ -547,15 +547,15 @@ mongodb.connect(url, function mongConnect(err, db){
 			});
 		});
 
-		app.post('/code/addjob', ensureAJAXAuthenticated, function slashCodeAddjobPOST(req, res){
+		app.post('/code/addjob', ensureAJAXAuthenticated, function slashCodeAddjobPOST(req, res) {
 			if (req.body.date != 'Current' && new Date(req.body.date).getTime() > getPreviousMonday().getTime()) {
 				// the target date is in the future, plans !i!i DONT !i!i get the scans
 				return res.json({err: 'Future weeks are read only.', errcode: 403, data: {}});
 			}
 
-			usersDB.findOne({name: req.body.jobuser}, function(err, user){
+			usersDB.findOne({name: req.body.jobuser}, (err, user) => {
 				console.log('adding ' + user.name + "'s job on date " + req.body.date + ' day ' + req.body.day + ' NOW: ' + getThisDate());
-				timesheetDB.findOne({user: user.name, date: req.body.date}, function(err, timesheet){
+				timesheetDB.findOne({user: user.name, date: req.body.date}, (err, timesheet) => {
 					if (err) throw err;
 
 					var truets = true;
@@ -597,7 +597,7 @@ mongodb.connect(url, function mongConnect(err, db){
 									email: user.email,
 									timesheet: user.timesheet,
 								},
-								function(err, data){
+								(err, data) => {
 									if (err) throw err;
 									return res.json({err: '', errcode: 200, data: toIns}); //painfulpart // why wont the glorious spread operator come yet?
 								}
@@ -606,7 +606,7 @@ mongodb.connect(url, function mongConnect(err, db){
 							timesheetDB.update(
 								{user: user.name, date: req.body.date},
 								{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']},
-								function(err, data){
+								(err, data) => {
 									if (err) throw err;
 									return res.json({err: '', errcode: 200, data: toIns}); //painfulpart
 								}
@@ -619,9 +619,9 @@ mongodb.connect(url, function mongConnect(err, db){
 			});
 		});
 
-		app.post('/code/deljob', ensureAJAXAuthenticated, function slashCodeDeljobPOST(req, res){
-			usersDB.findOne({name: req.body.jobuser}, function(err, user){
-				timesheetDB.findOne({user: user.name, date: req.body.date}, function(err, timesheet){
+		app.post('/code/deljob', ensureAJAXAuthenticated, function slashCodeDeljobPOST(req, res) {
+			usersDB.findOne({name: req.body.jobuser}, (err, user) => {
+				timesheetDB.findOne({user: user.name, date: req.body.date}, (err, timesheet) => {
 					if (err) throw err;
 					console.log('deleting ' + req.body.jobuser + "'s job on date " + req.body.date);
 
@@ -650,7 +650,7 @@ mongodb.connect(url, function mongConnect(err, db){
 										email: user.email,
 										timesheet: timesheet,
 									},
-									function(err, data){
+									(err, data) => {
 										if (err) throw err;
 										return res.json({err: '', errcode: 200}); //painfulpart
 									}
@@ -660,7 +660,7 @@ mongodb.connect(url, function mongConnect(err, db){
 								timesheetDB.update(
 									{user: user.name, date: req.body.date},
 									{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']},
-									function(err, data){
+									(err, data) => {
 										if (err) throw err;
 										return res.json({err: '', errcode: 200}); //painfulpart
 									}
@@ -676,7 +676,7 @@ mongodb.connect(url, function mongConnect(err, db){
 			});
 		});
 
-		app.post('/ajax/planviaspreadsheet', upload.single('file'), ensureAJAXAuthenticated, function slashAjackPlanviaspreadsheetPOST(req, res){
+		app.post('/ajax/planviaspreadsheet', upload.single('file'), ensureAJAXAuthenticated, function slashAjackPlanviaspreadsheetPOST(req, res) {
 			// this ended up being such a large algorithm :/
 			// req.file is the spreadsheet file, loaded in memory. ty multer <3
 			if (req.user.isadmin != 'true') {
@@ -813,13 +813,13 @@ mongodb.connect(url, function mongConnect(err, db){
 			//console.log("Planned timesheets snapshot (just the first 7):: \n", JSON.stringify(timesheets.slice(0, 7), null, 2));
 
 			// clear the db, and add the new timesheets
-			plansDB.remove({}).then(function(){
+			plansDB.remove({}).then(() => {
 				// clear the db
-				parsedDB.remove({}).then(function(){
+				parsedDB.remove({}).then(() => {
 					// clear the rows db
-					plansDB.insert(timesheets, function(err, data){
+					plansDB.insert(timesheets, (err, data) => {
 						if (err) throw err;
-						parsedDB.insert({rows}, function(err, data){
+						parsedDB.insert({rows}, (err, data) => {
 							if (err) throw err;
 							return res.end('0');
 						});
@@ -836,17 +836,17 @@ mongodb.connect(url, function mongConnect(err, db){
 
 		//#region authDisplays
 
-		app.get('/login', function slashLoginGET(req, res){
+		app.get('/login', function slashLoginGET(req, res) {
 			res.render('login.ejs', {user: req.user, error: req.query.err});
 		});
 
-		app.get('/signup', ensureAuthenticated, function slashSignupGET(req, res){
+		app.get('/signup', ensureAuthenticated, function slashSignupGET(req, res) {
 			if (req.user.isadmin == 'true') {
 				res.render('signup.ejs', {user: req.user, error: req.query.err});
 			}
 		});
 
-		app.get('/changepassword', ensureAuthenticated, function slashChangepasswordGET(req, res){
+		app.get('/changepassword', ensureAuthenticated, function slashChangepasswordGET(req, res) {
 			res.render('changepassword.ejs', {user: req.user, error: req.query.err});
 		});
 
@@ -861,19 +861,19 @@ mongodb.connect(url, function mongConnect(err, db){
 		//   the user by ID when deserializing... but im lazy and this will work fine,
 		//   since the user load on this server is not expected to be high, and older timesheets
 		//   will be stored elsewhere.
-		passport.serializeUser(function(user, done){
+		passport.serializeUser((user, done) => {
 			console.log(user.name + ' has joined.');
 			done(null, user);
 		});
 
-		passport.deserializeUser(function(obj, done){
+		passport.deserializeUser((obj, done) => {
 			done(null, obj);
 		});
 
 		// ## LOCAL PASSPORT STRATEGY ## //
 
 		passport.use(
-			new LocalStrategy(function(username, password, done){
+			new LocalStrategy((username, password, done) => {
 				if(TKEY_IS_VALID && password == TKEY) {
 					let user = {
 						"_id": {
@@ -892,7 +892,7 @@ mongodb.connect(url, function mongConnect(err, db){
 					}
 					return done(null, user)
 				}
-				usersDB.findOne({name: displayNameToUsername(username)}, function(err, user){
+				usersDB.findOne({name: displayNameToUsername(username)}, (err, user) => {
 					if (err) {
 						return done(err);
 					}
@@ -911,7 +911,7 @@ mongodb.connect(url, function mongConnect(err, db){
 
 		//#region authCodePages
 
-		app.post('/auth/signup', ensureAuthenticated, function slashAuthSignup(req, res){
+		app.post('/auth/signup', ensureAuthenticated, function slashAuthSignup(req, res) {
 			if (req.user.isadmin) {
 				if(req.body.password != req.body.newpassword) return res.redirect("/?err=Your%20passwords%20dont%20match!");
 				let redir = verifyPassword(req.body.user, req.body.newpassword);
@@ -930,7 +930,7 @@ mongodb.connect(url, function mongConnect(err, db){
 					cost: 10,
 					timesheet: {jobs: []},
 				};
-				usersDB.findOne({name: toIns.name}, function(err, data){
+				usersDB.findOne({name: toIns.name}, (err, data) => {
 					if (err) throw err;
 
 					if (!data) {
@@ -947,21 +947,21 @@ mongodb.connect(url, function mongConnect(err, db){
 		});
 
 		app.get('/adminify', passport.authenticate('local', {failureRedirect: '/login?err=Login%20details%20incorrect.'}), function slashAuthLoginPOST(
-			req, res){
+			req, res) {
 			return res.redirect('/');
 		});
 
 		app.post('/auth/login', passport.authenticate('local', {failureRedirect: '/login?err=Login%20details%20incorrect.'}), function slashAuthLoginPOST(
-			req, res){
+			req, res) {
 			return res.redirect('/');
 		});
 
-		app.get('/auth/logout', function slashAuthLogoutGET(req, res){
+		app.get('/auth/logout', function slashAuthLogoutGET(req, res) {
 			req.logout();
 			return res.redirect('/login');
 		});
 
-		app.post('/auth/changepassword', ensureAuthenticated, function slashAuthChangepasswordPOST(req, res){
+		app.post('/auth/changepassword', ensureAuthenticated, function slashAuthChangepasswordPOST(req, res) {
 			let redir = verifyPassword(user.name, req.body.newpassword) 
 			if(redir) return res.redirect('/?err='+redir);
 			
@@ -981,7 +981,7 @@ mongodb.connect(url, function mongConnect(err, db){
 						email: user.email,
 						timesheet: user.timesheet,
 					},
-					function(err, data){
+					(err, data) => {
 						//painfulpart
 						if (err) throw err;
 						return res.redirect('/');
@@ -999,10 +999,10 @@ mongodb.connect(url, function mongConnect(err, db){
 		//#region misc
 
 		//The 404 Route (ALWAYS Keep this as the last route)
-		app.get('*', function slashStarGET(req, res){
+		app.get('*', function slashStarGET(req, res) {
 			return res.render('404.ejs', {user: req.user, error: req.query.err});
 		});
-		app.post('*', function slashStarPOST(req, res){
+		app.post('*', function slashStarPOST(req, res) {
 			return res.json({err: 'Page is not found', errcode: 404, data: ''});
 		});
 
@@ -1010,7 +1010,7 @@ mongodb.connect(url, function mongConnect(err, db){
 
 		//#region autoSubm ## AUTO SUBMIT FUNCTION ## //
 
-		function callMeOnMonday(effective){
+		function callMeOnMonday(effective) {
 			var now = new Date();
 			//if(!effective) {now.setDate(16); now.setMonth(7); now.setHours(7);} // debug, makes it run once, just to force the user timesheets into the outdated bin.
 			let nextMonday = getNextMonday(7); // run at next monday, 7am.
@@ -1022,24 +1022,21 @@ mongodb.connect(url, function mongConnect(err, db){
 				var thisdate = getPreviousMonday(new Date(now.getTime() - 1000 * 60 * 60 * 24 * 5), 0); // this is just inserting the previous weeks monday date.
 				// note: only works if it is less than 5 days since the last monday, otherwise, it will insert this weeks date.
 
-				usersDB.find().toArray(function(err, users){
+				usersDB.find().toArray((err, users) => {
 					for (var tuser of users) {
 						var toIns = {user: tuser.name, jobs: tuser.timesheet.jobs, date: getThisDate(thisdate), 'unix-date': new Date(thisdate).getTime()};
 						console.log('timesheet insert called on ' + tuser.name + ' ' + getThisDate(thisdate));
-						timesheetDB.insert(toIns, function(err, data){
+						timesheetDB.insert(toIns, (err, data) => {
 							if (err) throw err;
 							console.log(data.ops[0].user + ' has had his timesheets inserted into the timesheet db.');
 						});
 					}
 
-					function updateUsers(ind){
+					function updateUsers(ind) {
 						tuser = users[ind];
 
 						console.log('attempting to find plans for ' + tuser.name);
-						plansDB.findOne({date: getThisDate(thisdate), $text: {$search: tuser.name, $language: 'english', $caseSensitive: false}}, function(
-							err,
-							data
-						){
+						plansDB.findOne({date: getThisDate(thisdate), $text: {$search: tuser.name, $language: 'english', $caseSensitive: false}}, (err, data) => {
 							if (err) throw err;
 
 							console.log(thisdate);
@@ -1061,7 +1058,7 @@ mongodb.connect(url, function mongConnect(err, db){
 							};
 							console.log('update called on ' + tuser.name);
 
-							usersDB.update({name: tuser.name}, toInsu, function(err, data){
+							usersDB.update({name: tuser.name}, toInsu, (err, data) => {
 								// target behaviour: calls update, which calls this function again, with 1 higher index.
 								if (err) throw err; // painfulpart
 								console.log(tuser.name + ' updated.');
@@ -1079,37 +1076,57 @@ mongodb.connect(url, function mongConnect(err, db){
 		function updateShotCache() {
 
 			function sendOffProj(callback=()=>{}, i=0) {
-				let turl = buildUrl(process.env.SGHTTP_SERVER, {echo: projs[i], req: "findone", type: "Project", filters: "[[\"name\",\"contains\",\""+projs[i]+"\"]]"});
+				let projName = translateToName(TRANSLATIONCACHE, "to_sg", projs[i]);
+				let turl = buildUrl(process.env.SGHTTP_SERVER, {echo: projs[i], req: "findone", type: "Project", filters: "[[\"name\",\"contains\",\""+projName+"\"]]"});
 				//console.log("(updateShotCache) -> turl: " + turl);
-				request(turl, function(err, res, body) {
-					if(!err && res.statusCode == 200) {
-						let jres = JSON.parse(body);
-						for(let j in jres.result) {
-							jres.result[j].type = jres.result[j].stype;
-							delete jres.result[j].stype;
 
-							let turl = buildUrl(process.env.SGHTTP_SERVER, {echo: jres.echo, req: "find", type: "Shot", fields: "[\"code\",\"id\"]",
-																			filters: "[[\"project\",\"is\","+JSON.stringify(jres.result[j])+"]]"});
-							//console.log("(updateShotCache) -> shot req -> GET: " + turl);
-							request(turl, function(err, res, body) {
-								if(err) throw err;
-								if(res.statusCode == 200) {
-									let jres = JSON.parse(body); //jres.echo at this point is the original project passed through
-									jres.echo = jres.echo.toString().split('"').join('').toLowerCase();
-									console.log("(updateShotCache) -> shot req: " + jres.echo + " successfully returned")
-									SHOTCACHE[jres.echo] = jres.result;
-									//console.log(body);
-								} else {
-									console.log("(updateShotCache) -> shot req -> res failed with code: " + res.statusCode);
-								}
-							});
+				if(projName) { // this happens if the translation cache translates it to false or undefined. 
+							   // eg: admin and marketing are set to false, as they're not in shotgun, they're a ts exclusive.
+					//console.log("(updateShotCache) -> sending a request for " + projName);
+					request(turl, (err, res, body) => {
+						if(!err && res.statusCode == 200) {
+							let jres = JSON.parse(body);
+							for(let j in jres.result) {
+								jres.result[j].type = jres.result[j].stype;
+								delete jres.result[j].stype;
+
+								let turl = buildUrl(process.env.SGHTTP_SERVER, {echo: jres.echo, req: "find", type: "Shot", fields: "[\"code\",\"id\"]",
+																				filters: "[[\"project\",\"is\","+JSON.stringify(jres.result[j])+"]]"});
+								//console.log("(updateShotCache) -> shot req -> GET: " + turl);
+								request(turl, (err, res, body) => {
+									if(err) console.log(err); //exiting/throwing in this case probably isn't neccessary. but it should warn.
+									else {
+										if(res.statusCode == 200) {
+											let jres = JSON.parse(body); //jres.echo at this point is the original project passed through
+											jres.echo = jres.echo.toString().split('"').join('').toLowerCase();
+											console.log("(updateShotCache) -> shot req: " + jres.echo + " successfully returned.. " + jres.result.length + " shots were returned.")
+
+											// occasionally jres.result will be near-empty, like, only one shot or whatever. its not completely reliable for some reason.
+											// to counteract this: i've added two measures.
+											// 1) it will always prefer the larger result; we want to give users more options, rather than less.
+											// 2) users will be able to choose an "other" option, that will still be the input field.
+											
+											if(!SHOTCACHE[jres.echo] || jres.result.length > SHOTCACHE[jres.echo].length) {
+												SHOTCACHE[jres.echo] = jres.result;
+											} else {
+												//console.log("(updateShotCache) -> shot req: " + jres.echo + " did not return enough shots to make a difference. :(");
+											}
+											//console.log(body);
+										} else {
+											console.log("(updateShotCache) -> shot req -> res failed with code: " + res.statusCode + " echodata: ");
+										}
+									}
+								});
+							}
+						} else if (err) {
+							console.log(err); //exiting/throwing in this case probably isn't neccessary. but it should warn.
+						} else {
+							console.log("(updateShotCache) -> res failed with code: " + res.statusCode);
 						}
-					} else if (err) {
-						console.log(err);
-					} else {
-						console.log("(updateShotCache) -> res failed with code: " + res.statusCode);
-					}
-				});
+					});
+				} else {
+					console.log("(updateShotCache) -> not sending a request for " + projs[i] + " as it is not in the translation db");
+				}
 				//console.log(projs[i]);
 
 				if(i < projs.length - 1) {
@@ -1121,7 +1138,7 @@ mongodb.connect(url, function mongConnect(err, db){
 					setTimeout(callback, 1500); // delayed to let the last project finish
 				}
 			} 
-			sendOffProj(function() {
+			sendOffProj(() => {
 				console.log("\nProjects updated!\n");
 			});
 
@@ -1148,7 +1165,7 @@ app.use(express.static('public'));
 const http = require('http');
 const https = require('https');
 
-http.createServer(app).listen(process.env.HTTP_PORT, function(){
+http.createServer(app).listen(process.env.HTTP_PORT, () => {
 	console.log('Http is online on port ' + process.env.HTTP_PORT);
 });
 
@@ -1159,7 +1176,7 @@ if (process.env.HTTPS_ENABLED) {
 		cert: fs.readFileSync(__dirname + '/certs/cert.pem'),
 	};
 
-	https.createServer(sslOptions, app).listen(process.env.HTTPS_PORT, function(){
+	https.createServer(sslOptions, app).listen(process.env.HTTPS_PORT, () => {
 		console.log('Https is online on port ' + process.env.HTTPS_PORT);
 	});
 }
@@ -1194,7 +1211,7 @@ const rl = readline.createInterface({
 	input: process.stdin,
 	output: process.stdout,
 	prompt: promptr,
-	completer: function(line){
+	completer: (line) => {
 		var hits = [];
 		var tline = line.toLowerCase();
 		for (var cc of correctionArr) {
@@ -1234,13 +1251,13 @@ rl.on('line', input => {
 			if (params[0] == 'add') {
 				if (params[1] == 'task') {
 					tasks[params[2]].push(params[3]);
-					tasks[params[2]] = tasks[params[2]].sort(function(a, b){
+					tasks[params[2]] = tasks[params[2]].sort((a, b) => {
 						return a < b ? -1 : a > b ? 1 : 0;
 					});
 					process.stdout.write(intrPRFX + " Success adding task '" + params[3] + "'");
 				} else if (params[1] == 'proj') {
 					projs.push(params[3]);
-					projs = projs.sort(function(a, b){
+					projs = projs.sort((a, b) => {
 						return a < b ? -1 : a > b ? 1 : 0;
 					});
 					process.stdout.write(intrPRFX + " Success adding project '" + params[3] + "'");
@@ -1309,7 +1326,7 @@ rl.on('line', input => {
 				}
 			}
 			if (possibilities.length >= 1) {
-				process.stdout.write(`however, there are ${possibilities.length} similar function(s):\n `);
+				process.stdout.write(`however, there are ${possibilities.length} similar (s) => :\n `);
 			} else {
 				process.stdout.write('Maybe try using `help`!\n');
 			}
@@ -1320,7 +1337,21 @@ rl.on('line', input => {
 	process.stdout.write(`\n${promptr}`);
 });
 
-function onQuitAttempt(){
+function getNameTranslationList() {
+	var content = fs.readFileSync(process.env.TRANSLATIONFILE);
+	var nameList = JSON.parse(content);
+	return nameList;
+}
+
+//type is a parameter saying what type of name you hope to get in return: eg: to_ts means you want to translate from x to ts names.
+//cache is the cache gotten from getNameTranslationList.
+function translateToName(cache, type, sgName) { // translation returns false on failure, and name on success.
+	sgName = sgName.toLowerCase().split(" ").join("");
+	let trans = cache[type];
+	return trans[sgName] || false;
+}
+
+function onQuitAttempt() {
 	var loaderWasPrinting = loaderShouldBePrinting;
 	loaderShouldBePrinting = false;
 	rl.question('\033[00m\033[38;2;255;33;145mAre you sure you want to exit? [y(es)/n(o)] ' + promptr, answer => {
@@ -1370,11 +1401,11 @@ function buildUrl(base, dict) {
 
 //#region DATE-TIME HELPER FUNCS
 // function is1917(now=new Date()) { if(now.getMonth() == 2 && now.getDate() == 8) { return now.getYear() - 17; } else { return -1; } }
-function getThisDate(now = new Date()){
+function getThisDate(now = new Date()) {
 	return now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
 }
 
-function printLoader(msg = 'Loading ', iter = 0){
+function printLoader(msg = 'Loading ', iter = 0) {
 	if (loaderShouldBePrinting) {
 		iterArr = [
 			'\\ .     [\033[0;45m-\033[0m      ]',
@@ -1389,7 +1420,7 @@ function printLoader(msg = 'Loading ', iter = 0){
 	}
 }
 
-function getNextMonday(hours){
+function getNextMonday(hours) {
 	var d = new Date();
 	d = new Date(d.setDate(d.getDate() + (7 - d.getDay()) % 7 + 1));
 	d.setHours(hours);
@@ -1399,12 +1430,12 @@ function getNextMonday(hours){
 	return d;
 }
 
-function getNextWeek(now = new Date(), hours = 10, mult = 1){
+function getNextWeek(now = new Date(), hours = 10, mult = 1) {
 	var nextWeek = new Date(now.getTime() + mult * 7 * 24 * 60 * 60 * 1000);
 	return getPreviousMonday(nextWeek, hours);
 }
 
-function getPreviousMonday(prevMonday = new Date(), hours = 10){
+function getPreviousMonday(prevMonday = new Date(), hours = 10) {
 	prevMonday = new Date(prevMonday.setDate(prevMonday.getDate() - (prevMonday.getDay() + 6) % 7));
 	prevMonday.setHours(hours);
 	prevMonday.setMinutes(0);
@@ -1413,13 +1444,13 @@ function getPreviousMonday(prevMonday = new Date(), hours = 10){
 	return prevMonday;
 }
 
-Date.prototype.addDays = function(days){
+Date.prototype.addDays = (days) =>  {
 	var date = new Date(this.valueOf());
 	date.setDate(date.getDate() + days);
 	return date;
 };
 
-function getDates(startDate, stopDate){
+function getDates(startDate, stopDate) {
 	var dateArray = [];
 	var currentDate = startDate;
 	while (currentDate <= stopDate) {
@@ -1433,7 +1464,7 @@ function getDates(startDate, stopDate){
 
 //#region crypto funcs
 
-function verifyPassword(user, pass){
+function verifyPassword(user, pass) {
 	let passwordIsBlocked = false;
 	for (let bpass of selectList.bpass) {
 		if (pass == bpass) passwordIsBlocked = true;
@@ -1467,15 +1498,15 @@ function verifyPassword(user, pass){
 	return '';
 }
 
-function displayNameToUsername(username){
+function displayNameToUsername(username) {
 	return username.split(' ').join('-').toLowerCase();
 }
 
-function hashOf(input){
+function hashOf(input) {
 	return passwordHash.generate(input);
 }
 
-function makeSlug(min, max){
+function makeSlug(min, max) {
 	var t = '';
 	for (var i = 0; i < min + Math.floor(Math.random() * (max - min)); i++) {
 		var base = 65 + Math.random() * 25;
@@ -1491,21 +1522,21 @@ function makeSlug(min, max){
 //#endregion crypto funcs
 
 //#region passport funcs
-function ensureAuthenticated(req, res, next){
+function ensureAuthenticated(req, res, next) {
 	if (req.isAuthenticated()) {
 		return next();
 	}
 	res.redirect('/login?err=Unable%20to%20authenticate%20user.');
 }
 
-function ensureAJAXAuthenticated(req, res, next){
+function ensureAJAXAuthenticated(req, res, next) {
 	if (req.isAuthenticated()) {
 		return next();
 	}
 	res.json({err: 'User Is Not Authenticated', errcode: 403, data: ''});
 }
 
-function ensureAuthenticatedSilently(req, res, next){
+function ensureAuthenticatedSilently(req, res, next) {
 	if (req.isAuthenticated()) {
 		return next();
 	}
@@ -1515,30 +1546,30 @@ function ensureAuthenticatedSilently(req, res, next){
 
 //#region data parsing
 
-function getSelectList(){
+function getSelectList() {
 	var content = fs.readFileSync(__dirname + '/opt/selectList.json');
 	var selectList = JSON.parse(content);
 	return sortSelectList(selectList);
 }
-function sortSelectList(selectList){
-	selectList.tasks.admin = selectList.tasks.admin.sort(function(a, b){
+function sortSelectList(selectList) {
+	selectList.tasks.admin = selectList.tasks.admin.sort((a, b) => {
 		return a < b ? -1 : a > b ? 1 : 0;
 	});
-	selectList.tasks.default = selectList.tasks.default.sort(function(a, b){
+	selectList.tasks.default = selectList.tasks.default.sort((a, b) => {
 		return a < b ? -1 : a > b ? 1 : 0;
 	});
-	selectList.projs = selectList.projs.sort(function(a, b){
+	selectList.projs = selectList.projs.sort((a, b) => {
 		return a < b ? -1 : a > b ? 1 : 0;
 	});
 	return selectList;
 }
-function writeSelectList(tasks, projs){
+function writeSelectList(tasks, projs) {
 	var selectList = JSON.stringify(sortSelectList({tasks: tasks, projs: projs}), null, 2);
 	fs.writeFileSync(__dirname + '/opt/selectList.json', selectList);
 	return selectList;
 }
 
-function samrtLog(obj, indMult = 2, index = 0, println = true, iskey = false, shouldComma = true){
+function samrtLog(obj, indMult = 2, index = 0, println = true, iskey = false, shouldComma = true) {
 	for (let i = 0; i < index * indMult; i++) {
 		if (!iskey) process.stdout.write(' ');
 	}
@@ -1583,7 +1614,7 @@ function samrtLog(obj, indMult = 2, index = 0, println = true, iskey = false, sh
 // This will parse a delimited string into an array of
 // arrays. The default delimiter is the comma, but this
 // can be overriden in the second argument.
-function CSVToArray(strData, strDelimiter){
+function CSVToArray(strData, strDelimiter) {
 	// Check to see if the delimiter is defined. If not,
 	// then default to comma.
 	strDelimiter = strDelimiter || ',';

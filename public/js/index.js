@@ -7,7 +7,7 @@ let projCache = {};
 let shotCache = {};
 
 $(document).ready(function() {
-	$('.proj-inpc').each(function(){projCheckerFunc(this)});
+	$('.proj-inpc').each(function() { projCheckerFunc(this); });
 
 	$('.btn-delj').each(delJobEvent); // bind a delete blocker to each delete-job button
 
@@ -17,103 +17,69 @@ $(document).ready(function() {
 
 			if (parentForm.find('.shot-inpc').val() != '') {
 				e.preventDefault();
-				$.post(
-					'/code/addjob',
-					parentForm.serialize(),
-					function(data) {
-						if (data.errcode == 200) {
-							var srv = fromSrv;
-							job = data.data;
-							var tid = Math.floor(Math.random() * 1000000);
-							var toIns =
-								`
-								<tr class="ts-row row no-gutters col-12 job-row shrinkme" id="tid-` +
-								tid +
-								`">
-								<td class="col-3 job-proj">` +
-								job.proj +
-								`</td>
-								<td class="col-3 job-shot">` +
-								job.shot +
-								`</td>
-								<td class="col-3 job-task">` +
-								job.task +
-								`</td>
-								<td class="col-2 job-time">` +
-								job.time +
-								`</td>
-								<td class="col-1 job-del">
-								<form action="/code/deljob" method="POST">
-									<input name="jobuser" class="delj-user" value="` +
-								(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) +
-								`" hidden />
-									<input name="jobid" class="delj-id" value="` +
-								job.id +
-								`" hidden />
-									<input name="day" class="delj-day" value="` +
-								job.day +
-								`" hidden />
-									<input name="date" class="delj-date" value="` +
-								srv.tdate +
-								`" hidden />
-									<button id="deljob-` +
-								job.id +
-								`" class="btn-delj" type="submit" style="color: #e75045;"` +
-								(srv.editable == 'true' ? '' : ' disabled') +
-								`> <i class="fa fa-trash" aria-hidden="true"></i></button>
-									</form>
-								</td>
-							</tr>
-						`;
-							parentForm.parent().children('.job-table').each(function(){
-								var tbody = $(this).children('tbody').first();
-								tbody.append(toIns);
+				$.post('/code/addjob', parentForm.serialize(), function(data) {
+					if (data.errcode == 200) {
+						var srv = fromSrv;
+						job = data.data;
+						var tid = Math.floor(Math.random() * 1000000);
+						var toIns = `
+							<tr class="ts-row row no-gutters col-12 job-row shrinkme" id="tid-` + tid + `">
+							<td class="col-3 job-proj">` + job.proj + `</td>
+							<td class="col-3 job-shot">` + job.shot + `</td>
+							<td class="col-3 job-task">` + job.task + `</td>
+							<td class="col-2 job-time">` + job.time + `</td>
+							<td class="col-1 job-del">
+							<form action="/code/deljob" method="POST">
+								<input name="jobuser" class="delj-user" value="` + (srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `" hidden />
+								<input name="jobid" class="delj-id" value="` + job.id + `" hidden />
+								<input name="day" class="delj-day" value="` + job.day + `" hidden />
+								<input name="date" class="delj-date" value="` + srv.tdate + `" hidden />
+								<button id="deljob-` + job.id + `" class="btn-delj" type="submit" style="color: #e75045;"` + (srv.editable == 'true' ? '' : ' disabled') + `> <i class="fa fa-trash" aria-hidden="true"></i></button>
+								</form>
+							</td>
+						</tr>`;
 
-								var njob = $('#tid-' + tid);
-								var coords = {x: njob.offset().left + 20, y: njob.offset().top + 20};
-								sparkflow.tune(coords).generate();
-								sparkflow_timeline.replay();
+						parentForm.parent().children('.job-table').each(function() {
+							var tbody = $(this).children('tbody').first();
+							tbody.append(toIns);
 
-								var coordsr = {x: coords.x + njob.width(), y: coords.y};
-								sparkflowr.tune(coordsr).generate();
-								sparkflowr_timeline.replay();
+							var njob = $('#tid-' + tid);
+							var coords = {x: njob.offset().left + 20, y: njob.offset().top + 20};
+							sparkflow.tune(coords).generate();
+							sparkflow_timeline.replay();
 
-								setTimeout(
-									function(njob) {
-										njob.removeClass('shrinkme');
-									},
-									10,
-									njob
-								);
+							var coordsr = {x: coords.x + njob.width(), y: coords.y};
+							sparkflowr.tune(coordsr).generate();
+							sparkflowr_timeline.replay();
 
-								bindDeleteBlocker($('#deljob-' + job.id));
-								updateTotalWeekBar(tbody);
-								var total = updateTotalDayBar($(this));
-								updateDayColor(job.day, total);
-								updateShading(tbody);
-							});
-						} else if (data.err && data.errcode) {
-							alert('ERRCODE ' + data.errcode + ' : ' + data.err);
-							if (data.errcode == 403) location.reload();
-						} else {
-							alert('Empty / Malformed Data recieved. Please refresh the page.');
-							location.reload();
-						}
-					},
-					'json'
-				);
+							setTimeout(function(njob) { njob.removeClass('shrinkme'); }, 10, njob);
+
+							bindDeleteBlocker($('#deljob-' + job.id));
+							updateTotalWeekBar(tbody);
+							var total = updateTotalDayBar($(this));
+							updateDayColor(job.day, total);
+							updateShading(tbody);
+						});
+					} else if (data.err && data.errcode) {
+						alert('ERRCODE ' + data.errcode + ' : ' + data.err);
+						if (data.errcode == 403) location.reload();
+					} else {
+						alert('Empty / Malformed Data recieved. The page will now reload.');
+						location.reload();
+					}
+				},'json');
 			}
 		});
 	});
 
 	$('.proj-inpc').each(function() {
-		$(this).change(function () {projCheckerFunc(this)});
+		$(this).change(function() { projCheckerFunc(this); });
 	});
 
 	$('.sub-nav-link').each(function() {
 		// bind to the days as well
-		$(this).click(function(){
-			$('.proj-inpc').each(function(){
+		$(this).click(function() {
+			$('.proj-inpc').each(function() {
 				var taskel = $(this).parent().parent().find('.task-inpc');
 				if ($(this).val().toLowerCase() == 'admin') {
 					updateTasks(fromSrv.tasks.admin, taskel);
@@ -174,11 +140,11 @@ function projCheckerFunc(projel) {
 	} else if(fromSrv.sgHttpEnabled == 'true' && fromSrv.sgHttpRetriever == 'server') {
 		shotCache = fromSrv.sgHttpCache;
 		console.log("attempting to update",tval);
-		console.log(shotCache[tval]);
+		//console.log(shotCache[tval]);
 		if(shotCache[tval]) {
 			makeShotSelect(shotel);
-			console.log("updating",tval);
-			updateShots(shotCache[tval], shotel);
+			//setTimeout((tval) => {console.log("updating",tval);}, 250, tval);
+			setTimeout(updateShots, 250, shotCache[tval], shotel);
 		} else {
 			makeShotInp(shotel);
 		}
@@ -189,7 +155,7 @@ function onShotAJAXReturn(shotel, projName, data) {
 	if(data) {
 		shotCache[projName] = data;
 		console.log("onShotAjaxReturn", projName);
-		console.log("SHOTEL",$(shotel).html(''));
+		console.log("SHOTEL", $(shotel).html(''));
 		updateShots(data, shotel);
 	} else {
 		console.log("Server returned empty data.");
@@ -247,6 +213,7 @@ function getShots(shotel, projName, callback) {
 }
 
 function updateShots(tshots, shotel) {
+	//console.log(tshots.length,"shots found when updating");
 	let htmlToIns = "<option value=\"general\">general</option>";
 	for(let i in tshots) {
 		htmlToIns += "<option value=\""+tshots[i].code+"\">"+tshots[i].code+"</option>";
@@ -270,7 +237,7 @@ function bindDeleteBlocker(el) {
 }
 
 function delJobEvent() {
-	$(this).bind('click', function(e){
+	$(this).bind('click', function(e) {
 		e.preventDefault(); // dont send off the form by visiting the page
 		var parentForm = $(this).parent();
 		var parentTable = $(this).parent().parent().parent().parent().parent().find('.job-table'); // thatsa lotta parents
@@ -278,10 +245,7 @@ function delJobEvent() {
 		var day = parentForm.find('.delj-day').val();
 
 		parentForm.children('');
-		$.post(
-			'/code/deljob',
-			parentForm.serialize(),
-			function(data){
+		$.post('/code/deljob', parentForm.serialize(), function(data) {
 				// but use my js to send it off, it's async :)
 				if (data.err == '') {
 					var jobrow = parentForm.parent().parent();
@@ -293,19 +257,13 @@ function delJobEvent() {
 
 					jobrow.addClass('shrinkme');
 
-					setTimeout(
-						function(jobrow, parentTable, day){
+					setTimeout(function(jobrow, parentTable, day) {
 							jobrow.remove(); // remove the job
 							updateTotalWeekBar(parentTable);
 							var total = updateTotalDayBar(parentTable); // update the total
 							updateDayColor(day, total);
 							updateShading(parentTable); // update the colors
-						},
-						700,
-						jobrow,
-						parentTable,
-						day
-					);
+						}, 700, jobrow, parentTable, day);
 				} else {
 					alert(data.err);
 				}
@@ -331,7 +289,7 @@ function updateDayColor(day, total) {
 
 function updateTotalWeekBar() {
 	var total = 0;
-	$('.job-time').each(function(){
+	$('.job-time').each(function() {
 		total += parseFloat($(this).text());
 	});
 	if (total >= 24) $('#subm-btn').attr('disabled');
@@ -339,12 +297,12 @@ function updateTotalWeekBar() {
 }
 
 function updateTotalDayBar(tableEl) {
-	tableEl.find('.total-day-bar').each(function(){
+	tableEl.find('.total-day-bar').each(function() {
 		$(this).remove();
 	});
 	var total = 0;
-	tableEl.find('.job-row').each(function(){
-		$(this).children('.job-time').each(function(){
+	tableEl.find('.job-row').each(function() {
+		$(this).children('.job-time').each(function() {
 			total += parseFloat($(this).text());
 		});
 	});
@@ -352,9 +310,7 @@ function updateTotalDayBar(tableEl) {
 	var toIns =
 		`
 		<tr class="ts-row row no-gutters col-12 total-day-bar">
-			<td class="col-1 offset-9" style="text-align: left;">` +
-		total +
-		`</td>
+			<td class="col-1 offset-9" style="text-align: left;">` + total + `</td>
 			<td class="col-2">Total</td>
 		</tr>`;
 	tableEl.append(toIns);
@@ -364,7 +320,7 @@ function updateTotalDayBar(tableEl) {
 
 function updateShading(tableEl) {
 	var cc = 0;
-	tableEl.find('.job-row').each(function(){
+	tableEl.find('.job-row').each(function() {
 		if (cc % 2 != 0) {
 			$(this).removeClass('even');
 		} else {
