@@ -141,10 +141,10 @@ function projCheckerFunc(projel) {
 		shotCache = fromSrv.sgHttpCache;
 		console.log("attempting to update",tval);
 		//console.log(shotCache[tval]);
-		if(shotCache[tval]) {
+		if(shotCache[tval] && shotCache[tval].length >= 1) {
 			makeShotSelect(shotel);
 			//setTimeout((tval) => {console.log("updating",tval);}, 250, tval);
-			setTimeout(updateShots, 250, shotCache[tval], shotel);
+			updateShots(shotCache[tval], shotel);
 		} else {
 			makeShotInp(shotel);
 		}
