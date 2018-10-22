@@ -913,9 +913,11 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		app.post('/auth/signup', ensureAuthenticated, function slashAuthSignup(req, res) {
 			if (req.user.isadmin) {
-				if(req.body.password != req.body.newpassword) return res.redirect("/?err=Your%20passwords%20dont%20match!");
-				let redir = verifyPassword(req.body.user, req.body.newpassword);
+				if(req.body.password != req.body.confirmpassword) return res.redirect("/?err=Your%20passwords%20dont%20match!");
+
+				let redir = verifyPassword(req.body.username, req.body.confirmpassword);
 				if(redir) return res.redirect("/?err="+redir);
+
 				console.log(redir);
 
 				var date  = new Date();
@@ -962,7 +964,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 		});
 
 		app.post('/auth/changepassword', ensureAuthenticated, function slashAuthChangepasswordPOST(req, res) {
-			let redir = verifyPassword(user.name, req.body.newpassword) 
+			let redir = verifyPassword(req.user.name, req.body.newpassword) 
 			if(redir) return res.redirect('/?err='+redir);
 			
 

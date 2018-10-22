@@ -5,14 +5,21 @@
 		<!-- Code written by Samuel J. Clarke, May-June 2018, for CumulusVFX. -->
 
 			<!-- Meta -->
-		<meta name="viewport" content="width=device-width, initial-scale=1,0, shrink-to-fit=no">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 		<meta name="author" content="Samuel J. Clarke">
 		<meta name="keywords" content="HTML,CSS,XML,JavaScript,Cumulus,CumulusVFX,VFX,Timesheets,Samuel,Clarke,NodeJS,Timetables,Timesheets">
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<title>Timesheets!</title>
+
+		<script type="text/javascript">
+			let IS_NODE = (typeof module !== 'undefined');
+			console.log(IS_NODE);
+		</script>
+
 		<link rel="shortcut icon" href="/res/favicon.ico?">
 			<!-- jQuery -->
 		<script src="./lib/jquery.js"></script>
+		<script type="text/javascript"> if(IS_NODE) { jQuery = $ = module.exports } </script>
 			<!-- jQuery Form Validator -->
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js" crossorigin="anonymous"></script>
 			<!-- Tether & Popper (for bootstrap) -->
