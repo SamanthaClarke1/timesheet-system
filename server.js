@@ -96,14 +96,17 @@ const exit = (exitCode) => {
 	process.stdout.write('\033[00m\n');
 	process.exit(exitCode);
 };
-console.log = function(str, pers = srvrPRFX){
-	// WOAH, LOOK AT THE SPOOKY
+
+// okay, yeah, redefining system functions probably isnt the best idea but it works damn fine, and you can still use stdout.write
+console.log = function(str, pers = srvrPRFX) { 
 	process.stdout.clearLine();
 	process.stdout.cursorTo(0);
 	process.stdout.write(pers + str + '\n' + promptr);
 };
+
 var loaderShouldBePrinting = true;
 printLoader('Server in startup ');
+
 var TKEY = '';
 var TKEY_TIMEOUT = 1000 * 60 * 2;
 var TKEY_IS_VALID = false;
@@ -1566,7 +1569,7 @@ function sortSelectList(selectList) {
 	return selectList;
 }
 function writeSelectList(tasks, projs) {
-	var selectList = JSON.stringify(sortSelectList({tasks: tasks, projs: projs}), null, 2);
+	var selectList = JSON.stringify(sortSelectList({tasks: tasks, projs: projs, bpass: bpass}), null, 2);
 	fs.writeFileSync(__dirname + '/opt/selectList.json', selectList);
 	return selectList;
 }
