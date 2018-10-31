@@ -1,9 +1,9 @@
 {
   "name": "timetable-manager",
-  "version": "1.7.9",
+  "version": "1.8.3",
   "description": "Manages the timetables for cmls. Recieves input from artists, that log their time, and stores it in a db.",
   "main": "server.js",
-  "codename": "Red Rocket",
+  "codename": "Tenacious Timer",
   "dependencies": {
     "body-parser": "^1.18.3",
     "boxen": "^2.0.0",

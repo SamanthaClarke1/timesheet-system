@@ -211,6 +211,14 @@ th {
 	padding: 0;
 	margin: 0;
 }
+.icon16 {
+	height: 16px;
+	width: 16px;
+}
+.icon24 {
+	height: 24px;
+	width: 24px;
+}
 .icon32 {
 	height: 32px;
 	width: 32px;

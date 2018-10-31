@@ -3,14 +3,49 @@
 /* Code written by Samuel J. Clarke, May-July 2018, for CumulusVFX. */
 //begin server.js
 
+/*
+*                                                                 
+*                              NNNNNN                             
+*                      Ndhyoo+////////+ooyhdN                     
+*                  Nhs+//////////////////////+shN                 
+*               Nho//////////////////////////////ohN              
+*             ms////////////////////////////////////sm            
+*           ms////////////////////////////////////////sm          
+*          y////////////////////////////////////////////y         
+*        No//////////////////////////////////////////////oN       
+*       m+////////////////////////////////////////////////+m      
+*      N+//////////////////////////////////////////////////+N     
+*      s////////////////////////////////////////////////////s     
+*     d/ohhyyyyyyyyyyyyyyyyssshmmmhhy+///////////////////////d    
+*     osmo`                   `my`  oN+//////////////////////o    
+*    N+m+                     / -   .No//shmNNmdyo////////////N   
+*    m+mo  -/++++/.           / h+oydy/yN         mo//////////m   
+*    m+ms                     /    No/d             o/////////m   
+*    N+my  `..``````````````  / sys+/o              m/////////N   
+*     sms  :oooooooooooosso/  / ysydmN              d////////o    
+*     mmo                     +                     NNNmy////d    
+*       o  -+ooossssssssssy-  +                          h//s     
+*       s                     o                          h/+N     
+*       y  :++++++++++++++++` o Nmmmmmmmmmmmmmmmmmmmmmmds/+m      
+*       o  -::::--:::::::--.  o o////////////////////////oN       
+*       o                     o o///////////////////////y         
+*       o .hdhyyyyyyyyyyss+-  + +/////////////////////sm          
+*       /                     / +///////////////////sm            
+*    Nmmhoooo++++///+++oss+`  / +////////////////ohN              
+* d:`                 .yy.`   / +////////////+shN                 
+* h`                  oNy.`  .hm+/////+ooyhdN                     
+*  d/:////////////:/+osN  NmN   NNNNN                              
+*                                                                 
+*/
+
 //#region optionParsing ## parses the options, and acts on *some* of them. ## //
 require('dotenv').config();
 
 const optionDefinitions = [
-	{ name: 'dburl', alias: 'u', type: String		},
-	{ name: 'help', alias: 'h', type: Boolean		},
-	{ name: 'version', alias: 'v', type: Boolean	},
-	{ name: 'quickpush', alias: 'q', type: Boolean	}
+	{ name: 'dburl',		alias: 'u',		type: String	},
+	{ name: 'help',			alias: 'h',		type: Boolean	},
+	{ name: 'version',		alias: 'v', 	type: Boolean	},
+	{ name: 'quickpush',	alias: 'q',		type: Boolean	}
 ];
 
 const boxen 			= require('boxen');
@@ -557,68 +592,72 @@ mongodb.connect(url, function mongConnect(err, db) {
 			}
 
 			usersDB.findOne({name: req.body.jobuser}, (err, user) => {
-				console.log('adding ' + user.name + "'s job on date " + req.body.date + ' day ' + req.body.day + ' NOW: ' + getThisDate());
-				timesheetDB.findOne({user: user.name, date: req.body.date}, (err, timesheet) => {
-					if (err) throw err;
+				if(user) {
+					console.log('adding ' + user.name + "'s job on date " + req.body.date + ' day ' + req.body.day + ' NOW: ' + getThisDate());
+					timesheetDB.findOne({user: user.name, date: req.body.date}, (err, timesheet) => {
+						if (err) throw err;
 
-					var truets = true;
-					if (!timesheet) {
-						timesheet = user.timesheet;
-						truets = false;
-					}
-
-					var toIns = {
-						day: req.body.day,
-						shot: req.body.shotcode,
-						proj: req.body.project,
-						time: req.body.timespent,
-						task: req.body.task,
-						id: makeSlug(15, 15),
-					};
-					if (toIns.day.length && toIns.shot && toIns.proj && toIns.time && toIns.task) {
-						if (toIns.day.length > 11) return res.json({err: 'Day too long', errcode: 400, data: ''});
-						if (toIns.shot.length > 35) return res.json({err: 'Shot code too long', errcode: 400, data: ''});
-						if (toIns.proj.length > 25) return res.json({err: 'Project too long', errcode: 400, data: ''});
-						if (toIns.task.length > 20) return res.json({err: 'Task too long', errcode: 400, data: ''});
-						if (toIns.day.length < 2) return res.json({err: 'Day too short', errcode: 400, data: ''});
-						if (toIns.task.length < 1) return res.json({err: 'Task too short', errcode: 400, data: ''});
-						if (toIns.shot.length < 1) return res.json({err: 'Shot code too short', errcode: 400, data: ''});
-
-						timesheet.jobs.push(toIns);
-
-						if (!truets) {
-							req.user.timesheet = timesheet;
-							usersDB.update(
-								{name: user.name},
-								{
-									cost: user.cost,
-									name: user.name,
-									displayName: user.displayName,
-									dob: user.dob,
-									password: user.password,
-									isadmin: user.isadmin,
-									email: user.email,
-									timesheet: user.timesheet,
-								},
-								(err, data) => {
-									if (err) throw err;
-									return res.json({err: '', errcode: 200, data: toIns}); //painfulpart // why wont the glorious spread operator come yet?
-								}
-							);
-						} else {
-							timesheetDB.update(
-								{user: user.name, date: req.body.date},
-								{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']},
-								(err, data) => {
-									if (err) throw err;
-									return res.json({err: '', errcode: 200, data: toIns}); //painfulpart
-								}
-							);
+						var truets = true;
+						if (!timesheet) {
+							timesheet = user.timesheet;
+							truets = false;
 						}
-					} else {
-						return res.json({err: 'Missing input fields!', errcode: 400, data: {}});
-					}
-				});
+
+						var toIns = {
+							day: req.body.day,
+							shot: req.body.shotcode,
+							proj: req.body.project,
+							time: req.body.timespent,
+							task: req.body.task,
+							id: makeSlug(15, 15),
+						};
+						if (toIns.day.length && toIns.shot && toIns.proj && toIns.time && toIns.task) {
+							if (toIns.day.length > 11) return res.json({err: 'Day too long', errcode: 400, data: ''});
+							if (toIns.shot.length > 35) return res.json({err: 'Shot code too long', errcode: 400, data: ''});
+							if (toIns.proj.length > 25) return res.json({err: 'Project too long', errcode: 400, data: ''});
+							if (toIns.task.length > 20) return res.json({err: 'Task too long', errcode: 400, data: ''});
+							if (toIns.day.length < 2) return res.json({err: 'Day too short', errcode: 400, data: ''});
+							if (toIns.task.length < 1) return res.json({err: 'Task too short', errcode: 400, data: ''});
+							if (toIns.shot.length < 1) return res.json({err: 'Shot code too short', errcode: 400, data: ''});
+
+							timesheet.jobs.push(toIns);
+
+							if (!truets) {
+								req.user.timesheet = timesheet;
+								usersDB.update(
+									{name: user.name},
+									{
+										cost: user.cost,
+										name: user.name,
+										displayName: user.displayName,
+										dob: user.dob,
+										password: user.password,
+										isadmin: user.isadmin,
+										email: user.email,
+										timesheet: user.timesheet,
+									},
+									(err, data) => {
+										if (err) throw err;
+										return res.json({err: '', errcode: 200, data: toIns}); //painfulpart // why wont the glorious spread operator come yet?
+									}
+								);
+							} else {
+								timesheetDB.update(
+									{user: user.name, date: req.body.date},
+									{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']},
+									(err, data) => {
+										if (err) throw err;
+										return res.json({err: '', errcode: 200, data: toIns}); //painfulpart
+									}
+								);
+							}
+						} else {
+							return res.json({err: 'Missing input fields!', errcode: 400, data: {}});
+						}
+					});
+				} else {
+					return res.json({err: 'User not found!', errcode: 400, data: {}});
+				}
 			});
 		});
 

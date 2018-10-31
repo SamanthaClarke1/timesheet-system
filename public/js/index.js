@@ -7,6 +7,11 @@ let projCache = {};
 let shotCache = {};
 
 $(document).ready(function() {
+	if(!IS_NODE) {
+		$("#rokyt-launcher").toggle();
+		$("#rokyt-hr").toggle();
+	}
+
 	$('.proj-inpc').each(function() { projCheckerFunc(this); });
 
 	$('.btn-delj').each(delJobEvent); // bind a delete blocker to each delete-job button
@@ -89,6 +94,8 @@ $(document).ready(function() {
 			});
 		});
 	});
+
+	if(IS_NODE) bindRokytIcoClickEvents();
 });
 
 function makeShotSelect(shotel) {
@@ -328,6 +335,26 @@ function updateShading(tableEl) {
 		}
 		cc++;
 	});
+}
+
+function bindRokytIcoClickEvents() {
+	$(".rokyt-ico").each(function() {
+		$(this).click(rokytIcoClickEvent);
+	});
+}
+
+const rokytProgOpts = {
+	"nuke": ["N", "A", "X"]
+};
+function rokytIcoClickEvent() {
+	$(".rokyt-ico").each(function() {
+		$(this).removeClass("active");
+	});
+	$(this).addClass("active");
+
+	for (let prog in rokytProgOpts) {
+		console.log(prog);
+	}
 }
 
 // @license-end
