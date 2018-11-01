@@ -6,12 +6,14 @@ var rKeys = [];
 const easterEggString = 'me me big boy';
 const startDate = new Date().getTime();
 
-setInterval(function(){
-	let tDate = new Date().getTime();
-	if (Math.abs(tDate - startDate) > 86400 * 100) {
-		location.reload();
-	}
-}, 1000 * 60); // once every minute, check if the page is too outdated, and if so, refresh the page
+if(!IS_NODE) { console.log("Welcome to the timesheet webpage. It'll keep itself updated by restarting in 12h, if you leave it open.");
+	setInterval(function() {
+		let tDate = new Date().getTime();
+		if (Math.abs(tDate - startDate) > 12 * 60 * 60 * 1000) {
+			location.reload();
+		}
+	}, 1000 * 60 * 60); // once every hour, check if the page is too outdated, and if so, refresh the page
+}
 
 $(document).ready(function(){
 	if (window.location.href.indexOf('err=') != -1) window.history.pushState('', '', window.location.href.split('err=')[0]);
@@ -26,9 +28,7 @@ $(document).ready(function(){
 			$('p, a, h1, h2, h3, h4, h5, h6, span, #text, td, option, input').each(function(){
 				if ($(this).children().length < 1)
 					$(this).text(
-						$(this)
-							.text()
-							.split('')
+						$(this).text().split('')
 							.sort((a, b) => {
 								return Math.random() - 0.5;
 							})

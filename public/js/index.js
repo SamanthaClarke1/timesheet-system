@@ -1,10 +1,22 @@
 // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
 
-// yeah, yeah, the whole idea of using ajax came in half way through development, so my code looks like sphagetti.
+// yeah, yeah, the whole idea of using ajax came in half way through development, so my code looks like spaghetti.
 // but, yknow, whatever, i could go some pasta, so who's the real winner here?
+// edit: i have eaten so much spaghetti that i've developed a gluten allergy
 
 let projCache = {};
 let shotCache = {};
+
+let rokytProgOpts, timers;
+if(IS_NODE) {
+	rokytProgOpts = { // prog to trigger on, pretty names arr, tech values arr
+		"nuke": {
+			"pretty": ["Normal", "Assist", "X"],
+			"tech": ["N", "A", "X"]
+		}
+	};
+	timers = [];
+}
 
 $(document).ready(function() {
 	if(!IS_NODE) {
@@ -16,66 +28,7 @@ $(document).ready(function() {
 
 	$('.btn-delj').each(delJobEvent); // bind a delete blocker to each delete-job button
 
-	$('.btn-inpc').each(function() {
-		$(this).bind('click', function(e) {
-			var parentForm = $(this).parent();
-
-			if (parentForm.find('.shot-inpc').val() != '') {
-				e.preventDefault();
-				$.post('/code/addjob', parentForm.serialize(), function(data) {
-					if (data.errcode == 200) {
-						var srv = fromSrv;
-						job = data.data;
-						var tid = Math.floor(Math.random() * 1000000);
-						var toIns = `
-							<tr class="ts-row row no-gutters col-12 job-row shrinkme" id="tid-` + tid + `">
-							<td class="col-3 job-proj">` + job.proj + `</td>
-							<td class="col-3 job-shot">` + job.shot + `</td>
-							<td class="col-3 job-task">` + job.task + `</td>
-							<td class="col-2 job-time">` + job.time + `</td>
-							<td class="col-1 job-del">
-							<form action="/code/deljob" method="POST">
-								<input name="jobuser" class="delj-user" value="` + (srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `" hidden />
-								<input name="jobid" class="delj-id" value="` + job.id + `" hidden />
-								<input name="day" class="delj-day" value="` + job.day + `" hidden />
-								<input name="date" class="delj-date" value="` + srv.tdate + `" hidden />
-								<button id="deljob-` + job.id + `" class="btn-delj" type="submit" style="color: #e75045;"` + (srv.editable == 'true' ? '' : ' disabled') + `> <i class="fa fa-trash" aria-hidden="true"></i></button>
-								</form>
-							</td>
-						</tr>`;
-
-						parentForm.parent().children('.job-table').each(function() {
-							var tbody = $(this).children('tbody').first();
-							tbody.append(toIns);
-
-							var njob = $('#tid-' + tid);
-							var coords = {x: njob.offset().left + 20, y: njob.offset().top + 20};
-							sparkflow.tune(coords).generate();
-							sparkflow_timeline.replay();
-
-							var coordsr = {x: coords.x + njob.width(), y: coords.y};
-							sparkflowr.tune(coordsr).generate();
-							sparkflowr_timeline.replay();
-
-							setTimeout(function(njob) { njob.removeClass('shrinkme'); }, 10, njob);
-
-							bindDeleteBlocker($('#deljob-' + job.id));
-							updateTotalWeekBar(tbody);
-							var total = updateTotalDayBar($(this));
-							updateDayColor(job.day, total);
-							updateShading(tbody);
-						});
-					} else if (data.err && data.errcode) {
-						alert('ERRCODE ' + data.errcode + ' : ' + data.err);
-						if (data.errcode == 403) location.reload();
-					} else {
-						alert('Empty / Malformed Data recieved. The page will now reload.');
-						location.reload();
-					}
-				},'json');
-			}
-		});
-	});
+	bindSubmitJobClickEvent();
 
 	$('.proj-inpc').each(function() {
 		$(this).change(function() { projCheckerFunc(this); });
@@ -95,8 +48,13 @@ $(document).ready(function() {
 		});
 	});
 
-	if(IS_NODE) bindRokytIcoClickEvents();
+	if(IS_NODE) {
+		bindRokytIcoClickEvents();
+		fillRokytOpts($(".rokyt-ico.active"));
+	}
 });
+
+//#region dropdown ajax
 
 function makeShotSelect(shotel) {
 	let sel =  `<select name="shotcode" class="col-12 no-pad-right shot-inpc">
@@ -238,11 +196,12 @@ function updateTasks(ttasks, taskel) {
 	taskel.empty();
 	taskel.append(html);
 }
+//#endregion dropdown ajax
 
+//#region timetable edits
 function bindDeleteBlocker(el) {
 	el.parent().find('.btn-delj').each(delJobEvent); // bind a delete blocker to this el
 }
-
 function delJobEvent() {
 	$(this).bind('click', function(e) {
 		e.preventDefault(); // dont send off the form by visiting the page
@@ -279,7 +238,72 @@ function delJobEvent() {
 		);
 	});
 }
+function bindSubmitJobClickEvent() {
+	$('.btn-inpc').each(function() {
+		$(this).bind('click', submitJobClickEvent);
+	});
+}
+function submitJobClickEvent(e) {
+	var parentForm = $(this).parent();
 
+	if (parentForm.find('.shot-inpc').val() != '') {
+		e.preventDefault();
+		$.post('/code/addjob', parentForm.serialize(), function(data) {
+			if (data.errcode == 200) {
+				var srv = fromSrv;
+				job = data.data;
+				var tid = Math.floor(Math.random() * 1000000);
+				var toIns = `
+					<tr class="ts-row row no-gutters col-12 job-row shrinkme" id="tid-` + tid + `">
+					<td class="col-3 job-proj">` + job.proj + `</td>
+					<td class="col-3 job-shot">` + job.shot + `</td>
+					<td class="col-3 job-task">` + job.task + `</td>
+					<td class="col-2 job-time">` + job.time + `</td>
+					<td class="col-1 job-del">
+						<form action="/code/deljob" method="POST">
+							<input name="jobuser" class="delj-user" value="` + (srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `" hidden />
+							<input name="jobid" class="delj-id" value="` + job.id + `" hidden />
+							<input name="day" class="delj-day" value="` + job.day + `" hidden />
+							<input name="date" class="delj-date" value="` + srv.tdate + `" hidden />
+							<button id="deljob-` + job.id + `" class="btn-delj" type="submit" style="color: #e75045;"` + (srv.editable == 'true' ? '' : ' disabled') + `> <i class="fa fa-trash" aria-hidden="true"></i></button>
+						</form>
+					</td>
+				</tr>`;
+
+				parentForm.parent().children('.job-table').each(function() {
+					var tbody = $(this).children('tbody').first();
+					tbody.append(toIns);
+
+					var njob = $('#tid-' + tid);
+					var coords = {x: njob.offset().left + 20, y: njob.offset().top + 20};
+					sparkflow.tune(coords).generate();
+					sparkflow_timeline.replay();
+
+					var coordsr = {x: coords.x + njob.width(), y: coords.y};
+					sparkflowr.tune(coordsr).generate();
+					sparkflowr_timeline.replay();
+
+					setTimeout(function(njob) { njob.removeClass('shrinkme'); }, 10, njob);
+
+					bindDeleteBlocker($('#deljob-' + job.id));
+					updateTotalWeekBar(tbody);
+					var total = updateTotalDayBar($(this));
+					updateDayColor(job.day, total);
+					updateShading(tbody);
+				});
+			} else if (data.err && data.errcode) {
+				alert('ERRCODE ' + data.errcode + ' : ' + data.err);
+				if (data.errcode == 403) location.reload();
+			} else {
+				alert('Empty / Malformed Data recieved. The page will now reload.');
+				location.reload();
+			}
+		},'json');
+	}
+}
+//#endregion timetable edits
+
+//#region updaters
 function updateDayColor(day, total) {
 	var el = $('#' + day + '-daylink').children('a');
 	var classToAdd = total == 0 ? 'red' : total >= 8 ? 'green' : 'yellow';
@@ -336,25 +360,151 @@ function updateShading(tableEl) {
 		cc++;
 	});
 }
+//#endregion updaters
 
-function bindRokytIcoClickEvents() {
-	$(".rokyt-ico").each(function() {
-		$(this).click(rokytIcoClickEvent);
-	});
-}
-
-const rokytProgOpts = {
-	"nuke": ["N", "A", "X"]
-};
-function rokytIcoClickEvent() {
-	$(".rokyt-ico").each(function() {
-		$(this).removeClass("active");
-	});
-	$(this).addClass("active");
-
-	for (let prog in rokytProgOpts) {
-		console.log(prog);
+function makeSlug(min, max) {
+	var t = '';
+	for (var i = 0; i < min + Math.floor(Math.random() * (max - min)); i++) {
+		var base = 65 + Math.random() * 25;
+		if (Math.random() < 0.4) {
+			base += 32;
+		} else if (Math.random() < 0.3) {
+			base = 48 + Math.random() * 9;
+		}
+		t += String.fromCharCode(base);
 	}
+	return t;
 }
+
+//#region rokyt
+if(IS_NODE) {
+	function rokytLaunchClickEvent() {
+		//TODO
+		$("#rokyt-launcher").parent().find(".submitJobForm").find("")
+	}
+	function bindRokytIcoClickEvents() {
+		$(".rokyt-ico").each(function() {
+			$(this).click(rokytIcoClickEvent);
+		});
+	}
+	function rokytIcoClickEvent() {
+		$(".rokyt-ico").each(function() {
+			$(this).removeClass("active");
+		});
+		$(this).addClass("active");
+
+		fillRokytOpts(this);
+	}
+	function fillRokytOpts(tt) {
+		let hadAMatch = false;
+		for (let prog in rokytProgOpts) {
+			if($(tt).hasClass("rokyt-ico-"+prog)) {
+				let toAppend = "";
+				hadAMatch = true;
+				for(let i in rokytProgOpts[prog]["pretty"]) {
+					let optPretty = rokytProgOpts[prog].pretty[i];
+					let optTech = rokytProgOpts[prog].tech[i];
+					toAppend += `<option value=${optTech}>${optPretty}</option>`;
+				}
+				$(".rokyt-xtra-opts").empty().append(toAppend);
+				$(".rokyt-xtra-opts").show();
+			}
+		}
+		if(!hadAMatch) $(".rokyt-xtra-opts").hide();
+		return hadAMatch;
+	}
+
+	function updateTimerDisplay() {
+		//TODO
+	}
+
+	//#region rokyt-timers
+
+	/// To explain "timers"...
+	/// example timer, [0]:
+	/// {
+	///    "timeSpent": 0, // int, milliseconds
+	///    "timeStarted": 1540961951344, // int, unix timestamp
+	///    "proj": "Lambs Of God", // string, project
+	///    "id": "abcdef", // string, 6 long slug
+	///    "prog": "nuke", // string, program
+	///    "xtraopts": "N", // string, value from xtra-opts dropdown
+	///    "task": "Roto", // string, task
+	///    "shot": "scb_010" // string, shot code
+	/// }
+	/// example timer, [0], gets ended at 1540962051344, and becomes:
+	/// {
+	///    "timeSpent": 100000, // timeSpent (0) + timeEnding (1540962051344) - timeStarted (1540961951344)
+	///    "timeStarted": -1 // timeStarted becomes -1, which is a sentinel key for "paused".
+	///    ...
+	/// }
+	/// example timer, [0], gets unpaused at 1540962151344, and becomes:
+	/// {
+	///    "timeSpent": 100000, // unchanged
+	///    "timeStarted": 1540962151344 // updates to current time
+	///    ...
+	/// }
+	/// i would love to use some OOP for this, but my current methodology for this page has not been OOP at all. 
+	/// so, im not gonna stop that now, even if i dont really like function based programming as much as i like oop
+	/// so instead, im going to work on the following functions...
+
+	function createTimer(proj, shot, task, prog, xtraopts, id=makeSlug(6, 6), timeSpent=0, startTime=new Date() ) { // creates a new timer and returns it.
+		let timer = {
+			"timeSpent": timeSpent, // int, milliseconds
+			"timeStarted": startTime-0, // int, unix timestamp 
+			// oh and startTime-0 is a great coercion trick: if its an int it wont do anything, and if its a date it'll coerse it to an int
+			"proj": proj, // string, project
+			"id": id, // string, 6 long slug
+			"prog": prog, // string, program
+			"xtraopts": xtraopts, // string, value from xtra-opts dropdown
+			"task": task, // string, task
+			"shot": shot // string, shot code
+		}
+		return timer;
+	}
+	function addTimer(timer) { // adds a timer and returns it, also updates the display
+		timers.push(timer);
+		updateTimerDisplay();
+		return timer;
+	}
+	function pauseTimer(timer, now=new Date()) { // if the timers not already paused, pauses it, calculates its time (see above example), updates display,
+											  // and returns the timer if successful, false otherwise
+		timer.timeSpent += now - timer.timeStarted;
+		timer.timeStarted = -1;
+		updateTimerDisplay();
+		return timer;
+	}
+	function unpauseTimer(timer, now=new Date()) { // unpauses a timer and returns it
+		timer.timeStarted = now.getTime();
+		updateTimerDisplay();
+		return timer;
+	}
+	function publishTimer(id) { // publishes a timer to the timesheet bar, updates the display, returns timer
+		//TODO
+	}
+	function removeTimer(id) { // removes a timer, updates the display, returns the timer
+		let removedTimer = timers.splice(getTimerIndex(id), 1)[0];
+		updateTimerDisplay();
+		return removedTimer;
+	}
+	function getTimerIndex(id) { // like getTimer, but it returns the index instead of the timer, still returns false on failure.
+		for(let i in timers) {
+			if(timers[i].id == id) {
+				return i-0;//coersion to int >:)
+			}
+		}
+		return false;
+	}
+	function getTimer(id) { // returns a timer with the specified id
+		for(let timer of timers) {
+			if(timer.id == id) {
+				return timer;
+			}
+		}
+		return false;
+	}
+	//#endregion rokyt-timers
+}
+//#endregion rokyt
 
 // @license-end

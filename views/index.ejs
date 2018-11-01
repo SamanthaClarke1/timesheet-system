@@ -150,31 +150,31 @@
 
 								<tbody class="rokyt-body-bot no-gutters">
 									<tr class="rokyt-row row no-gutters col-12">
-										<td class="col-4 row no-gutters text-center"> 
+										<td class="col-5 row no-gutters text-center"> 
 										<!-- 
 											i did this in the nastiest/most beautiful regex string ever (depending on how much you like regex), please enjoy.
-											F:	([\s]*)(<img class="img img-responsive icon32" alt="cmls logo"\n)(\s*src="[0-9A-z./]*" />)
-											R:	$1<div class="rokyt-ico">$1\t$2\t$3$1</div>
+											Find:	([\s]*)(<img class="img img-responsive icon32" alt="cmls logo"\n)(\s*src="[0-9A-z./]*" />)
+											Repl:	$1<div class="rokyt-ico col-4 text-center rokyt-ico-nuke">$1\t$2\t$3$1</div>
 										-->
-											<div class="rokyt-ico col-4 text-center rokyt-ico-nuke">
-												<img class="img img-responsive icon32" alt="nuke"
+											<div class="rokyt-ico col-4 text-center rokyt-ico-nuke active">
+												<img class="img img-responsive fill-y" alt="nuke"
 													src="/res/nuke/nuke32x32.ico" />
 											</div>
 											<div class="rokyt-ico col-4 text-center rokyt-ico-maya">
-												<img class="img img-responsive icon32" alt="maya"
+												<img class="img img-responsive fill-y" alt="maya"
 													src="/res/maya/maya32x32.ico" />
 											</div>
 											<div class="rokyt-ico col-4 text-center rokyt-ico-houdini">
-												<img class="img img-responsive icon32" alt="houdini"
+												<img class="img img-responsive fill-y" alt="houdini"
 													src="/res/houdini/houdini32x32.ico" />
 											</div>
 										</td>
-										<td class="col-4">
+										<td class="col-2">
 											<select class="col-12 fill-y rokyt-xtra-opts">
 												<!-- this'll be filled with jquery, all g. -->
 											</select>
 										</td>
-										<td class="col-4">
+										<td class="col-5">
 											<button id="rokyt-launch-btn" class="btn btn-outline-warning btn-block btn-inpc">
 												Launch!
 											</button>
@@ -189,9 +189,13 @@
 						<!-- sends data to /addjob, which adds the job to the list and redirects back here. -->
 						<form id="submitJobForm-<%= day %>" class="row no-gutters col-12 submitJobForm" action="/code/addjob" method="POST">
 							<div class="row no-gutters col-12">
-								<% if(user.isadmin) { %> <input name="jobuser" value="<%= tuser.name %>" hidden /> <% } else { %> <input name="jobuser" value="<%= user.name %>" hidden /> <% } %>
-								<input name="day" value="<%= daycp %>" hidden />
-								<input name="date" value="<%= targetdate %>" hidden />
+								<% if(user.isadmin) { %> 
+									<input name="jobuser" value="<%= tuser.name %>" class="jobusr-inpc" hidden />
+								<% } else { %> 
+									<input name="jobuser" value="<%= user.name %>" class="jobusr-inpc" hidden /> 
+								<% } %>
+								<input name="day" value="<%= daycp %>" class="day-inpc" hidden />
+								<input name="date" value="<%= targetdate %>" class="date-inpc" hidden />
 	
 								<div class="col-3">
 									<select name="project" class="col-12 no-pad-right proj-inpc fill-y">

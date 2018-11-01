@@ -13,7 +13,7 @@
 
 		<script type="text/javascript">
 			let IS_NODE = (typeof module !== 'undefined');
-			console.log(IS_NODE);
+			if(IS_NODE) { console.log("Welcome to the timesheet desktop app."); }
 		</script>
 
 		<link rel="shortcut icon" href="./res/tslogo/tslogo32x32.ico?">
@@ -29,14 +29,14 @@
 		<link rel="stylesheet" href="./lib/bootstrap4.css">
 		<script src="./lib/bootstrap4.js"></script>
 			<!-- Fonts & Icons-->
-		<link href="https://fonts.googleapis.com/css?family=Archivo|Noto+Sans:700" rel="stylesheet"> 
+		<link href="https://fonts.googleapis.com/css?family=Archivo|Noto+Sans:700" rel="stylesheet">
 		<script src="https://use.fontawesome.com/52160498ec.js"></script>
 			<!-- Our CSS/JS -->
 		<script src="./js/general.js"></script>
 		<link rel="stylesheet" href="./css/style.css">
 		<link rel="stylesheet" href="./css/style.night.css">
 	</head>
-  
+
 	<body>
 		<!-- Navbar -->
 		<nav class="navbar navbar-toggleable-md navbar-inverse bg-inverse font-main">
@@ -47,9 +47,9 @@
 			<% } %>
 
 			<!-- Navbar toggle button -->
-			<button class="navbar-toggler navbar-toggler-right" type="button" 
-				data-toggle="collapse" data-target="#navbarSupportedContent" 
-				aria-controls="navbarSupportedContent" aria-expanded="false" 
+			<button class="navbar-toggler navbar-toggler-right" type="button"
+				data-toggle="collapse" data-target="#navbarSupportedContent"
+				aria-controls="navbarSupportedContent" aria-expanded="false"
 				aria-label="Toggle navigation">
 				<span class="navbar-toggler-icon"></span>
 			</button>
@@ -57,7 +57,7 @@
 			<!-- Navbar logo -->
 			<a class="navbar-brand" href="/">
 				<img class="img img-responsive icon48" alt="cmls logo"
-				     src="/res/tslogo/tslogo48x48.ico" />
+					src="/res/tslogo/tslogo48x48.ico" />
 			</a>
 
 
@@ -103,10 +103,10 @@
 		<!--div class="errholder">
 			<h1 class="err"> Site is under maintanence. DO NOT USE IT. </h1>
 		</div-->
-		<% if(error) { %> 
+		<% if(error) { %>
 			<div class="errholder">
 				<h1 class="err"> <%= error %> </h1>
-			</div> 
+			</div>
 		<% } %>
 		<div class="secondarybody font-main"> <!-- fades in everything (but not actually because i removed that once i stopped liking it) -->
 			<%- body %>
