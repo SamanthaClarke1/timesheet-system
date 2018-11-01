@@ -4,6 +4,7 @@
 // but, yknow, whatever, i could go some pasta, so who's the real winner here?
 // edit: i have eaten so much spaghetti that i've developed a gluten allergy
 
+//#region initial declarations
 let projCache = {};
 let shotCache = {};
 
@@ -17,7 +18,9 @@ if(IS_NODE) {
 	};
 	timers = [];
 }
+//#endregion initial declarations
 
+//#region initial binds
 $(document).ready(function() {
 	if(!IS_NODE) {
 		$("#rokyt-launcher").toggle();
@@ -53,6 +56,7 @@ $(document).ready(function() {
 		fillRokytOpts($(".rokyt-ico.active"));
 	}
 });
+//#endregion initial binds
 
 //#region dropdown ajax
 
