@@ -70,6 +70,6 @@ This part is just a roadmap of all the things I have left to do on the next vers
 - [x] New Icon
 - [x] Changing the way urls were passed to the server.
 - [x] Letting servers create a temporary admin (via add-user in the cmd) (i know its not all that great but i wrote myself into a corner...)
-- [x] Better README :laugh:
+- [x] Better README :smile:
 
 #### Made by Samuel Clarke, 2018, for CumulusVFX.
