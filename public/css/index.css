@@ -71,14 +71,21 @@
 }
 
 .rokyt-body-top {
-
 }
 .rokyt-body-bot {
-	margin-top: 10px;
 }
 
+.rokyt-timer-bar {
+	background: #2b3d46;
+	border-radius: 5px;
+	margin: 5px;
+}
+.rokyt-timer-bar.even {
+	background: #1b282e;
+}
 .rokyt-row {
-	background: #292b2c;
+	margin-top: 15px;
+	background: #1b282e;
 }
 
 .fill-y {

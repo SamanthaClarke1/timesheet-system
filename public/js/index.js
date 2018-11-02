@@ -8,7 +8,7 @@
 let projCache = {};
 let shotCache = {};
 
-let rokytProgOpts, timers;
+let rokytProgOpts, timers, currentProg;
 if(IS_NODE) {
 	rokytProgOpts = { // prog to trigger on, pretty names arr, tech values arr
 		"nuke": {
@@ -16,6 +16,7 @@ if(IS_NODE) {
 			"tech": ["N", "A", "X"]
 		}
 	};
+	currentProg = "nuke";
 	timers = [];
 }
 //#endregion initial declarations
@@ -54,6 +55,8 @@ $(document).ready(function() {
 	if(IS_NODE) {
 		bindRokytIcoClickEvents();
 		fillRokytOpts($(".rokyt-ico.active"));
+		$("#rokyt-launch-btn").bind('click', rokytLaunchClickEvent);
+		setInterval(updateTimerDisplay, 20*1000); // once every 20 secs, update timer display (so it looks like they actually "tick" forward).
 	}
 });
 //#endregion initial binds
@@ -366,6 +369,7 @@ function updateShading(tableEl) {
 }
 //#endregion updaters
 
+//#region helpers
 function makeSlug(min, max) {
 	var t = '';
 	for (var i = 0; i < min + Math.floor(Math.random() * (max - min)); i++) {
@@ -379,12 +383,28 @@ function makeSlug(min, max) {
 	}
 	return t;
 }
+function formatMilliToHourMin(milli) {
+	let m = Math.floor(milli / (60*1000));
+	let h = Math.floor(m / 60);
+	m %= 60;
+	return (h+'').padStart(2,0)+':'+(m+'').padStart(2,0);
+}
+//#endregion
 
 //#region rokyt
 if(IS_NODE) {
-	function rokytLaunchClickEvent() {
+	function rokytLaunchClickEvent(e) {
 		//TODO
-		$("#rokyt-launcher").parent().find(".submitJobForm").find("")
+		let jobForm = $("#rokyt-launcher").parent().find(".submitJobForm");
+		e.preventDefault();
+		let timer = createTimer(
+			jobForm.find(".proj-inpc").val(),	// proj
+			jobForm.find(".shot-inpc").val(),	// shot
+			jobForm.find(".task-inpc").val(),	// task
+			currentProg,						// prog
+			$(".rokyt-xtra-opts").val(),		// xtraopts
+		);
+		addTimer(timer);
 	}
 	function bindRokytIcoClickEvents() {
 		$(".rokyt-ico").each(function() {
@@ -404,6 +424,7 @@ if(IS_NODE) {
 		for (let prog in rokytProgOpts) {
 			if($(tt).hasClass("rokyt-ico-"+prog)) {
 				let toAppend = "";
+				currentProg = prog;
 				hadAMatch = true;
 				for(let i in rokytProgOpts[prog]["pretty"]) {
 					let optPretty = rokytProgOpts[prog].pretty[i];
@@ -411,15 +432,23 @@ if(IS_NODE) {
 					toAppend += `<option value=${optTech}>${optPretty}</option>`;
 				}
 				$(".rokyt-xtra-opts").empty().append(toAppend);
-				$(".rokyt-xtra-opts").show();
+				$(".rokyt-xtra-opts").removeAttr('disabled');
 			}
 		}
-		if(!hadAMatch) $(".rokyt-xtra-opts").hide();
+		if(!hadAMatch) $(".rokyt-xtra-opts").attr('disabled', '');
 		return hadAMatch;
 	}
 
 	function updateTimerDisplay() {
 		//TODO
+		$(".rokyt-body-top").empty();
+
+		let toAppend = "";
+		for(let i in timers) {
+			toAppend += getHTMLForTimer(timers[i], i);
+		}
+
+		$(".rokyt-body-top").append(toAppend);
 	}
 
 	//#region rokyt-timers
@@ -452,11 +481,26 @@ if(IS_NODE) {
 	/// so, im not gonna stop that now, even if i dont really like function based programming as much as i like oop
 	/// so instead, im going to work on the following functions...
 
-	function createTimer(proj, shot, task, prog, xtraopts, id=makeSlug(6, 6), timeSpent=0, startTime=new Date() ) { // creates a new timer and returns it.
+	function ensureTimerIsTimer(timer) { // if it can ensure timer is a timer / find its id / theres a timer with index timer,
+										 // return timer, else return false. 
+		if (typeof timer == 'object') {
+			if(typeof timer.id == 'string' && typeof timer.timeStarted == 'number') {
+				return timer;
+			} return false;
+		}
+		else if(typeof timer == 'string') {
+			return getTimer(timer);
+		} else if(typeof timer == 'number') {
+			if(timers[timer]) return timers[timer];
+			return false;
+		}
+	}
+	function createTimer(proj, shot, task, prog, xtraopts, id=makeSlug(6, 6), timeSpent=0, 
+						 timeStarted=new Date() ) { // creates a new timer and returns it.
 		let timer = {
 			"timeSpent": timeSpent, // int, milliseconds
-			"timeStarted": startTime-0, // int, unix timestamp 
-			// oh and startTime-0 is a great coercion trick: if its an int it wont do anything, and if its a date it'll coerse it to an int
+			"timeStarted": timeStarted-0, // int, unix timestamp 
+			// oh and timeStarted-0 is a great coercion trick: if its an int it wont do anything, and if its a date it'll coerse it to an int
 			"proj": proj, // string, project
 			"id": id, // string, 6 long slug
 			"prog": prog, // string, program
@@ -466,20 +510,31 @@ if(IS_NODE) {
 		}
 		return timer;
 	}
-	function addTimer(timer) { // adds a timer and returns it, also updates the display
+	function addTimer(timer) { // adds a timer and returns it, also updates the display, 
+							   //also calls unpauseTimer on timer (pausing all others)
 		timers.push(timer);
+		unpauseTimer(timer);
 		updateTimerDisplay();
+		console.log(timers);
 		return timer;
 	}
 	function pauseTimer(timer, now=new Date()) { // if the timers not already paused, pauses it, calculates its time (see above example), updates display,
 											  // and returns the timer if successful, false otherwise
+		timer = ensureTimerIsTimer(timer);
+
+		if(timer.timeStarted < 0) return false;
 		timer.timeSpent += now - timer.timeStarted;
 		timer.timeStarted = -1;
 		updateTimerDisplay();
 		return timer;
 	}
-	function unpauseTimer(timer, now=new Date()) { // unpauses a timer and returns it
-		timer.timeStarted = now.getTime();
+	function unpauseTimer(timer, now=new Date()) { // unpauses a timer, pauses all others and returns it.
+		timer = ensureTimerIsTimer(timer);
+
+		for(let ttim of timers) {
+			pauseTimer(ttim);
+		}
+		timer.timeStarted = now-0;
 		updateTimerDisplay();
 		return timer;
 	}
@@ -506,6 +561,31 @@ if(IS_NODE) {
 			}
 		}
 		return false;
+	}
+	function getHTMLForTimer(timer, index) {
+		return `
+		<tr class="col-12 row no-gutters rokyt-timer-bar ${(index%2==0?'even':'odd')}">
+			<td class="col-3">
+				${timer.proj}
+				<img class="img img-responsive fill-y" alt="${timer.prog}"
+					src="/res/${timer.prog}/${timer.prog}32x32.ico" />
+				${timer.xtraopts}
+			</td>
+			<td class="col-3">${timer.shot}</td>
+			<td class="col-3">${timer.task}</td>
+			<td class="col-3 row no-gutters text-center">
+				<span class="col-3" onclick="${timer.timeStarted == -1 ? 'un' : ''}pauseTimer('${timer.id}')">
+					${timer.timeStarted == -1 ? '||' : formatMilliToHourMin( timer.timeSpent + (Date.now() - timer.timeStarted) )}
+				</span>
+				<button class="col-3 offset-1" type="submit" style="color: #e75045;">
+					<i class="fa fa-trash" aria-hidden="true"></i>
+				</button>
+				<button class="col-3 offset-1" type="submit" style="color: #e75045;">
+					<i class="fa fa-trash" aria-hidden="true"></i>
+				</button>
+			</td>
+		</tr>
+		`
 	}
 	//#endregion rokyt-timers
 }
