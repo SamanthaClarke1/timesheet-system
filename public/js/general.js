@@ -2,6 +2,9 @@
 
 /* Code written by Samuel J. Clarke, May-June 2018, for CumulusVFX. */
 
+$.fn.classList = function() {return this[0].className.split(/\s+/)}; // jquery plugin for classList
+$.fn.safeVal   = function() {return (tmp=((this.attr('disabled')?' ':'')||(this.attr('hidden')?' ':'')||this.val()))==' '?'':tmp};
+
 var rKeys = [];
 const easterEggString = 'me me big boy';
 const startDate = new Date().getTime();

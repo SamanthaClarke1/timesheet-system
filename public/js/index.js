@@ -402,7 +402,7 @@ if(IS_NODE) {
 			jobForm.find(".shot-inpc").val(),	// shot
 			jobForm.find(".task-inpc").val(),	// task
 			currentProg,						// prog
-			$(".rokyt-xtra-opts").val(),		// xtraopts
+			$(".rokyt-xtra-opts").safeVal(),	// xtraopts
 		);
 		addTimer(timer);
 	}
@@ -417,6 +417,8 @@ if(IS_NODE) {
 		});
 		$(this).addClass("active");
 
+		currentProg = this.className.match(/rokyt-ico-([A-z0-9]+)/)[1] || currentProg;
+
 		fillRokytOpts(this);
 	}
 	function fillRokytOpts(tt) {
@@ -424,7 +426,6 @@ if(IS_NODE) {
 		for (let prog in rokytProgOpts) {
 			if($(tt).hasClass("rokyt-ico-"+prog)) {
 				let toAppend = "";
-				currentProg = prog;
 				hadAMatch = true;
 				for(let i in rokytProgOpts[prog]["pretty"]) {
 					let optPretty = rokytProgOpts[prog].pretty[i];
@@ -567,8 +568,8 @@ if(IS_NODE) {
 		<tr class="col-12 row no-gutters rokyt-timer-bar ${(index%2==0?'even':'odd')}">
 			<td class="col-3">
 				${timer.proj}
-				<img class="img img-responsive fill-y" alt="${timer.prog}"
-					src="/res/${timer.prog}/${timer.prog}32x32.ico" />
+				<img class="img icon24" alt="${timer.prog}"
+					src="/res/${timer.prog}/${timer.prog}24x24.ico" />
 				${timer.xtraopts}
 			</td>
 			<td class="col-3">${timer.shot}</td>
