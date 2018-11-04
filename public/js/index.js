@@ -8,6 +8,30 @@
 let projCache = {};
 let shotCache = {};
 
+try {
+	let es6testfunc = (x) => {return x+1;}
+	if(es6testfunc(14) != 15) declareSupportMissing('ES6');
+} catch {
+	declareSupportMissing('ES6')
+}
+if(typeof(es6testfunc) !== 'undefined') {
+	declareSupportMissing('let scoping')
+}
+
+if (typeof(Storage) === "undefined") {
+	declareSupportMissing('local storage')
+} else {
+	loadTimersFromLocalStorage();
+}
+
+function declareSupportMissing(support) {
+	alert("We're sorry, but the timesheet system relies on "+support+" support to function correctly, and, your browser doesn't support it! Please upgrade to a more recent browser, such as firefox, or ensure that your current browser is up to date.")
+}
+
+window.addEventListener('beforeunload', function() {
+	storeTimersToLocalStorage();
+}, false);
+
 let rokytProgOpts, timers, currentProg;
 if(IS_NODE) {
 	rokytProgOpts = { // prog to trigger on, pretty names arr, tech values arr
@@ -495,6 +519,12 @@ if(IS_NODE) {
 			if(timers[timer]) return timers[timer];
 			return false;
 		}
+	}
+	function loadTimersFromLocalStorage() {
+		return localStorage.getItem('timesheet_timers');
+	}
+	function storeTimersToLocalStorage() {
+		localStorage.setItem('timesheet_timers', JSON.stringify(timers));
 	}
 	function createTimer(proj, shot, task, prog, xtraopts, id=makeSlug(6, 6), timeSpent=0, 
 						 timeStarted=new Date() ) { // creates a new timer and returns it.
