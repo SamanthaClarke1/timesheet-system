@@ -81,4 +81,18 @@ function highlightCurrentPage(){
 	}
 }
 
+try {
+	let es6testfunc = (x) => {return x+1;}
+	if(es6testfunc(14) != 15) declareSupportMissing('ES6');
+} catch {
+	declareSupportMissing('ES6')
+}
+if(typeof(es6testfunc) !== 'undefined') {
+	declareSupportMissing('let scoping')
+}
+
+function declareSupportMissing(support) {
+	alert("We're sorry, but the timesheet system relies on "+support+" support to function correctly, and, your browser doesn't support it! Please upgrade to a more recent browser, such as firefox, or ensure that your current browser is up to date.")
+}
+
 // @license-end

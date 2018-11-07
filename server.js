@@ -1,5 +1,7 @@
 // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
 
+//#region meta
+
 /* Code written by Samuel J. Clarke, May-July 2018, for CumulusVFX. */
 //begin server.js
 
@@ -37,6 +39,8 @@
 *  d/:////////////:/+osN  NmN   NNNNN                              
 *                                                                 
 */
+
+//#endregion meta
 
 //#region optionParsing ## parses the options, and acts on *some* of them. ## //
 require('dotenv').config();
@@ -301,7 +305,6 @@ mongodb.connect(url, function mongConnect(err, db) {
 			});
 		}
 
-
 		//#endregion
 
 		//#region displayHandlers
@@ -320,7 +323,6 @@ mongodb.connect(url, function mongConnect(err, db) {
 			//}
 
 			if (req.user.isadmin) {
-				//swjp
 				usersDB.find({}).project({name: 1, displayName: 1}).toArray((err, users) => {
 					if (err) throw err;
 
@@ -346,8 +348,17 @@ mongodb.connect(url, function mongConnect(err, db) {
 							var targetdate = req.query.tdate ? req.query.tdate : thisdate;
 
 							var ttsheet = req.user.timesheet;
+							let foundTimeSheet = false;
+
 							for (var tsheet of timesheets) {
-								if (tsheet.date == targetdate) ttsheet = tsheet;
+								if (tsheet.date == targetdate) {
+									ttsheet = tsheet;
+									foundTimeSheet = true;
+								}
+							}
+							if(!foundTimeSheet) {
+								ttsheet = timesheets[4]; // if we cant find their timesheet, set it to current.
+								targetdate = 'Current';
 							}
 
 							if (targetdate != 'Current' && new Date(targetdate).getTime() > getPreviousMonday().getTime()) {
@@ -361,14 +372,14 @@ mongodb.connect(url, function mongConnect(err, db) {
 										ttsheet = data;
 									}
 									return res.render('index.ejs', {
-										tday: req.query.tday ? req.query.tday : false,
+										tday: req.query.tday || false,
 										editable: true,
 										targetdate: targetdate,
 										timesheets: timesheets,
 										users: users,
 										tuser: dbuser,
 										user: req.user,
-										error: req.query.err,
+										error: req.query.err || (foundTimeSheet ? '':'Couldn\'t find your timesheet!'),
 										timesheet: ttsheet,
 										projs: projs,
 										tasks: tasks,
@@ -380,14 +391,14 @@ mongodb.connect(url, function mongConnect(err, db) {
 								});
 							} else {
 								return res.render('index.ejs', {
-									tday: req.query.tday ? req.query.tday : false,
+									tday: req.query.tday || false,
 									editable: true,
 									targetdate: targetdate,
 									timesheets: timesheets,
 									users: users,
 									tuser: dbuser,
 									user: req.user,
-									error: req.query.err,
+									error: req.query.err || (foundTimeSheet ? '':'Couldn\'t find your timesheet!'),
 									timesheet: ttsheet,
 									projs: projs,
 									tasks: tasks,
@@ -415,8 +426,16 @@ mongodb.connect(url, function mongConnect(err, db) {
 					var targetdate = req.query.tdate ? req.query.tdate : thisdate;
 
 					var ttsheet = req.user.timesheet;
+					let foundTimeSheet = false;
 					for (var tsheet of timesheets) {
-						if (tsheet.date == targetdate) ttsheet = tsheet;
+						if (tsheet.date == targetdate) {
+							ttsheet = tsheet;
+							foundTimeSheet = true;
+						}
+					}
+					if(!foundTimeSheet) {
+						ttsheet = timesheets[4]; // if we cant find their timesheet, set it to current.
+						targetdate = 'Current';
 					}
 
 					// editable logic
@@ -491,7 +510,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 		});
 
 		app.get('/help', (req, res) => {
-			res.render('help.ejs', {user: req.user, error: req.query.err});
+			res.render('help.ejs', { user: req.user, error: req.query.err });
 		});
 
 		//#endregion
@@ -1248,7 +1267,9 @@ const correctionArr = [
 	//[["os", "sys", "calc", "run", "cmd", "ash"], 
 	//	"bash {cmd}"],
 	[[ 'elp', 'how', '?', 'man', 'anua' ],
-		 'help', 'help' ],
+		'help', 'help' ],
+	[[ 'og', 'lo', 'console' ],
+		'log <javascript>', 'log' ]
 ];
 
 const rl = readline.createInterface({
@@ -1271,11 +1292,18 @@ rl.on('line', input => {
 	funcReq = input.split(' ')[0].toLowerCase();
 	params = input.split(' ').slice(1, input.split(' ').length);
 	switch (funcReq) {
+		case 'log':
+			try {
+				eval('try {\nconsole.log(' + params.join(' ') + ');} catch(err) { process.stdout.write(err.toString()+ "\\n"); }');
+			} catch (err) {
+				console.log(err);
+			}
+			break;
 		case 'add-user':
 			TKEY=makeSlug(8,8);
 			TKEY_IS_VALID=true;
 			setTimeout(()=>{TKEY_IS_VALID=false;}, TKEY_TIMEOUT);
-			process.stdout.write(intrPRFX + 'Please go to: <websiteurl>/adminify?username=admin&password='+TKEY+" to become an administrator, temporarily.\n You have "+(TKEY_TIMEOUT/(60*1000))+" minutes to do so.\nOnce you're in, add an admin user, and restart the server.");
+			process.stdout.write(intrPRFX + 'Please go to: <websiteurl>/adminify?username=admin&password='+TKEY+" to become an administrator, temporarily.\n You have "+(TKEY_TIMEOUT/(60*1000))+" minute(s) to do so.\nOnce you're in, add an admin user, and restart the server.");
 			break;
 		case 'memebigboy':
 			process.stdout.write(intrPRFX + 'go away josh');
@@ -1341,7 +1369,7 @@ rl.on('line', input => {
 				result = eval('try {\n' + params.join(' ') + '} catch(err) { process.stdout.write(err.toString()+ "\\n"); }');
 				if (result) result = result.toString();
 			} catch (err) {
-				throw err;
+				console.log(err);
 			}
 			if (result) process.stdout.write(result);
 			break;

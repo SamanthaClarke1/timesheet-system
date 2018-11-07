@@ -8,30 +8,6 @@
 let projCache = {};
 let shotCache = {};
 
-try {
-	let es6testfunc = (x) => {return x+1;}
-	if(es6testfunc(14) != 15) declareSupportMissing('ES6');
-} catch {
-	declareSupportMissing('ES6')
-}
-if(typeof(es6testfunc) !== 'undefined') {
-	declareSupportMissing('let scoping')
-}
-
-if (typeof(Storage) === "undefined") {
-	declareSupportMissing('local storage')
-} else {
-	loadTimersFromLocalStorage();
-}
-
-function declareSupportMissing(support) {
-	alert("We're sorry, but the timesheet system relies on "+support+" support to function correctly, and, your browser doesn't support it! Please upgrade to a more recent browser, such as firefox, or ensure that your current browser is up to date.")
-}
-
-window.addEventListener('beforeunload', function() {
-	storeTimersToLocalStorage();
-}, false);
-
 let rokytProgOpts, timers, currentProg;
 if(IS_NODE) {
 	rokytProgOpts = { // prog to trigger on, pretty names arr, tech values arr
@@ -42,6 +18,7 @@ if(IS_NODE) {
 	};
 	currentProg = "nuke";
 	timers = [];
+	var {exec, spawn} = require('child_process');
 }
 //#endregion initial declarations
 
@@ -81,6 +58,12 @@ $(document).ready(function() {
 		fillRokytOpts($(".rokyt-ico.active"));
 		$("#rokyt-launch-btn").bind('click', rokytLaunchClickEvent);
 		setInterval(updateTimerDisplay, 20*1000); // once every 20 secs, update timer display (so it looks like they actually "tick" forward).
+
+		if (typeof(Storage) === "undefined") {
+			declareSupportMissing('web storage')
+		} else {
+			loadTimersFromSessionStorage();
+		}
 	}
 });
 //#endregion initial binds
@@ -240,7 +223,7 @@ function delJobEvent() {
 		var parentTable = $(this).parent().parent().parent().parent().parent().find('.job-table'); // thatsa lotta parents
 		if (parentTable.length <= 0) parentTable = $(this).parent().parent().parent().parent().parent();
 		var day = parentForm.find('.delj-day').val();
-
+		
 		parentForm.children('');
 		$.post('/code/deljob', parentForm.serialize(), function(data) {
 				// but use my js to send it off, it's async :)
@@ -274,62 +257,68 @@ function bindSubmitJobClickEvent() {
 		$(this).bind('click', submitJobClickEvent);
 	});
 }
+function submitJobCallback(parentForm) {
+	return function(data) {
+		if (data.errcode == 200) {
+			var srv = fromSrv;
+			job = data.data;
+			var tid = Math.floor(Math.random() * 1000000);
+			var toIns = `
+				<tr class="ts-row row no-gutters col-12 job-row shrinkme" id="tid-` + tid + `">
+				<td class="col-3 job-proj">` + job.proj + `</td>
+				<td class="col-3 job-shot">` + job.shot + `</td>
+				<td class="col-3 job-task">` + job.task + `</td>
+				<td class="col-2 job-time">` + job.time + `</td>
+				<td class="col-1 job-del">
+					<form action="/code/deljob" method="POST">
+						<input name="jobuser" class="delj-user" value="` + (srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `" hidden />
+						<input name="jobid" class="delj-id" value="` + job.id + `" hidden />
+						<input name="day" class="delj-day" value="` + job.day + `" hidden />
+						<input name="date" class="delj-date" value="` + srv.tdate + `" hidden />
+						<button id="deljob-` + job.id + `" class="btn-delj" type="submit" style="color: #e75045;"` + (srv.editable == 'true' ? '' : ' disabled') + `> <i class="fa fa-trash" aria-hidden="true"></i></button>
+					</form>
+				</td>
+			</tr>`;
+
+			parentForm.parent().children('.job-table').each(function() {
+				var tbody = $(this).children('tbody').first();
+				tbody.append(toIns);
+
+				var njob = $('#tid-' + tid);
+				var coords = {x: njob.offset().left + 20, y: njob.offset().top + 20};
+				sparkflow.tune(coords).generate();
+				sparkflow_timeline.replay();
+
+				var coordsr = {x: coords.x + njob.width(), y: coords.y};
+				sparkflowr.tune(coordsr).generate();
+				sparkflowr_timeline.replay();
+
+				setTimeout(function(njob) { njob.removeClass('shrinkme'); }, 10, njob);
+
+				bindDeleteBlocker($('#deljob-' + job.id));
+				updateTotalWeekBar(tbody);
+				var total = updateTotalDayBar($(this));
+				updateDayColor(job.day, total);
+				updateShading(tbody);
+			});
+		} else if (data.err && data.errcode) {
+			alert('ERRCODE ' + data.errcode + ' : ' + data.err);
+			if (data.errcode == 403) location.reload();
+		} else {
+			alert('Empty / Malformed Data recieved. The page will now reload.');
+			location.reload();
+		}
+	}
+}
+function submitJobData(jobData, parentForm) {
+	$.post('/code/addjob', jobData, submitJobCallback(parentForm), 'json');
+}
 function submitJobClickEvent(e) {
 	var parentForm = $(this).parent();
 
 	if (parentForm.find('.shot-inpc').val() != '') {
 		e.preventDefault();
-		$.post('/code/addjob', parentForm.serialize(), function(data) {
-			if (data.errcode == 200) {
-				var srv = fromSrv;
-				job = data.data;
-				var tid = Math.floor(Math.random() * 1000000);
-				var toIns = `
-					<tr class="ts-row row no-gutters col-12 job-row shrinkme" id="tid-` + tid + `">
-					<td class="col-3 job-proj">` + job.proj + `</td>
-					<td class="col-3 job-shot">` + job.shot + `</td>
-					<td class="col-3 job-task">` + job.task + `</td>
-					<td class="col-2 job-time">` + job.time + `</td>
-					<td class="col-1 job-del">
-						<form action="/code/deljob" method="POST">
-							<input name="jobuser" class="delj-user" value="` + (srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `" hidden />
-							<input name="jobid" class="delj-id" value="` + job.id + `" hidden />
-							<input name="day" class="delj-day" value="` + job.day + `" hidden />
-							<input name="date" class="delj-date" value="` + srv.tdate + `" hidden />
-							<button id="deljob-` + job.id + `" class="btn-delj" type="submit" style="color: #e75045;"` + (srv.editable == 'true' ? '' : ' disabled') + `> <i class="fa fa-trash" aria-hidden="true"></i></button>
-						</form>
-					</td>
-				</tr>`;
-
-				parentForm.parent().children('.job-table').each(function() {
-					var tbody = $(this).children('tbody').first();
-					tbody.append(toIns);
-
-					var njob = $('#tid-' + tid);
-					var coords = {x: njob.offset().left + 20, y: njob.offset().top + 20};
-					sparkflow.tune(coords).generate();
-					sparkflow_timeline.replay();
-
-					var coordsr = {x: coords.x + njob.width(), y: coords.y};
-					sparkflowr.tune(coordsr).generate();
-					sparkflowr_timeline.replay();
-
-					setTimeout(function(njob) { njob.removeClass('shrinkme'); }, 10, njob);
-
-					bindDeleteBlocker($('#deljob-' + job.id));
-					updateTotalWeekBar(tbody);
-					var total = updateTotalDayBar($(this));
-					updateDayColor(job.day, total);
-					updateShading(tbody);
-				});
-			} else if (data.err && data.errcode) {
-				alert('ERRCODE ' + data.errcode + ' : ' + data.err);
-				if (data.errcode == 403) location.reload();
-			} else {
-				alert('Empty / Malformed Data recieved. The page will now reload.');
-				location.reload();
-			}
-		},'json');
+		$.post('/code/addjob', parentForm.serialize(), submitJobCallback(parentForm), 'json');
 	}
 }
 //#endregion timetable edits
@@ -411,22 +400,25 @@ function formatMilliToHourMin(milli) {
 	let m = Math.floor(milli / (60*1000));
 	let h = Math.floor(m / 60);
 	m %= 60;
-	return (h+'').padStart(2,0)+':'+(m+'').padStart(2,0);
+	return (h+'').padStart(1,0)+':'+(m+'').padStart(2,0);
 }
 //#endregion
 
 //#region rokyt
 if(IS_NODE) {
 	function rokytLaunchClickEvent(e) {
-		//TODO
 		let jobForm = $("#rokyt-launcher").parent().find(".submitJobForm");
 		e.preventDefault();
 		let timer = createTimer(
 			jobForm.find(".proj-inpc").val(),	// proj
 			jobForm.find(".shot-inpc").val(),	// shot
 			jobForm.find(".task-inpc").val(),	// task
+			jobForm.find(".jobusr-inpc").val(),	// jobusr
+			jobForm.find(".day-inpc").val(),	// day
+			jobForm.find(".date-inpc").val(),	// date
 			currentProg,						// prog
 			$(".rokyt-xtra-opts").safeVal(),	// xtraopts
+			jobForm,							// parent form
 		);
 		addTimer(timer);
 	}
@@ -465,12 +457,11 @@ if(IS_NODE) {
 	}
 
 	function updateTimerDisplay() {
-		//TODO
 		$(".rokyt-body-top").empty();
 
 		let toAppend = "";
 		for(let i in timers) {
-			toAppend += getHTMLForTimer(timers[i], i);
+			toAppend += getHTMLForTimer(timers[i], i, true);
 		}
 
 		$(".rokyt-body-top").append(toAppend);
@@ -520,14 +511,16 @@ if(IS_NODE) {
 			return false;
 		}
 	}
-	function loadTimersFromLocalStorage() {
-		return localStorage.getItem('timesheet_timers');
+	function loadTimersFromSessionStorage() {
+		timers = JSON.parse((x=sessionStorage.getItem('timesheet_timers'))?x:[]);
+		updateTimerDisplay();
 	}
-	function storeTimersToLocalStorage() {
-		localStorage.setItem('timesheet_timers', JSON.stringify(timers));
+	function storeTimersToSessionStorage() {
+		sessionStorage.setItem('timesheet_timers', JSON.stringify(timers));
 	}
-	function createTimer(proj, shot, task, prog, xtraopts, id=makeSlug(6, 6), timeSpent=0, 
+	function createTimer(proj, shot, task, jobuser, day, date, prog, xtraopts, parentForm, id=makeSlug(6, 6), timeSpent=0, 
 						 timeStarted=new Date() ) { // creates a new timer and returns it.
+
 		let timer = {
 			"timeSpent": timeSpent, // int, milliseconds
 			"timeStarted": timeStarted-0, // int, unix timestamp 
@@ -537,40 +530,105 @@ if(IS_NODE) {
 			"prog": prog, // string, program
 			"xtraopts": xtraopts, // string, value from xtra-opts dropdown
 			"task": task, // string, task
-			"shot": shot // string, shot code
+			"shot": shot, // string, shot code
+			"jobuser": jobuser, // string, users name
+			"parentForm": parentForm,
+			"day": day, // string, day
+			"date": date, // string, week code (eg, Current, eg, 2018-10-29)
 		}
+
+		// Script with spaces in the filename:
+		timer.process = spawn('"/Volumes/RS01/Resources/Engineering/Sam/timesheet-desktop/nuke_launch.sh"', ['a', 'b'], { shell: true });
+
+		timer.process.stdout.on('data', function(data) {
+			console.log(`stdout: ${data}`);
+		});
+		
+		timer.process.stderr.on('data', function(data) {
+			console.log(`stderr: ${data}`);
+		});
+		
+		timer.process.on('close', function(code) {
+			console.log(`imcatProc exited with code ${code}`);
+			console.log((new Date() - openTime) + " ms spent using nuke");
+		});
+
 		return timer;
 	}
-	function addTimer(timer) { // adds a timer and returns it, also updates the display, 
-							   //also calls unpauseTimer on timer (pausing all others)
+	function addTimer(timer, trusty=false) {	// adds a timer and returns it, also updates the display, 
+												// also calls unpauseTimer on timer (pausing all others),
+												// returns timer if succesful, false otherwise
+		if(!trusty) timer = ensureTimerIsTimer(timer);
+		if(!timer) return false;
+		
 		timers.push(timer);
+		
 		unpauseTimer(timer);
 		updateTimerDisplay();
-		console.log(timers);
+
 		return timer;
 	}
-	function pauseTimer(timer, now=new Date()) { // if the timers not already paused, pauses it, calculates its time (see above example), updates display,
-											  // and returns the timer if successful, false otherwise
-		timer = ensureTimerIsTimer(timer);
+	function pauseTimer(timer, trusty=false, now=new Date()) {	// if the timers not already paused, pauses it, calculates its time (see above example), updates display,
+																// and returns the timer if successful, false otherwise
+																// if trusty evaluates to true, it wont bother trying to collapse timer to a timer, but assume it is one.
+		if(!trusty) timer = ensureTimerIsTimer(timer);
+		if(!timer) return false;
 
 		if(timer.timeStarted < 0) return false;
 		timer.timeSpent += now - timer.timeStarted;
 		timer.timeStarted = -1;
+
 		updateTimerDisplay();
 		return timer;
 	}
-	function unpauseTimer(timer, now=new Date()) { // unpauses a timer, pauses all others and returns it.
-		timer = ensureTimerIsTimer(timer);
+	function unpauseTimer(timer, trusty=false, now=new Date()) { // unpauses a timer, pauses all others and returns it. 
+																 // returns timer if successful, false otherwise.
+		if(!trusty) timer = ensureTimerIsTimer(timer);
+		if(!timer) return false;
 
 		for(let ttim of timers) {
-			pauseTimer(ttim);
+			pauseTimer(ttim, true);
 		}
 		timer.timeStarted = now-0;
 		updateTimerDisplay();
+
 		return timer;
 	}
-	function publishTimer(id) { // publishes a timer to the timesheet bar, updates the display, returns timer
-		//TODO
+	function convertTimerToJobData(timer, trusty=false) {
+		if(!trusty) timer = ensureTimerIsTimer(timer);
+		if(!timer) return false;
+
+		let jobData = {
+			'jobuser':	 timer.jobuser,		//str
+			'day':		 timer.day,			//str
+			'date':		 timer.date,		//str
+			'project':	 timer.proj,		//str
+			'shotcode':	 timer.shot,		//str
+			'task':		 timer.task,		//str
+			'timespent': timer.timeSpent,	//num
+		}
+		return jobData;
+	}
+	function publishTimer(timer, trusty=false) { // publishes a timer to the timesheet bar, updates the display, returns timer and removes it if successful, false otherwise
+		if(!trusty) timer = ensureTimerIsTimer(timer);
+		if(!timer) return false;
+		let parentForm = timer.parentForm;
+
+		pauseTimer(timer, true);
+		timer.timeSpent /= (60*60*1000);
+		timer.timeSpent = Math.round(timer.timeSpent / .25) * .25;
+		
+		if(timer.timeSpent < .25) {
+			timer.timeSpent *= (60*60*1000);
+			alert("Cannot publish timer yet, let it run for at least 15 Minutes!");
+			return false;
+		}
+		
+		submitJobData(convertTimerToJobData(timer), parentForm);
+
+		removeTimer(timer, true);
+
+		return timer;
 	}
 	function removeTimer(id) { // removes a timer, updates the display, returns the timer
 		let removedTimer = timers.splice(getTimerIndex(id), 1)[0];
@@ -580,7 +638,7 @@ if(IS_NODE) {
 	function getTimerIndex(id) { // like getTimer, but it returns the index instead of the timer, still returns false on failure.
 		for(let i in timers) {
 			if(timers[i].id == id) {
-				return i-0;//coersion to int >:)
+				return i-0; // coersion to int >:)
 			}
 		}
 		return false;
@@ -593,9 +651,11 @@ if(IS_NODE) {
 		}
 		return false;
 	}
-	function getHTMLForTimer(timer, index) {
+	function getHTMLForTimer(timer, isOdd, trusty=false) {
+		timer = ensureTimerIsTimer(timer);
+		isOdd %= 2;
 		return `
-		<tr class="col-12 row no-gutters rokyt-timer-bar ${(index%2==0?'even':'odd')}">
+		<tr class="col-12 row no-gutters rokyt-timer-bar ${(isOdd?'odd':'even')}">
 			<td class="col-3">
 				${timer.proj}
 				<img class="img icon24" alt="${timer.prog}"
@@ -606,12 +666,12 @@ if(IS_NODE) {
 			<td class="col-3">${timer.task}</td>
 			<td class="col-3 row no-gutters text-center">
 				<span class="col-3" onclick="${timer.timeStarted == -1 ? 'un' : ''}pauseTimer('${timer.id}')">
-					${timer.timeStarted == -1 ? '||' : formatMilliToHourMin( timer.timeSpent + (Date.now() - timer.timeStarted) )}
+					${timer.timeStarted == -1 ? '<i class="fa fa-play"></i>' : formatMilliToHourMin( timer.timeSpent + (Date.now() - timer.timeStarted) )}
 				</span>
-				<button class="col-3 offset-1" type="submit" style="color: #e75045;">
-					<i class="fa fa-trash" aria-hidden="true"></i>
+				<button class="col-3 offset-1 btn btn-outline-info" type="submit" style="color: #4550e7;" onclick="publishTimer('${timer.id}')" >
+					<i class="fa fa-send" aria-hidden="true"></i>
 				</button>
-				<button class="col-3 offset-1" type="submit" style="color: #e75045;">
+				<button class="col-3 offset-1 btn btn-outline-danger" type="submit" style="color: #793025;" onclick="removeTimer('${timer.id}')" >
 					<i class="fa fa-trash" aria-hidden="true"></i>
 				</button>
 			</td>
@@ -620,6 +680,11 @@ if(IS_NODE) {
 	}
 	//#endregion rokyt-timers
 }
+
+window.addEventListener('beforeunload', function() {
+	if(IS_NODE) storeTimersToSessionStorage();
+}, false);
+
 //#endregion rokyt
 
 // @license-end
