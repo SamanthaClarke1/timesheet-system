@@ -1,6 +1,6 @@
 BASEDIR=$1
 
-find $BASEDIR -not \( -name node_modules -prune -o -name lib -prune -o -name package-lock.json \) -iregex '.*\.\(js\|json\|ejs\|html\|php\|sql\|css\)' -exec sh -c 'echo -ne "$1\t\t\t"; cat "$1" | wc -l' - {} \;
+find $BASEDIR -not \( -name node_modules -prune -o -name lib -prune -o -name package-lock.json \) -iregex '.*\.\(js\|json\|ejs\|html\|php\|sql\|css\)' -exec sh -c 'printf "%*s\r%s\n" "$(tput cols)" "$(cat "$1" | wc -l)" "$1"' - {} \;
 
 printf "\nTotal:\n"
 

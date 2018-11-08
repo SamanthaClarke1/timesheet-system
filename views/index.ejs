@@ -152,23 +152,14 @@
 								<tbody class="rokyt-body-bot no-gutters">
 									<tr class="rokyt-row row no-gutters col-12">
 										<td class="col-5 row no-gutters text-center"> 
-										<!-- 
-											i did this in the nastiest/most beautiful regex string ever (depending on how much you like regex), please enjoy.
-											Find:	([\s]*)(<img class="img img-responsive icon32" alt="cmls logo"\n)(\s*src="[0-9A-z./]*" />)
-											Repl:	$1<div class="rokyt-ico col-4 text-center rokyt-ico-nuke">$1\t$2\t$3$1</div>
-										-->
-											<div class="rokyt-ico col-4 text-center rokyt-ico-nuke active">
-												<img class="img img-responsive fill-y" alt="nuke"
-													src="/res/nuke/nuke32x32.ico" />
-											</div>
-											<div class="rokyt-ico col-4 text-center rokyt-ico-maya">
-												<img class="img img-responsive fill-y" alt="maya"
-													src="/res/maya/maya32x32.ico" />
-											</div>
-											<div class="rokyt-ico col-4 text-center rokyt-ico-houdini">
-												<img class="img img-responsive fill-y" alt="houdini"
-													src="/res/houdini/houdini32x32.ico" />
-											</div>
+											<% let list = ['nuke', 'maya', 'houdini', 'unknown']; 
+												for (let lind in list) {
+													let tprog = list[lind]; %>
+												<div class="rokyt-ico col-3 text-center rokyt-ico-<%= tprog %> <%= (lind == 0 ? 'active' : '') %>">
+													<img class="img img-responsive fill-y" alt="<%= tprog %>"
+														src="/res/<%= tprog %>/<%= tprog %>32x32.ico" />
+												</div>
+											<% } %>
 										</td>
 										<td class="col-2">
 											<select class="col-12 fill-y rokyt-xtra-opts">

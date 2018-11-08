@@ -461,17 +461,6 @@ if(IS_NODE) {
 		return hadAMatch;
 	}
 
-	function updateTimerDisplay() {
-		$(".rokyt-body-top").empty();
-
-		let toAppend = "";
-		for(let i in timers) {
-			toAppend += getHTMLForTimer(timers[i], i, true);
-		}
-
-		$(".rokyt-body-top").append(toAppend);
-	}
-
 	//#region rokyt-timers
 
 	/// To explain "timers"...
@@ -501,7 +490,17 @@ if(IS_NODE) {
 	/// i would love to use some OOP for this, but my current methodology for this page has not been OOP at all. 
 	/// so, im not gonna stop that now, even if i dont really like function based programming as much as i like oop
 	/// so instead, im going to work on the following functions...
+	
+	function updateTimerDisplay() {
+		$(".rokyt-body-top").empty();
 
+		let toAppend = "";
+		for(let i in timers) {
+			toAppend += getHTMLForTimer(timers[i], i, true);
+		}
+
+		$(".rokyt-body-top").append(toAppend);
+	}
 	function ensureTimerIsTimer(timer) { // if it can ensure timer is a timer / find its id / theres a timer with index timer,
 										 // return timer, else return false. 
 		if (typeof timer == 'object') {
@@ -544,12 +543,13 @@ if(IS_NODE) {
 
 		let suffix = translateToName(fromSrv.translationCache, 'to_suffix', timer.proj);
 		
-		// Script with spaces in the filename:
-		timer.process = spawn('"/Volumes/RS01/Resources/Engineering/Sam/timesheet-desktop/'+timer.prog+'_launch.sh"', [suffix, timer.xtraopts], { shell: true });
+		if(timer.prog != 'unknown') {
+			timer.process = spawn('"/Volumes/RS01/Resources/Engineering/Sam/timesheet-desktop/'+timer.prog+'_launch.sh"', [suffix, timer.xtraopts], { shell: true });
 
-		timer.process.stdout.on('data', timerProcStdoutEvent(timer));
-		timer.process.stderr.on('data', timerProcStderrEvent(timer));
-		timer.process.on('close', timerProcCloseEvent(timer));
+			timer.process.stdout.on('data', timerProcStdoutEvent(timer));
+			timer.process.stderr.on('data', timerProcStderrEvent(timer));
+			timer.process.on('close', timerProcCloseEvent(timer));
+		}
 
 		return timer;
 	}

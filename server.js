@@ -143,6 +143,9 @@ console.log = function(str, pers = srvrPRFX) {
 	process.stdout.write(pers + str + '\n' + promptr);
 };
 
+let dirsplit = __dirname.split('/');
+let serverRel = dirsplit[dirsplit.length-1].split('-').reverse()[0];
+
 var loaderShouldBePrinting = true;
 printLoader('Server in startup ');
 
@@ -1476,7 +1479,6 @@ function buildUrl(base, dict) {
 }
 
 //#region DATE-TIME HELPER FUNCS
-// function is1917(now=new Date()) { if(now.getMonth() == 2 && now.getDate() == 8) { return now.getYear() - 17; } else { return -1; } }
 function getThisDate(now = new Date()) {
 	return now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
 }
