@@ -61,13 +61,13 @@ const request = require('request');
 
 if (options.help) {
 	console.log(boxen(`Timesheets! - Hosts the timesheet server,
-    Serves the GUI AND creates a CLI for sysadmins.
+    Serves the GUI and creates a CLI for sysadmins.
 
 Usage: node ./server.js [options]
-	-u --dburl <url>    specifies the database to load (from an url)
-	-h --help           displays this help message
-	-v --version        displays the version number
-	-q --quickpush      pushes this week into the past week
+    -u --dburl <url>    specifies the database to load (from an url)
+    -h --help           displays this help message
+    -v --version        displays the version number
+    -q --quickpush      pushes this week into the past week
 `, { backgroundColor: 'black', float: 'center', align: 'left', padding: 1, margin: 1, borderStyle: 'classic', borderColor: 'magenta' }));
 	return 0;
 } else if (options.version) {
@@ -386,7 +386,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 										sgHttpServer: tmp_sghttpurl,
 										sgHttpEnabled: process.env.SGHTTP_ENABLED,
 										sgHttpRetriever: process.env.SGHTTP_RETRIEVER,
-										sgHttpCache: SHOTCACHE
+										sgHttpCache: SHOTCACHE,
+										translationCache: TRANSLATIONCACHE
 									});
 								});
 							} else {
@@ -405,7 +406,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 									sgHttpServer: tmp_sghttpurl,
 									sgHttpEnabled: process.env.SGHTTP_ENABLED,
 									sgHttpRetriever: process.env.SGHTTP_RETRIEVER,
-									sgHttpCache: SHOTCACHE
+									sgHttpCache: SHOTCACHE,
+									translationCache: TRANSLATIONCACHE
 								});
 							}
 						});
@@ -467,7 +469,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 								sgHttpServer: tmp_sghttpurl,
 								sgHttpEnabled: process.env.SGHTTP_ENABLED,
 								sgHttpRetriever: process.env.SGHTTP_RETRIEVER,
-								sgHttpCache: SHOTCACHE
+								sgHttpCache: SHOTCACHE,
+								translationCache: TRANSLATIONCACHE
 							});
 						});
 					} else {
@@ -484,7 +487,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 							sgHttpServer: tmp_sghttpurl,
 							sgHttpEnabled: process.env.SGHTTP_ENABLED,
 							sgHttpRetriever: process.env.SGHTTP_RETRIEVER,
-							sgHttpCache: SHOTCACHE
+							sgHttpCache: SHOTCACHE,
+							translationCache: TRANSLATIONCACHE
 						});
 					}
 				});

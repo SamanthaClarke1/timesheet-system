@@ -402,6 +402,11 @@ function formatMilliToHourMin(milli) {
 	m %= 60;
 	return (h+'').padStart(1,0)+':'+(m+'').padStart(2,0);
 }
+function translateToName(cache, type, sgName) { // translation returns false on failure, and name on success.
+	sgName = sgName.toLowerCase().split(" ").join("");
+	let trans = cache[type];
+	return trans[sgName] || false;
+}
 //#endregion
 
 //#region rokyt
@@ -537,23 +542,32 @@ if(IS_NODE) {
 			"date": date, // string, week code (eg, Current, eg, 2018-10-29)
 		}
 
+		let suffix = translateToName(fromSrv.translationCache, 'to_suffix', timer.proj);
+		
 		// Script with spaces in the filename:
-		timer.process = spawn('"/Volumes/RS01/Resources/Engineering/Sam/timesheet-desktop/nuke_launch.sh"', ['a', 'b'], { shell: true });
+		timer.process = spawn('"/Volumes/RS01/Resources/Engineering/Sam/timesheet-desktop/'+timer.prog+'_launch.sh"', [suffix, timer.xtraopts], { shell: true });
 
-		timer.process.stdout.on('data', function(data) {
-			console.log(`stdout: ${data}`);
-		});
-		
-		timer.process.stderr.on('data', function(data) {
-			console.log(`stderr: ${data}`);
-		});
-		
-		timer.process.on('close', function(code) {
-			console.log(`imcatProc exited with code ${code}`);
-			console.log((new Date() - openTime) + " ms spent using nuke");
-		});
+		timer.process.stdout.on('data', timerProcStdoutEvent(timer));
+		timer.process.stderr.on('data', timerProcStderrEvent(timer));
+		timer.process.on('close', timerProcCloseEvent(timer));
 
 		return timer;
+	}
+	function timerProcStdoutEvent(timer) {
+		return function(data) {
+			console.log(`${timer.id}->stdout: ${data}`)
+		}
+	}
+	function timerProcStderrEvent(timer) {
+		return function(data) {
+			console.log(`${timer.id}->stdout: ${data}`);
+		}
+	}
+	function timerProcCloseEvent(timer) {
+		return function(code) {
+			pauseTimer(timer);
+			console.log(`${timer.id}->close: ${code}. timeSpent: ${timer.timeSpent}`);
+		}
 	}
 	function addTimer(timer, trusty=false) {	// adds a timer and returns it, also updates the display, 
 												// also calls unpauseTimer on timer (pausing all others),

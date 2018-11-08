@@ -4,7 +4,7 @@
 This timesheet system was originally created for CumulusVFX. It is made to allow users to log their hours, and for administrators to monitor how much everyone is working.
 Just run the local server on a server somewhere, and have people visit it in their browsers.
 
-**Version**: 1.8.4, **Codename**: Tenacious Timer.
+**Version**: 1.8.6, **Codename**: Tenacious Timer.
 
 # Installation
 
@@ -53,13 +53,16 @@ node ./server.js --help
 # TODO
 
 This part is just a roadmap of all the things I have left to do on the next version of the timesheet system.
-(That version is 1.9.1, from 1.8.4, right now)
+(That version is 1.9.1, from 1.8.6, right now)
 
 - [ ] Add instructions on how to better create nameTranslation
 - [ ] Edit already created shots?
-- [ ] Rokyt/Timers initial code
+- [x] Rokyt/Timers initial code
+- [x] Finish Rokyt Launcher
+- [x] Better support for the desktop app
+- [ ] Minor visual edits to index.ejs (stop the buttons just being the browser defaults)
 - [ ] Fix a bug where, occasionally, changing project doesnt update shots (just leaves it at "general")
-- [ ] Perhaps refactor the way sg-http code was made...? It's pretty ugly right now, and has some support for options that it probably *shouldnt* support...
+- [ ] Perhaps refactor the way sg-http code was made (including in index.js)? It's pretty ugly right now, and has some support for options that it probably *shouldnt* support
 - [x] Turn shot field into a dropdown instead of an input (using sg-http)
 - [x] Cleaning up old files
 - [x] Cleaning up old console.logs

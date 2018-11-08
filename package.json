@@ -1,6 +1,6 @@
 {
   "name": "timetable-manager",
-  "version": "1.8.4",
+  "version": "1.8.6",
   "description": "Manages the timetables for cmls. Recieves input from artists, that log their time, and stores it in a db.",
   "main": "server.js",
   "codename": "Tenacious Timer",

@@ -587,9 +587,9 @@ $(document).ready(function(){
 
 	function projToColor(proj){
 		var rgb = [
-			Math.floor(Math.pow(proj.length + proj.charCodeAt(0), 2) % 180 + 75),
-			Math.floor(Math.pow(proj.length + proj.charCodeAt(1 % proj.length) + proj.length, 2) % 180 + 75),
-			Math.floor(Math.pow(proj.length + proj.charCodeAt(2 % proj.length) + proj.length / 2, 2) % 180 + 75),
+			Math.floor(Math.pow(proj.length + proj.charCodeAt(0), 3) % 200 + 55),
+			Math.floor(Math.pow(proj.length + proj.charCodeAt(1 % proj.length) + proj.length, 3) % 190 + 65),
+			Math.floor(Math.pow(proj.length + proj.charCodeAt(2 % proj.length) + proj.length / 2, 3) % 170 + 85),
 		];
 		return 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')';
 	}
