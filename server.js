@@ -1365,7 +1365,7 @@ rl.on('line', input => {
 
 			break;
 		case 'save-selections':
-			writeSelectList(tasks, projs);
+			writeSelectList(tasks, projs, selectList.bpass);
 			break;
 		case 'get-hash-of':
 			process.stdout.write(hashOf(params[0]));
@@ -1437,7 +1437,7 @@ function onQuitAttempt() {
 		if (answer.match(/^y(es)?$/i)) {
 			rl.question('\033[00m\033[38;2;255;33;145mDo you want to save your selections (task/proj lists)? [y(es)/n(o)] ' + promptr, answer => {
 				if (answer.match(/^y(es)?$/i)) {
-					writeSelectList(tasks, projs);
+					writeSelectList(tasks, projs, selectList.bpass);
 				}
 				rl.pause();
 				exit(0);
@@ -1641,7 +1641,7 @@ function sortSelectList(selectList) {
 	});
 	return selectList;
 }
-function writeSelectList(tasks, projs) {
+function writeSelectList(tasks, projs, bpass) {
 	var selectList = JSON.stringify(sortSelectList({tasks: tasks, projs: projs, bpass: bpass}), null, 2);
 	fs.writeFileSync(__dirname + '/opt/selectList.json', selectList);
 	return selectList;

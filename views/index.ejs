@@ -153,8 +153,8 @@
 									<tr class="rokyt-row row no-gutters col-12">
 										<td class="col-5 row no-gutters text-center"> 
 											<% let list = ['nuke', 'maya', 'houdini', 'unknown']; 
-												for (let lind in list) {
-													let tprog = list[lind]; %>
+											for (let i in list) {
+												let tprog = list[i]; %>
 												<div class="rokyt-ico col-3 text-center rokyt-ico-<%= tprog %> <%= (lind == 0 ? 'active' : '') %>">
 													<img class="img img-responsive fill-y" alt="<%= tprog %>"
 														src="/res/<%= tprog %>/<%= tprog %>32x32.ico" />
@@ -191,7 +191,7 @@
 	
 								<div class="col-3">
 									<select name="project" class="col-12 no-pad-right proj-inpc fill-y">
-										<% for (var i in projs) { %>
+										<% for (let i in projs) { %>
 											<option value="<%= projs[i] %>"> <%= projs[i] %> </option>
 										<% } %>
 									</select>
