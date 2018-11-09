@@ -155,7 +155,7 @@
 											<% let list = ['nuke', 'maya', 'houdini', 'unknown']; 
 											for (let i in list) {
 												let tprog = list[i]; %>
-												<div class="rokyt-ico col-3 text-center rokyt-ico-<%= tprog %> <%= (lind == 0 ? 'active' : '') %>">
+												<div class="rokyt-ico col-3 text-center rokyt-ico-<%= tprog %> <%= (i == 0 ? 'active' : '') %>">
 													<img class="img img-responsive fill-y" alt="<%= tprog %>"
 														src="/res/<%= tprog %>/<%= tprog %>32x32.ico" />
 												</div>

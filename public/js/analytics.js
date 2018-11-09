@@ -6,7 +6,7 @@ var viewMode = 'user';
 var projCache = '';
 var projUsersCache = '';
 var week = [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday' ];
-let marg = {
+var marg = {
 	top: 50,
 	bot: 15,
 	left: 25,
@@ -15,7 +15,7 @@ let marg = {
 	frbarw: 90,
 	lbar: 175,
 	rxy: 0,
-	endcap: 50,
+	endcap: 50
 };
 //#endregion setup
 

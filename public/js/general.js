@@ -1,3 +1,5 @@
+/* eslint-env browser, es6, jquery */
+
 // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
 
 /* Code written by Samuel J. Clarke, May-June 2018, for CumulusVFX. */
@@ -84,7 +86,7 @@ function highlightCurrentPage(){
 try {
 	let es6testfunc = (x) => {return x+1;}
 	if(es6testfunc(14) != 15) declareSupportMissing('ES6');
-} catch {
+} catch (Exception) {
 	declareSupportMissing('ES6')
 }
 if(typeof(es6testfunc) !== 'undefined') {

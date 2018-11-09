@@ -9,17 +9,18 @@
 		<meta name="author" content="Samuel J. Clarke">
 		<meta name="keywords" content="HTML,CSS,XML,JavaScript,Cumulus,CumulusVFX,VFX,Timesheets,Samuel,Clarke,NodeJS,Timetables,Timesheets">
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<link rel="shortcut icon" href="./res/tslogo/tslogo32x32.ico?">
 		<title>Timesheets!</title>
 
-		<script type="text/javascript">
+			<!-- Node Finger Printing -->
+		<script>
 			let IS_NODE = (typeof module !== 'undefined');
 			if(IS_NODE) { console.log("Welcome to the timesheet desktop app."); }
 		</script>
 
-		<link rel="shortcut icon" href="./res/tslogo/tslogo32x32.ico?">
 			<!-- jQuery -->
 		<script src="./lib/jquery.js"></script>
-		<script type="text/javascript"> if(IS_NODE) { jQuery = $ = module.exports } </script>
+		<script> if(IS_NODE) { jQuery = $ = module.exports } </script>
 			<!-- jQuery Form Validator -->
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js" crossorigin="anonymous"></script>
 			<!-- Tether & Popper (for bootstrap) -->
@@ -29,16 +30,16 @@
 		<link rel="stylesheet" href="./lib/bootstrap4.css">
 		<script src="./lib/bootstrap4.js"></script>
 			<!-- Fonts & Icons-->
-		<link href="https://fonts.googleapis.com/css?family=Archivo|Noto+Sans:700" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Archivo%7CNoto+Sans:700" rel="stylesheet">
 		<script src="https://use.fontawesome.com/52160498ec.js"></script>
-			<!-- Our CSS/JS -->
+			<!-- Custom CSS/JS -->
 		<script src="./js/general.js"></script>
 		<link rel="stylesheet" href="./css/style.css">
 		<link rel="stylesheet" href="./css/style.night.css">
 	</head>
 
 	<body>
-		<!-- Navbar -->
+			<!-- Navbar -->
 		<nav class="navbar navbar-toggleable-md navbar-inverse bg-inverse font-main">
 			<% if(user) { %>
 				<div class="navbar-toggler-right navbar-username-right-holder avholder font-big">
@@ -46,7 +47,7 @@
 				</div>
 			<% } %>
 
-			<!-- Navbar toggle button -->
+				<!-- Navbar toggle button -->
 			<button class="navbar-toggler navbar-toggler-right" type="button"
 				data-toggle="collapse" data-target="#navbarSupportedContent"
 				aria-controls="navbarSupportedContent" aria-expanded="false"
@@ -54,14 +55,14 @@
 				<span class="navbar-toggler-icon"></span>
 			</button>
 
-			<!-- Navbar logo -->
+				<!-- Navbar logo -->
 			<a class="navbar-brand" href="/">
 				<img class="img img-responsive icon48" alt="cmls logo"
 					src="/res/tslogo/tslogo48x48.ico" />
 			</a>
 
 
-			<!-- Navbar bar  -->
+				<!-- Navbar bar  -->
 			<div class="collapse navbar-collapse" id="navbarSupportedContent">
 				<ul class="navbar-nav mr-auto animated">
 					<% if(user) { %>
@@ -100,19 +101,17 @@
 				</ul>
 			</div>
 		</nav>
-		<!--div class="errholder">
-			<h1 class="err"> Site is under maintanence. DO NOT USE IT. </h1>
-		</div-->
+
 		<% if(error) { %>
 			<div class="errholder">
 				<h1 class="err"> <%= error %> </h1>
 			</div>
 		<% } %>
-		<div class="secondarybody font-main"> <!-- fades in everything (but not actually because i removed that once i stopped liking it) -->
+		<div class="secondarybody font-main">
 			<%- body %>
 		</div>
 		<div class="text-center version-footer font-main grn-text semi-dim">
 			<small> Developed by Samuel Clarke, May-July 2018, for CumulusVFX <br/> Version 1.8.6 | Codename: Tenacious Timer </small>
 		</div>
-</body>
+	</body>
 </html>
