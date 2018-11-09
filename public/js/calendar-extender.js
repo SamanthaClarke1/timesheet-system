@@ -251,7 +251,7 @@ function addcalendarExtenderToDateInputs(){
 if (!checkDateInputSupport() && typeof window.orientation === 'undefined') {
 	addcalendarExtenderToDateInputs();
 	//this is also on mousedown event so it will capture new inputs that might joined to the dom dynamically
-	document.querySelector('body').addEventListener('mousedown', function(event){
+	document.querySelector('body').addEventListener('mousedown', function() {
 		addcalendarExtenderToDateInputs();
 	});
 }

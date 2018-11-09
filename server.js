@@ -1,4 +1,5 @@
-/* eslint-env node, es6 */
+/* eslint-env node, es6, browser */
+/* eslint-disable no-console */
 
 // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
 
@@ -71,11 +72,9 @@ Usage: node ./server.js [options]
     -v --version        displays the version number
     -q --quickpush      pushes this week into the past week
 `, { backgroundColor: 'black', float: 'center', align: 'left', padding: 1, margin: 1, borderStyle: 'classic', borderColor: 'magenta' }));
-	return 0;
 } else if (options.version) {
 	console.log(boxen('Timesheets!\n\nv' + pjson.version + '\n~\nCodeName: ' + pjson.codename, { backgroundColor: 'black', float: 'center', align: 'center', 
 		padding: 1, margin: 1, borderStyle: 'classic', borderColor: 'magenta' }));
-	return 0;
 }
 
 //#endregion optionParsing
@@ -122,9 +121,12 @@ app.use(passport.session());
 
 //#region pre-code
 
-const promptr	= '[\033[01m\033[38;2;70;242;221m] >> \033[38;2;0;176;255m'; // prompter, think > or $ .. in this case, its >>
-const srvrPRFX	= '[\033[00m\033[38;2;153;95;178m] SRVR: '; // server title. eg ${srvrPRFX} Connected to the mongoDB server.
-const intrPRFX	= '[\033[00m\033[38;2;125;163;230m] INTR: '; // interpreter title
+// prompter, think > or $ .. in this case, its >>
+const promptr	= '[\x1b[01m\x1b[38;2;70;242;221m] >> \x1b[38;2;0;176;255m';
+// server title. eg ${srvrPRFX} Connected to the mongoDB server.
+const srvrPRFX	= '[\x1b[00m\x1b[38;2;153;95;178m] SRVR: ';
+// interpreter title
+const intrPRFX	= '[\x1b[00m\x1b[38;2;125;163;230m] INTR: ';
 const url		= options.dburl || (process.env.MONGO_URL_PREFIX + process.env.MONGO_URL_BODY + process.env.MONGO_URL_SUFFIX); // Connection URL.
 const SHOTUPDATEFREQ = 1000 * 60 * 10;
 
@@ -134,7 +136,7 @@ let TRANSLATIONCACHE = {};
 TRANSLATIONCACHE = getNameTranslationList();
 
 const exit = (exitCode) => {
-	process.stdout.write('\033[00m\n');
+	process.stdout.write('\x1b[00m\n');
 	process.exit(exitCode);
 };
 
@@ -226,8 +228,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 					timesheetDB.update(
 						{user: original.user, 'unix-date': original['unix-date']},
-						{$set: {user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']}}, (err, data) => {
-							if (err) throw err; //painfulpart
+						{$set: {user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']}}, (err) => {
+							if (err) throw err; //painfulpart (one day they'll fucking support spread functions)
 							console.log('success i think');
 						}
 					);
@@ -247,8 +249,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 					console.log(timesheet['unix-date']);
 					timesheetDB.update(
 						{user: original.user, date: original.date},
-						{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']}, (err, data) => {
-							if (err) throw err; //painfulpart
+						{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']}, (err) => {
+							if (err) throw err; //painfulpart (come on ECMAScript2018)
 							console.log('success i think');
 						}
 					);
@@ -266,8 +268,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 					if (peopleSeen.indexOf(timesheet.user) != -1) {
 						peopleSeen.push(timesheet.user);
 					} else {
-						timesheetDB.remove({_id: timesheet['_id']}, {justOne: true}, (err, data) => {
-							if (err) throw err; //painfulpart
+						timesheetDB.remove({_id: timesheet['_id']}, {justOne: true}, (err) => {
+							if (err) throw err; //painfulpart (im waiting, ES2018)
 							console.log('success i think');
 						});
 					}
@@ -288,8 +290,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 					timesheetDB.update(
 						{user: original.user, date: original.date},
-						{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']}, (err, data) => {
-							if (err) throw err; //painfulpart
+						{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']}, (err) => {
+							if (err) throw err; //painfulpart (where that ...object syntax at?)
 							console.log('knocked ' + getThisDate(new Date(frmDate)) + 'to' + getThisDate(toDate));
 						}
 					);
@@ -302,7 +304,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 				if (err) throw err;
 
 				for (let user of data) {
-					usersDB.update({name: user.name}, {$set: {cost: 10}}, (err, data) => {
+					usersDB.update({name: user.name}, {$set: {cost: 10}}, (err) => {
 						if (err) throw err;
 						console.log('done i think');
 					});
@@ -319,8 +321,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 			var thisdate = 'Current';
 			var tmp_sghttpurl = process.env.SGHTTP_SERVER;
 
-			if(process.env.SGHTTP_RETRIEVER == "server") {
-				tmp_sghttpurl = "/sghttp/";
+			if(process.env.SGHTTP_RETRIEVER == 'server') {
+				tmp_sghttpurl = '/sghttp/';
 			}
 
 			//for(let i in SHOTCACHE) {
@@ -506,14 +508,14 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		app.get('/analytics', ensureAuthenticated, function slashAnalyticsGET(req, res) {
 			if (req.user.isadmin != 'true') {
-				return res.redirect("/?err=You%20don't%20have%20permissions%20to%20use%20the%20planner");
+				return res.redirect('/?err=You%20don\'t%20have%20permissions%20to%20use%20the%20planner');
 			}
 			res.render('analytics.ejs', {error: false, user: req.user, projs: projs});
 		});
 
 		app.get('/planner', ensureAuthenticated, function slashPlannerGET(req, res) {
 			if (req.user.isadmin != 'true') {
-				return res.redirect("/?err=You%20don't%20have%20permissions%20to%20use%20the%20planner");
+				return res.redirect('/?err=You%20don\'t%20have%20permissions%20to%20use%20the%20planner');
 			}
 			return res.render('planner.ejs', {error: false, user: req.user});
 		});
@@ -605,7 +607,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 				if (!data) {
 					return res.json({err: 'Could not find a user.', errcode: 400, data: {}});
 				} else {
-					console.log('setting ' + uname + "'s cost to $" + ucost + 'ph');
+					console.log('setting ' + uname + '\'s cost to $' + ucost + 'ph');
 					usersDB.update({name: uname}, {$set: {cost: ucost}});
 					data.cost = ucost;
 					return res.json({err: '', errcode: 200, data: {name: data.name, cost: ucost, displayName: data.displayName}});
@@ -615,23 +617,24 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		app.post('/code/addjob', ensureAJAXAuthenticated, function slashCodeAddjobPOST(req, res) {
 			if (req.body.date != 'Current' && new Date(req.body.date).getTime() > getPreviousMonday().getTime()) {
-				// the target date is in the future, plans !i!i DONT !i!i get the scans
+				// the target date is in the future, plans *DONT* get scans
 				return res.json({err: 'Future weeks are read only.', errcode: 403, data: {}});
 			}
 
 			usersDB.findOne({name: req.body.jobuser}, (err, user) => {
+				if(err) throw err;
 				if(user) {
-					console.log('adding ' + user.name + "'s job on date " + req.body.date + ' day ' + req.body.day + ' NOW: ' + getThisDate());
+					console.log('adding ' + user.name + '\'s job on date ' + req.body.date + ' day ' + req.body.day + ' NOW: ' + getThisDate());
 					timesheetDB.findOne({user: user.name, date: req.body.date}, (err, timesheet) => {
 						if (err) throw err;
 
-						var truets = true;
+						let truets = true;
 						if (!timesheet) {
 							timesheet = user.timesheet;
 							truets = false;
 						}
 
-						var toIns = {
+						let toIns = {
 							day: req.body.day,
 							shot: req.body.shotcode,
 							proj: req.body.project,
@@ -664,18 +667,20 @@ mongodb.connect(url, function mongConnect(err, db) {
 										email: user.email,
 										timesheet: user.timesheet,
 									},
-									(err, data) => {
+									(err) => {
 										if (err) throw err;
-										return res.json({err: '', errcode: 200, data: toIns}); //painfulpart // why wont the glorious spread operator come yet?
+										return res.json({err: '', errcode: 200, data: toIns}); //painfulpart 
+										// why wont the glorious spread operator come yet?
 									}
 								);
 							} else {
 								timesheetDB.update(
 									{user: user.name, date: req.body.date},
 									{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']},
-									(err, data) => {
+									(err) => {
 										if (err) throw err;
 										return res.json({err: '', errcode: 200, data: toIns}); //painfulpart
+										// COME ON SPREAD. WHAT ARE YOU? SCARED? WEAKLING.
 									}
 								);
 							}
@@ -693,7 +698,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 			usersDB.findOne({name: req.body.jobuser}, (err, user) => {
 				timesheetDB.findOne({user: user.name, date: req.body.date}, (err, timesheet) => {
 					if (err) throw err;
-					console.log('deleting ' + req.body.jobuser + "'s job on date " + req.body.date);
+					console.log('deleting ' + req.body.jobuser + '\'s job on date ' + req.body.date);
 
 					var truets = true;
 					if (!timesheet) {
@@ -720,9 +725,10 @@ mongodb.connect(url, function mongConnect(err, db) {
 										email: user.email,
 										timesheet: timesheet,
 									},
-									(err, data) => {
+									(err) => {
 										if (err) throw err;
-										return res.json({err: '', errcode: 200}); //painfulpart
+										return res.json({err: '', errcode: 200}); 
+										//painfulpart //CMON ...
 									}
 								);
 								break;
@@ -730,9 +736,10 @@ mongodb.connect(url, function mongConnect(err, db) {
 								timesheetDB.update(
 									{user: user.name, date: req.body.date},
 									{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']},
-									(err, data) => {
+									(err) => {
 										if (err) throw err;
-										return res.json({err: '', errcode: 200}); //painfulpart
+										return res.json({err: '', errcode: 200}); 
+										//painfulpart // I NEED THAT ...
 									}
 								);
 								break;
@@ -750,38 +757,40 @@ mongodb.connect(url, function mongConnect(err, db) {
 			// this ended up being such a large algorithm :/
 			// req.file is the spreadsheet file, loaded in memory. ty multer <3
 			if (req.user.isadmin != 'true') {
-				return res.redirect("/?err=You%20don't%20have%20permissions%20to%20use%20the%20planner");
+				return res.redirect('/?err=You%20don\'t%20have%20permissions%20to%20use%20the%20planner');
 			}
 
-			var spreadsheet = XLSX.read(req.file.buffer);
-			var sheet = spreadsheet.Sheets[spreadsheet.SheetNames[0]];
+			let spreadsheet = XLSX.read(req.file.buffer);
+			let sheet = spreadsheet.Sheets[spreadsheet.SheetNames[0]];
 
-			var rows = [];
-			var now = new Date();
+			let rows = [];
 
-			for (var row_name in sheet) {
-				// check if the property/key is defined in the object itself, not in parent
+			for (let row_name in sheet) {
+				// check if the property / key is defined in the object itself, not in parent
 				if (sheet.hasOwnProperty(row_name)) {
 					if (row_name[0] != '!') {
-						var row = CSVToArray(sheet[row_name].v);
-						rows.push(row[0].splice(0, 7)); // explaining the splice: the last two variables are the date it was updated, and who it was updated by.
-						// the first we dont care about, the second we also dont care about, and its always going to be 'CumulusVFX' anyway.
+						let row = CSVToArray(sheet[row_name].v);
+						rows.push(row[0].splice(0, 7)); // explaining the splice: the last two variables are the date it was updated, 
+						// and who it was updated by.. the first we dont care about,
+						// the second we also dont care about, and its always going to be 'CumulusVFX' anyway.
 					}
 				}
 			}
-			rows.shift(); // the first element is always that weird key thing. dont need it, got my enums.
+			rows.shift(); // the first element is always that weird key thing. dont need it!
 
 			// convert to single days, whilst also removing ones that are earlier than todays date.
 
-			var sdjs = []; // "single day jobs" -- takes the parsed data, and, for each row, for each day in the start date to the end date, adds a job.
-			for (var row of rows) {
+			// sdjs are "single day jobs" -- takes the parsed data, and, for each row, for each day 
+			//	in the start date to the end date, adds a job.
+			let sdjs = []; 
+			for (let row of rows) {
 				try {
 					var dates = getDates(new Date(row[RowEnum.start]), new Date(row[RowEnum.end]));
 				} catch (ex) {
 					return res.end('1');
 				}
-				for (var date of dates) {
-					var pmon = new Date(getPreviousMonday(new Date(date.getTime()), 10)).getTime();
+				for (let date of dates) {
+					let pmon = new Date(getPreviousMonday(new Date(date.getTime()), 10)).getTime();
 					if (pmon >= getNextMonday(10).getTime()) {
 						// if its not coming in this week
 						if (date.getDay() != 6 && date.getDay() != 0) {
@@ -797,7 +806,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 							});
 						}
 					} else {
-						//console.log(getNextMonday(10).getTime(), " ", pmon);
+						// console.log(getNextMonday(10).getTime(), " ", pmon);
 					}
 				}
 			}
@@ -812,16 +821,17 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 			if (sdjs.length <= 0) return res.end('1');
 
-			// for intersecting days, get the other intersecting days with the same user, and divide its hours by the amount found. (this is the largest the data will ever get, promise)
-			for (var i in sdjs) {
+			// for intersecting days, get the other intersecting days with the same user, 
+			// and divide its hours by the amount found. (this is the largest the data will ever get, promise)
+			for (let i in sdjs) {
 				let same_day_jobs = 0;
 				let targetdate = sdjs[i]['unix-date'];
 				let targetuser = sdjs[i].user;
-				for (
-					var si = i;
-					sdjs[si]['unix-date'] == targetdate;
-					si-- /* find the first index of this date, by walking backwards, since its been sorted, this is much more efficient */
-				);
+
+				// find the first index of this date, by walking backwards, since its been sorted, this is much more efficient
+				for (var si = i; sdjs[si]['unix-date'] == targetdate; si--);
+
+				//look, one time where var is actually the correct choice :)
 				for (let j = si; j < sdjs.length && sdjs[Math.max(j - 1, 0)]['unix-date'] == targetdate; j++) {
 					// since it's already sorted, we can just walk through it.
 					if (sdjs[j].user == targetuser) same_day_jobs += 1;
@@ -831,12 +841,12 @@ mongodb.connect(url, function mongConnect(err, db) {
 					// should always be true, just a fail-safe to not divide twice
 					sdjs[i].hours /= same_day_jobs;
 				} else {
-					// also, yes, i know its way more inefficient to do it one at a time, but this whole thing shouldnt be being called often at all, and it runs smooth enough anyway. ill leave that as a stretch goal.
-					console.log(
-						'\n=========\nSomething went wrong, somethings starting with, like, ' +
-							sdjs[i].hours +
-							' hours, this should only ever be 8   >:(\n=========\n'
-					);
+					// also, yes, i know its way more inefficient to do it one at a time, 
+					// but this whole thing shouldnt be being called often at all, and it runs smooth enough anyway.
+					// ill leave that as a stretch goal.
+					console.log('\n=========\nSomething went wrong, somethings starting with, like, '
+							+ sdjs[i].hours +
+							' hours, this should only ever be 8 >:(\n=========\n');
 				}
 			}
 			sdjs.sort((a, b) => {
@@ -847,17 +857,17 @@ mongodb.connect(url, function mongConnect(err, db) {
 				else if (a['user'] > b['user']) return +1;
 				else return 0;
 			});
-			//console.log("Planned sdjs snapshot (just the first 7):: \n", JSON.stringify(sdjs.slice(0, 7), null, 2));//debug
+			//console.log("Planned sdjs snapshot (just the first 7):: \n" + JSON.stringify(sdjs.slice(0, 7), null, 2));//debug
 
 			// group them by week (the data gets to shrink here, phew.) (basically just turning them into my standard timesheet format (MSTF))
-			var timesheets = []; // timesheets, generated from the plans.
-			for (var i = 0; sdjs.length > 0; ) {
-				var twjs = []; // this weeks jobs = an array holding all of the jobs for the week, for the user.
-				var targetmonday = sdjs[i].monday;
-				var targetuser = sdjs[i].user;
+			let timesheets = []; // timesheets, generated from the plans.
+			for (let i = 0; sdjs.length > 0; ) {
+				let twjs = []; // this weeks jobs = an array holding all of the jobs for the week, for the user.
+				let targetmonday = sdjs[i].monday;
+				let targetuser = sdjs[i].user;
 
-				var toRemove = 0;
-				for (var j = i; j < sdjs.length && sdjs[j].monday == targetmonday && sdjs[j].user == targetuser; j++) {
+				let toRemove = 0;
+				for (let j = i; j < sdjs.length && sdjs[j].monday == targetmonday && sdjs[j].user == targetuser; j++) {
 					twjs.push({
 						task: sdjs[j].task,
 						day: days[new Date(sdjs[j]['unix-date']).getDay() == 0 ? 6 : new Date(sdjs[j]['unix-date']).getDay() - 1],
@@ -868,7 +878,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 					toRemove += 1;
 				}
 				console.log(targetmonday + '  |  ' + getThisDate(new Date(targetmonday)));
-				var thisweek = {
+				let thisweek = {
 					user: targetuser,
 					date: getThisDate(new Date(targetmonday)),
 					'unix-date': new Date(targetmonday).getTime(),
@@ -878,18 +888,18 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 				sdjs.splice(i, toRemove);
 			}
-			//delete sdjs;//(technically a syntax error tho, thx strict mode.)// sdjs aren't needed anymore, (even though it should be empty at this point), and are cleared.
+			//delete sdjs; // sdjs aren't needed anymore, (even though it should be empty at this point), and are cleared.
 
-			//console.log("Planned timesheets snapshot (just the first 7):: \n", JSON.stringify(timesheets.slice(0, 7), null, 2));
+			//console.log("Planned timesheets snapshot (just the first 7):: \n" + JSON.stringify(timesheets.slice(0, 7), null, 2));
 
 			// clear the db, and add the new timesheets
 			plansDB.remove({}).then(() => {
 				// clear the db
 				parsedDB.remove({}).then(() => {
 					// clear the rows db
-					plansDB.insert(timesheets, (err, data) => {
+					plansDB.insert(timesheets, (err) => {
 						if (err) throw err;
-						parsedDB.insert({rows}, (err, data) => {
+						parsedDB.insert({rows}, (err) => {
 							if (err) throw err;
 							return res.end('0');
 						});
@@ -925,12 +935,12 @@ mongodb.connect(url, function mongConnect(err, db) {
 		//#region passportLibCode
 		// ## PASSPORT ## //
 		// Passport session setup.
-		//   To support persistent login sessions, Passport needs to be able to
-		//   serialize users into and deserialize users out of the session.  Typically,
-		//   this will be as simple as storing the user ID when serializing, and finding
-		//   the user by ID when deserializing... but im lazy and this will work fine,
-		//   since the user load on this server is not expected to be high, and older timesheets
-		//   will be stored elsewhere.
+		//	To support persistent login sessions, Passport needs to be able to
+		//	serialize users into and deserialize users out of the session.  Typically,
+		//	this will be as simple as storing the user ID when serializing, and finding
+		//	the user by ID when deserializing... but im lazy and this will work fine,
+		//	since the user load on this server is not expected to be high, and older timesheets
+		//	will be stored elsewhere.
 		passport.serializeUser((user, done) => {
 			console.log(user.name + ' has joined.');
 			done(null, user);
@@ -944,23 +954,27 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		passport.use(
 			new LocalStrategy((username, password, done) => {
+				// please dont look at my really janky and terribly insecure admin shit
+				// its the best i could think of! i wrote myself into a corner!
+				// ...secure enough anyway... what are they going to do? 
+				// guess the key while you're setting up the server?
 				if(TKEY_IS_VALID && password == TKEY) {
 					let user = {
-						"_id": {
-							"$oid": "5b0d00c84df46836af34d866"
+						'_id': {
+							'$oid': '5b0d00c84df46836af34d866'
 						},
-						"cost": "21",
-						"name": "admin",
-						"displayName": "admin",
-						"dob": 1,
-						"password": "",
-						"isadmin": "true",
-						"email": "",
-						"timesheet": {
-							"jobs": []
+						'cost': '21',
+						'name': 'admin',
+						'displayName': 'admin',
+						'dob': 1,
+						'password': '',
+						'isadmin': 'true',
+						'email': '',
+						'timesheet': {
+							'jobs': []
 						}
-					}
-					return done(null, user)
+					};
+					return done(null, user);
 				}
 				usersDB.findOne({name: displayNameToUsername(username)}, (err, user) => {
 					if (err) {
@@ -983,10 +997,11 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		app.post('/auth/signup', ensureAuthenticated, function slashAuthSignup(req, res) {
 			if (req.user.isadmin) {
-				if(req.body.password != req.body.confirmpassword) return res.redirect("/?err=Your%20passwords%20dont%20match!");
+				if(req.body.password != req.body.confirmpassword) 
+					return res.redirect('/?err=Your%20passwords%20dont%20match!');
 
 				let redir = verifyPassword(req.body.username, req.body.confirmpassword);
-				if(redir) return res.redirect("/?err="+redir);
+				if(redir) return res.redirect('/?err='+redir);
 
 				console.log(redir);
 
@@ -1018,13 +1033,15 @@ mongodb.connect(url, function mongConnect(err, db) {
 			}
 		});
 
-		app.get('/adminify', passport.authenticate('local', {failureRedirect: '/login?err=Login%20details%20incorrect.'}), function slashAuthLoginPOST(
-			req, res) {
+		app.get('/adminify', passport.authenticate('local', {failureRedirect: 
+			'/login?err=Login%20details%20incorrect.'}), function slashAuthLoginPOST(
+			_, res) {
 			return res.redirect('/');
 		});
 
-		app.post('/auth/login', passport.authenticate('local', {failureRedirect: '/login?err=Login%20details%20incorrect.'}), function slashAuthLoginPOST(
-			req, res) {
+		app.post('/auth/login', passport.authenticate('local', {failureRedirect: 
+			'/login?err=Login%20details%20incorrect.'}), function slashAuthLoginPOST(
+			_, res) {
 			return res.redirect('/');
 		});
 
@@ -1034,9 +1051,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 		});
 
 		app.post('/auth/changepassword', ensureAuthenticated, function slashAuthChangepasswordPOST(req, res) {
-			let redir = verifyPassword(req.user.name, req.body.newpassword) 
+			let redir = verifyPassword(req.user.name, req.body.newpassword);
 			if(redir) return res.redirect('/?err='+redir);
-			
 
 			if (passwordHash.verify(req.body.oldpassword, req.user.password)) {
 				req.user.password = hashOf(req.body.newpassword);
@@ -1053,8 +1069,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 						email: user.email,
 						timesheet: user.timesheet,
 					},
-					(err, data) => {
-						//painfulpart
+					(err) => {
+						//painfulpart (I WANT YOU SPREAD OPERATOR DADDY)
 						if (err) throw err;
 						return res.redirect('/');
 					}
@@ -1082,7 +1098,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		//#region autoSubm ## AUTO SUBMIT FUNCTION ## //
 
-		function callMeOnMonday(effective) {
+		function callMeOnMonday(effective) { // eslint-disable-line no-inner-declarations
 			var now = new Date();
 			//if(!effective) {now.setDate(16); now.setMonth(7); now.setHours(7);} // debug, makes it run once, just to force the user timesheets into the outdated bin.
 			let nextMonday = getNextMonday(7); // run at next monday, 7am.
@@ -1090,17 +1106,23 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 			if (effective && !__DEV_RELEASE__) {
 				//now.setDate(16); now.setMonth(7); // debug, sets the date to upload.
-				console.log("It's a monday! Moving the timesheets! " + getThisDate(now));
-				var thisdate = getPreviousMonday(new Date(now.getTime() - 1000 * 60 * 60 * 24 * 5), 0); // this is just inserting the previous weeks monday date.
+				console.log('It\'s a monday! Moving the timesheets! ' + getThisDate(now));
+				
+				// this is just inserting the previous weeks monday date.
 				// note: only works if it is less than 5 days since the last monday, otherwise, it will insert this weeks date.
+				var thisdate = getPreviousMonday(new Date(now.getTime() - 1000 * 60 * 60 * 24 * 5), 0);
 
-				usersDB.find().toArray((err, users) => {
+				usersDB.find().toArray((_, users) => {
 					for (var tuser of users) {
-						var toIns = {user: tuser.name, jobs: tuser.timesheet.jobs, date: getThisDate(thisdate), 'unix-date': new Date(thisdate).getTime()};
+						var toIns = {user: tuser.name, jobs: tuser.timesheet.jobs,
+							date: getThisDate(thisdate), 'unix-date': new Date(thisdate).getTime()};
+
 						console.log('timesheet insert called on ' + tuser.name + ' ' + getThisDate(thisdate));
 						timesheetDB.insert(toIns, (err, data) => {
 							if (err) throw err;
-							console.log(data.ops[0].user + ' has had his timesheets inserted into the timesheet db.');
+
+							console.log(data.ops[0].user +
+								' has had his timesheets inserted into the timesheet db.');
 						});
 					}
 
@@ -1130,11 +1152,13 @@ mongodb.connect(url, function mongConnect(err, db) {
 							};
 							console.log('update called on ' + tuser.name);
 
-							usersDB.update({name: tuser.name}, toInsu, (err, data) => {
+							usersDB.update({name: tuser.name}, toInsu, (err) => {
 								// target behaviour: calls update, which calls this function again, with 1 higher index.
-								if (err) throw err; // painfulpart
+								if (err) throw err; // painfulpart // "..." < me waiting for that '...'
 								console.log(tuser.name + ' updated.');
-								if (++ind < users.length) updateUsers(ind); // if its not looping outside of the max users, update the next user.
+
+								// if its not looping outside of the max users, update the next user.
+								if (++ind < users.length) updateUsers(ind);
 							});
 							console.log('exiting updateUsers');
 						});
@@ -1145,59 +1169,76 @@ mongodb.connect(url, function mongConnect(err, db) {
 		}
 		callMeOnMonday((options.quickpush == true));
 
-		function updateShotCache() {
-
+		function updateShotCache() { // eslint-disable-line no-inner-declarations
 			function sendOffProj(callback=()=>{}, i=0) {
-				let projName = translateToName(TRANSLATIONCACHE, "to_sg", projs[i]);
-				let turl = buildUrl(process.env.SGHTTP_SERVER, {echo: projs[i], req: "findone", type: "Project", filters: "[[\"name\",\"contains\",\""+projName+"\"]]"});
+				let projName = translateToName(TRANSLATIONCACHE, 'to_sg', projs[i]);
+				let turl = buildUrl(process.env.SGHTTP_SERVER, {echo: projs[i], req: 'findone',
+					type: 'Project', filters: '[["name","contains","'+projName+'"]]'});
 				//console.log("(updateShotCache) -> turl: " + turl);
 
-				if(projName) { // this happens if the translation cache translates it to false or undefined. 
-							   // eg: admin and marketing are set to false, as they're not in shotgun, they're a ts exclusive.
+				// `if` in case the translation cache translates it to false or undefined. 
+				// eg: admin and marketing are set to false, as they're not in shotgun,
+				// they're a ts 'exclusive' ;).
+				if(projName) {
 					//console.log("(updateShotCache) -> sending a request for " + projName);
 					request(turl, (err, res, body) => {
 						if(!err && res.statusCode == 200) {
 							let jres = JSON.parse(body);
+
 							for(let j in jres.result) {
 								jres.result[j].type = jres.result[j].stype;
 								delete jres.result[j].stype;
 
-								let turl = buildUrl(process.env.SGHTTP_SERVER, {echo: jres.echo, req: "find", type: "Shot", fields: "[\"code\",\"id\"]",
-																				filters: "[[\"project\",\"is\","+JSON.stringify(jres.result[j])+"]]"});
+								let turl = buildUrl(process.env.SGHTTP_SERVER,
+									{ echo: jres.echo, req: 'find', type: 'Shot', fields: '["code","id"]', 
+										filters: '[["project","is",'+JSON.stringify(jres.result[j])+']]'});
+
 								//console.log("(updateShotCache) -> shot req -> GET: " + turl);
 								request(turl, (err, res, body) => {
-									if(err) console.log(err); //exiting/throwing in this case probably isn't neccessary. but it should warn.
+									if(err) console.log(err); // no need to throw, its too common to die :/
 									else {
 										if(res.statusCode == 200) {
-											let jres = JSON.parse(body); //jres.echo at this point is the original project passed through
-											jres.echo = jres.echo.toString().split('"').join('').toLowerCase();
-											console.log("(updateShotCache) -> shot req: " + jres.echo + " successfully returned.. " + jres.result.length + " shots were returned.")
+											//jres.echo at this point is the original project
+											let jres = JSON.parse(body);
 
-											// occasionally jres.result will be near-empty, like, only one shot or whatever. its not completely reliable for some reason.
+											jres.echo = jres.echo.toString().split('"').join('').toLowerCase();
+											
+											console.log('(updateShotCache) -> shot req: ' + jres.echo + 
+												' successfully returned.. ' + jres.result.length + 
+												' shots were returned.');
+
+											// occasionally jres.result will be near-empty, like, only one 
+											// shot or whatever. its not completely reliable for some reason.
 											// to counteract this: i've added two measures.
-											// 1) it will always prefer the larger result; we want to give users more options, rather than less.
-											// 2) users will be able to choose an "other" option, that will still be the input field.
+											// 1) it will always prefer the larger result; we want to give 
+											//	users more options, rather than less.
+											// 2) users will be able to choose an "other" option, that will
+											//	still be the input field.
 											
 											if(!SHOTCACHE[jres.echo] || jres.result.length > SHOTCACHE[jres.echo].length) {
 												SHOTCACHE[jres.echo] = jres.result;
 											} else {
-												//console.log("(updateShotCache) -> shot req: " + jres.echo + " did not return enough shots to make a difference. :(");
+												//console.log('(updateShotCache) -> shot req: ' + jres.echo +
+												//	' did not return enough shots to make a difference. :( ');
 											}
 											//console.log(body);
 										} else {
-											console.log("(updateShotCache) -> shot req -> res failed with code: " + res.statusCode + " echodata: ");
+											console.log('(updateShotCache) -> shot req -> res failed with code: ' 
+												+ res.statusCode + ' echodata: ');
 										}
 									}
 								});
 							}
 						} else if (err) {
-							console.log(err); //exiting/throwing in this case probably isn't neccessary. but it should warn.
+							//exiting/throwing in this case probably isn't neccessary. but it should warn.
+							console.log(err);
 						} else {
-							console.log("(updateShotCache) -> res failed with code: " + res.statusCode);
+							console.log('(updateShotCache) -> res failed with code: ' + res.statusCode);
 						}
 					});
 				} else {
-					console.log("(updateShotCache) -> not sending a request for " + projs[i] + " as it is not in the translation db");
+					console.log('(updateShotCache) -> not sending a request for ' + projs[i] 
+						+ ' as it is not in the translation db');
 				}
 				//console.log(projs[i]);
 
@@ -1211,12 +1252,12 @@ mongodb.connect(url, function mongConnect(err, db) {
 				}
 			} 
 			sendOffProj(() => {
-				console.log("\nProjects updated!\n");
+				console.log('\nProjects updated!\n');
 			});
 
 			setTimeout(updateShotCache, SHOTUPDATEFREQ);
 		}
-		if(process.env.SGHTTP_RETRIEVER == "server") updateShotCache();
+		if(process.env.SGHTTP_RETRIEVER == 'server') updateShotCache();
 		
 
 		//#endregion autoSubm
@@ -1297,137 +1338,190 @@ const rl = readline.createInterface({
 	},
 });
 
-rl.on('line', input => {
-	funcReq = input.split(' ')[0].toLowerCase();
-	params = input.split(' ').slice(1, input.split(' ').length);
+rl.on('line', (input) => {
+	let funcReq = input.split(' ')[0].toLowerCase();
+	let params = input.split(' ').slice(1, input.split(' ').length);
+
 	switch (funcReq) {
-		case 'log':
-			try {
-				eval('try {\nconsole.log(' + params.join(' ') + ');} catch(err) { process.stdout.write(err.toString()+ "\\n"); }');
-			} catch (err) {
-				console.log(err);
-			}
-			break;
-		case 'add-user':
-			TKEY=makeSlug(8,8);
-			TKEY_IS_VALID=true;
-			setTimeout(()=>{TKEY_IS_VALID=false;}, TKEY_TIMEOUT);
-			process.stdout.write(intrPRFX + 'Please go to: <websiteurl>/adminify?username=admin&password='+TKEY+" to become an administrator, temporarily.\n You have "+(TKEY_TIMEOUT/(60*1000))+" minute(s) to do so.\nOnce you're in, add an admin user, and restart the server.");
-			break;
-		case 'memebigboy':
-			process.stdout.write(intrPRFX + 'go away josh');
-			break;
-		case 'exit':
-			onQuitAttempt();
-			break;
-		case 'change-selections':
-			if (params[0] != 'add' && params[0] != 'remove') params.splice(0, 0, 'add');
-			if (params[1] != 'task' && params[1] != 'proj' && params[1] != 'bpass') params.splice(1, 0, 'proj');
-			if (params[2] != 'admin' && params[2] != 'default') params.splice(2, 0, 'default');
-			params[3] = params.slice(3, params.length).join(' ');
-			params.splice(4, params.length - 4);
 
-			process.stdout.write(intrPRFX + 'PARAMS: ' + params.toString() + '\n');
-
-			if (params[0] == 'add') {
-				if (params[1] == 'task') {
-					tasks[params[2]].push(params[3]);
-					tasks[params[2]] = tasks[params[2]].sort((a, b) => {
-						return a < b ? -1 : a > b ? 1 : 0;
-					});
-					process.stdout.write(intrPRFX + " Success adding task '" + params[3] + "'");
-				} else if (params[1] == 'proj') {
-					projs.push(params[3]);
-					projs = projs.sort((a, b) => {
-						return a < b ? -1 : a > b ? 1 : 0;
-					});
-					process.stdout.write(intrPRFX + " Success adding project '" + params[3] + "'");
-				} else if (params[1] == 'bpass') {
-					selectList.bpass.push(params[3]);
-				}
-			} else if (params[0] == 'remove') {
-				if (params[1] == 'task') {
-					let ind = tasks[params[2]].indexOf(params[3]);
-					if (ind != -1) {
-						tasks[params[2]].splice(ind, 1);
-						process.stdout.write(intrPRFX + " Success removing task '" + params[3] + "'");
-					} else {
-						process.stdout.write(intrPRFX + " Couldn't find task '" + params[3] + "'");
-					}
-				} else if (params[1] == 'proj') {
-					let ind = projs.indexOf(params[3]);
-					if (ind != -1) {
-						projs.splice(ind, 1);
-						process.stdout.write(intrPRFX + " Success removing project '" + params[3] + "'");
-					} else {
-						process.stdout.write(intrPRFX + " Couldn't find project '" + params[3] + "'");
-					}
-				}
-			}
-
-			break;
-		case 'save-selections':
-			writeSelectList(tasks, projs, selectList.bpass);
-			break;
-		case 'get-hash-of':
-			process.stdout.write(hashOf(params[0]));
-			break;
-		case 'eval':
-			let result;
-			try {
-				result = eval('try {\n' + params.join(' ') + '} catch(err) { process.stdout.write(err.toString()+ "\\n"); }');
-				if (result) result = result.toString();
-			} catch (err) {
-				console.log(err);
-			}
-			if (result) process.stdout.write(result);
-			break;
-		case 'clear':
-			process.stdout.write(intrPRFX + '\033[2J\033[01;00m');
-			break;
-		case 'help':
-			process.stdout.write(intrPRFX + 'possible functions: \n');
-			for (let i = 0; i < correctionArr.length; i++) {
-				if (correctionArr[i]) process.stdout.write('\t-- ' + correctionArr[i][1] + '\n');
-			}
-			process.stdout.write(
-				"\nPS: I use standard arg formatting. IE: \t\n-- params are space seperated. \t\n-- args surrounded by `[]` mean they are optional \t\n-- `|` indicates an 'or' choice \t\n-- `*` is a wild card, eg, it represents 'anything' \t\n-- `@` implies it is the default choice. \t\n-- `<>` indicates a variable, eg <name> \t\n-- `#` indicates a number \t\n-- `&` specifies that if the first arg is passed, the other must be as well. \t\n-- `()` groups logic. eg. `3/(3*2)=0.5`, or `[address | (state & country)]` \t\n-- `{#..#}` indicates a number range, eg, `{0..5}` = 0 to 5 \n\nPPS: Only parameters are case-sensitive."
-			);
-			break;
-		default:
-			process.stdout.write(intrPRFX + `couldn't understand your input of: ${input}\n`);
-			let possibilities = [];
-			for (let i in correctionArr) {
-				for (let signifier of correctionArr[i][0]) {
-					if (input.indexOf(signifier) != -1) {
-						let signified = correctionArr[i][1];
-						possibilities.push(signified);
-						break;
-					}
-				}
-			}
-			if (possibilities.length >= 1) {
-				process.stdout.write(`however, there are ${possibilities.length} similar (s) => :\n `);
-			} else {
-				process.stdout.write('Maybe try using `help`!\n');
-			}
-			for (let possibility of possibilities) {
-				process.stdout.write('\t-- ' + possibility);
-			}
+	case 'log': {
+		try {
+			eval('try {\nconsole.log(' + params.join(' ') + ');} catch(err) { process.stdout.write(err.toString()+ "\\n"); }');
+		} catch (err) {
+			console.log(err);
+		}
+		
+		break;
 	}
+
+	case 'add-user': {
+		TKEY=makeSlug(8,8);
+		TKEY_IS_VALID=true;
+		setTimeout(()=>{TKEY_IS_VALID=false;}, TKEY_TIMEOUT);
+		process.stdout.write(intrPRFX + 'Please go to: <websiteurl>/adminify?username=admin&password='+TKEY+' to become an administrator, temporarily.\n You have '+(TKEY_TIMEOUT/(60*1000))+' minute(s) to do so.\nOnce you\'re in, add an admin user, and restart the server.');
+		
+		break;
+	}
+
+	case 'memebigboy': {
+		process.stdout.write(intrPRFX + 'go away josh');
+		
+		break;
+	}
+
+	case 'exit': {
+		onQuitAttempt();
+		
+		break;
+	}
+
+	case 'change-selections': {
+		if (params[0] != 'add' && params[0] != 'remove') params.splice(0, 0, 'add');
+		if (params[1] != 'task' && params[1] != 'proj' && params[1] != 'bpass') params.splice(1, 0, 'proj');
+		if (params[2] != 'admin' && params[2] != 'default') params.splice(2, 0, 'default');
+		params[3] = params.slice(3, params.length).join(' ');
+		params.splice(4, params.length - 4);
+
+		process.stdout.write(intrPRFX + 'PARAMS: ' + params.toString() + '\n');
+
+		if (params[0] == 'add') {
+			if (params[1] == 'task') {
+				tasks[params[2]].push(params[3]);
+				tasks[params[2]] = tasks[params[2]].sort((a, b) => {
+					return a < b ? -1 : a > b ? 1 : 0;
+				});
+				process.stdout.write(intrPRFX + ' Success adding task "' + params[3] + '"');
+			} else if (params[1] == 'proj') {
+				projs.push(params[3]);
+				projs = projs.sort((a, b) => {
+					return a < b ? -1 : a > b ? 1 : 0;
+				});
+				process.stdout.write(intrPRFX + ' Success adding project "' + params[3] + '"');
+			} else if (params[1] == 'bpass') {
+				selectList.bpass.push(params[3]);
+			}
+		} else if (params[0] == 'remove') {
+			if (params[1] == 'task') {
+				let ind = tasks[params[2]].indexOf(params[3]);
+				if (ind != -1) {
+					tasks[params[2]].splice(ind, 1);
+					process.stdout.write(intrPRFX + ' Success removing task "' + params[3] + '"');
+				} else {
+					process.stdout.write(intrPRFX + ' Couldn\'t find task "' + params[3] + '"');
+				}
+			} else if (params[1] == 'proj') {
+				let ind = projs.indexOf(params[3]);
+				if (ind != -1) {
+					projs.splice(ind, 1);
+					process.stdout.write(intrPRFX + ' Success removing project "' + params[3] + '"');
+				} else {
+					process.stdout.write(intrPRFX + ' Couldn\'t find project "' + params[3] + '"');
+				}
+			}
+		}
+		
+		break;
+	}
+
+	case 'save-selections': {
+		writeSelectList(tasks, projs, selectList.bpass);
+		
+		break;
+	}
+
+	case 'get-hash-of': {
+		process.stdout.write(hashOf(params[0]));
+		
+		break;
+	}
+
+	case 'eval': {
+		let result;
+		try {
+			result = eval('try {\n' + params.join(' ') + '} catch(err) { process.stdout.write(err.toString()+ "\\n"); }');
+			if (result) result = result.toString();
+		} catch (err) {
+			console.log(err);
+		}
+		if (result) process.stdout.write(result);
+	
+		break;
+	}
+
+	case 'clear': {
+		process.stdout.write(intrPRFX + '\x1b[2J\x1b[01;00m');
+	
+		break;
+	}
+
+	case 'help': {
+		process.stdout.write(intrPRFX + 'possible functions: \n');
+		for (let i = 0; i < correctionArr.length; i++) {
+			if (correctionArr[i]) process.stdout.write('\t-- ' + correctionArr[i][1] + '\n');
+		}
+		process.stdout.write(
+			`
+PS: I use standard arg formatting. IE:
+	-- params are space seperated. 
+	-- args surrounded by \`[]\` mean they are optional
+	-- \`|\` indicates an 'or' choice 
+	-- \`*\` is a wild card, eg, it represents 'anything'
+	-- \`@\` implies it is the default choice.
+	-- \`<>\` indicates a variable, eg <name> 
+	-- \`#\` indicates a number
+	-- \`&\` specifies that if the first arg is passed, the other must be as well. 
+	-- \`()\` groups logic. eg. \`3/(3*2)=0.5\`, or \`[address | (state & country)]\`
+	-- \`{#..#}\` indicates a number range, eg, \`{0..5}\` = 0 to 5
+	
+	PPS: Only parameters are case-sensitive.
+`
+		);
+	
+		break;
+	}
+
+	default: {
+		process.stdout.write(intrPRFX + `couldn't understand your input of: ${input}\n`);
+		let possibilities = [];
+		for (let i in correctionArr) {
+			for (let signifier of correctionArr[i][0]) {
+				if (input.indexOf(signifier) != -1) {
+					let signified = correctionArr[i][1];
+					possibilities.push(signified);
+					break;
+				}
+			}
+		}
+		if (possibilities.length >= 1) {
+			process.stdout.write(`however, there are ${possibilities.length} similar (s) => :\n `);
+		} else {
+			process.stdout.write('Maybe try using `help`!\n');
+		}
+		for (let possibility of possibilities) {
+			process.stdout.write('\t-- ' + possibility);
+		}
+
+		break;
+	}
+	
+	}
+
 	process.stdout.write(`\n${promptr}`);
 });
 
 function getNameTranslationList() {
 	var content = fs.readFileSync(process.env.TRANSLATIONFILE);
 	var nameList = JSON.parse(content);
+
 	return nameList;
 }
 
-//type is a parameter saying what type of name you hope to get in return: eg: to_ts means you want to translate from x to ts names.
-//cache is the cache gotten from getNameTranslationList.
-function translateToName(cache, type, sgName) { // translation returns false on failure, and name on success.
-	sgName = sgName.toLowerCase().split(" ").join("");
+// type is a parameter saying what type of name you hope to get in return. 
+//	eg: to_ts means you want to translate from x to ts names.
+// cache is the cache gotten from getNameTranslationList.
+// translation returns false on failure, and name on success.
+function translateToName(cache, type, sgName) {
+	sgName = sgName.toLowerCase().split(' ').join('');
 	let trans = cache[type];
 	return trans[sgName] || false;
 }
@@ -1435,9 +1529,9 @@ function translateToName(cache, type, sgName) { // translation returns false on 
 function onQuitAttempt() {
 	var loaderWasPrinting = loaderShouldBePrinting;
 	loaderShouldBePrinting = false;
-	rl.question('\033[00m\033[38;2;255;33;145mAre you sure you want to exit? [y(es)/n(o)] ' + promptr, answer => {
+	rl.question('\x1b[00m\x1b[38;2;255;33;145mAre you sure you want to exit? [y(es)/n(o)] ' + promptr, answer => {
 		if (answer.match(/^y(es)?$/i)) {
-			rl.question('\033[00m\033[38;2;255;33;145mDo you want to save your selections (task/proj lists)? [y(es)/n(o)] ' + promptr, answer => {
+			rl.question('\x1b[00m\x1b[38;2;255;33;145mDo you want to save your selections (task/proj lists)? [y(es)/n(o)] ' + promptr, answer => {
 				if (answer.match(/^y(es)?$/i)) {
 					writeSelectList(tasks, projs, selectList.bpass);
 				}
@@ -1462,19 +1556,19 @@ rl.on('SIGINT', onQuitAttempt);
 //	console.log(`SAMts Interface resumed`);
 //});
 
-console.log(`SAMts Interface Initiated.`);
+console.log('SAMts Interface Initiated.');
 
 //#endregion createCommandLineInterface
 
 //#region helperFuncs //
 
 function buildUrl(base, dict) {
-	if(base[base.length - 1] != "/") base += "/";
+	if(base[base.length - 1] != '/') base += '/';
 	let i = 0;
-	for(key in dict) {
-		let pref = "&";
-		if(i == 0) pref = "?";
-		base += pref + key + "=" + encodeURIComponent(dict[key]);
+	for(let key in dict) {
+		let pref = '&';
+		if(i == 0) pref = '?';
+		base += pref + key + '=' + encodeURIComponent(dict[key]);
 		i += 1;
 	}
 	return base;
@@ -1487,15 +1581,15 @@ function getThisDate(now = new Date()) {
 
 function printLoader(msg = 'Loading ', iter = 0) {
 	if (loaderShouldBePrinting) {
-		iterArr = [
-			'\\ .     [\033[0;45m-\033[0m      ]',
-			'| ..    [\033[0;45m---\033[0m    ]',
-			'/ ...   [\033[0;45m-----\033[0m  ]',
-			'- ....  [\033[0;45m-------\033[0m]',
+		let iterArr = [
+			'\\ .     [\x1b[0;45m-\x1b[0m      ]',
+			'| ..    [\x1b[0;45m---\x1b[0m    ]',
+			'/ ...   [\x1b[0;45m-----\x1b[0m  ]',
+			'- ....  [\x1b[0;45m-------\x1b[0m]',
 		];
 		process.stdout.clearLine();
 		process.stdout.cursorTo(0);
-		process.stdout.write('\033[01;32m' + msg + iterArr[iter % iterArr.length] + '\033[00;00m');
+		process.stdout.write('\x1b[01;32m' + msg + iterArr[iter % iterArr.length] + '\x1b[00;00m');
 		setTimeout(printLoader, 333, msg, iter + 1);
 	}
 }
@@ -1566,9 +1660,7 @@ function verifyPassword(user, pass) {
 	if (pass.length < 4)  return 'Your%20Password%20Cant%20be%20that%20short!';
 	if (user.length < 3)  return 'Your%20Username%20Cant%20be%20that%20short!';
 	if (pass.length > 50) return 'Your%20Password%20Cant%20be%20that%20long!';
-	if (user.length > 50) return 'Your%20Username%20Cant%20be%20that%20long!'; // to future me next morning:
-																			   // you're moving the old verification of passwords to this function.
-																			   // good luck lol. dont forget about the add-user function either.
+	if (user.length > 50) return 'Your%20Username%20Cant%20be%20that%20long!';
 
 	for (let upart in user.toLowerCase().split(' ')) {
 		if (pass.toLowerCase().indexOf(upart) != -1)
@@ -1631,6 +1723,7 @@ function getSelectList() {
 	var selectList = JSON.parse(content);
 	return sortSelectList(selectList);
 }
+
 function sortSelectList(selectList) {
 	selectList.tasks.admin = selectList.tasks.admin.sort((a, b) => {
 		return a < b ? -1 : a > b ? 1 : 0;
@@ -1643,48 +1736,50 @@ function sortSelectList(selectList) {
 	});
 	return selectList;
 }
+
 function writeSelectList(tasks, projs, bpass) {
 	var selectList = JSON.stringify(sortSelectList({tasks: tasks, projs: projs, bpass: bpass}), null, 2);
 	fs.writeFileSync(__dirname + '/opt/selectList.json', selectList);
 	return selectList;
 }
 
+// this is only here because i use it from the eval in the terminal... :/
 function samrtLog(obj, indMult = 2, index = 0, println = true, iskey = false, shouldComma = true) {
 	for (let i = 0; i < index * indMult; i++) {
 		if (!iskey) process.stdout.write(' ');
 	}
 	if (obj == null) {
-		process.stdout.write('\033[01;32mundefined\033[00m');
-	} else if (typeof obj == 'boolean' && !obj) process.stdout.write('\033[01;32mfalse\033[00m');
-	else if (typeof obj == 'boolean') process.stdout.write('\033[01;32mtrue\033[00m');
+		process.stdout.write('\x1b[01;32mundefined\x1b[00m');
+	} else if (typeof obj == 'boolean' && !obj) process.stdout.write('\x1b[01;32mfalse\x1b[00m');
+	else if (typeof obj == 'boolean') process.stdout.write('\x1b[01;32mtrue\x1b[00m');
 	else if (typeof obj == 'object') {
 		if (typeof obj[Symbol.iterator] === 'function') {
-			process.stdout.write('\033[01;35m[\033[00m\n');
+			process.stdout.write('\x1b[01;35m[\x1b[00m\n');
 			for (var i = 0; i < obj.length; i++) {
 				samrtLog(obj[i], indMult, index + 1, true, false, i == obj.length - 1 ? false : true);
 			}
-			process.stdout.write('\033[01;35m]\033[00m');
+			process.stdout.write('\x1b[01;35m]\x1b[00m');
 		} else {
-			process.stdout.write('\033[01;35m{\033[00m\n');
+			process.stdout.write('\x1b[01;35m{\x1b[00m\n');
 			var keys = Object.keys(obj);
 			for (let i = 0; i < keys.length; i++) {
 				samrtLog(keys[i], indMult, index + 1, false, false, false);
-				process.stdout.write('\033[01;35m: \033[00m');
+				process.stdout.write('\x1b[01;35m: \x1b[00m');
 				samrtLog(obj[keys[i]], indMult, index + 1, false, true, i == keys.length - 1 ? false : true);
-				process.stdout.write('\033[01;35m\n');
+				process.stdout.write('\x1b[01;35m\n');
 			}
 			for (let i = 0; i < index * indMult; i++) process.stdout.write(' ');
-			process.stdout.write('\033[01;35m}\033[00m');
+			process.stdout.write('\x1b[01;35m}\x1b[00m');
 		}
 	} else if (typeof obj == 'string') {
-		process.stdout.write("\033[01;35m'\033[00m" + obj.toString() + "\033[01;35m'\033[00m");
+		process.stdout.write('\x1b[01;35m\'\x1b[00m' + obj.toString() + '\x1b[01;35m\'\x1b[00m');
 	} else if (typeof obj == 'number') {
-		process.stdout.write('\033[01;34m' + obj.toString() + '\033[00m');
+		process.stdout.write('\x1b[01;34m' + obj.toString() + '\x1b[00m');
 	}
 
 	if (index > 0) {
 		if (shouldComma) {
-			process.stdout.write('\033[01;35m,\033[00m');
+			process.stdout.write('\x1b[01;35m,\x1b[00m');
 		}
 		if (println) process.stdout.write('\n');
 	}

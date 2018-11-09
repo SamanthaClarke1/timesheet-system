@@ -2,8 +2,8 @@
 
 // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
 
-var users = [];
-var marg = {lbar: 150, top: 20, right: 20, bot: 20, left: 20, barspacing: 2};
+let users = [];
+let marg = { lbar: 150, top: 20, right: 20, bot: 20, left: 20, barspacing: 2 };
 
 $(document).ready(function(){
 	function renderD3(dset){
@@ -16,8 +16,8 @@ $(document).ready(function(){
 			}
 		}
 
-		let minCost = 0,
-			maxCost = 0;
+		let minCost = 0, maxCost = 0;
+
 		for (let i = 0; i < dset.length; i++) maxCost = Math.max(dset[i].cost ? dset[i].cost : -1, maxCost);
 		let costRange = maxCost - minCost; //Math.floor(Math.random() * 60);//
 		costRange = Math.ceil(costRange);
@@ -34,8 +34,6 @@ $(document).ready(function(){
 
 		let xScale = d3.scaleLinear().domain([ 0, costRange ]).range([ 0, w - marg.right ]);
 
-		let yScale = d3.scaleLinear().domain([ 0, dset.length ]).range([ h - (marg.top + marg.bot), 0 ]);
-
 		const svg = d3
 			.select('#tables')
 			.append('svg')
@@ -49,7 +47,7 @@ $(document).ready(function(){
 
 		const xAxis = d3.axisTop(xScale).ticks(Math.min(costRange, 16));
 
-		svg.append('g').attr('transform', 'translate(0,0)').attr('class', 'axisWhite').call(xAxis);
+		svg.append('g').attr('transform', 'translate(0, 0)').attr('class', 'axisWhite').call(xAxis);
 	}
 
 	$.get('/ajax/getusercosts', function(data){
@@ -83,9 +81,9 @@ $(document).ready(function(){
 	});
 
 	function createUserCostBars(svg, dat, tcl, inx, iny, wscl, hscl){
-		var usrbar = svg.append('g').attr('transform', 'translate(' + inx + ', ' + (iny + marg.barspacing * 2) + ')').attr('class', tcl);
+		let usrbar = svg.append('g').attr('transform', 'translate(' + inx + ', ' + (iny + marg.barspacing * 2) + ')').attr('class', tcl);
 
-		var usrbarrow = usrbar
+		usrbar
 			.selectAll('g')
 			.data(dat)
 			.enter()
@@ -93,18 +91,18 @@ $(document).ready(function(){
 			.attr('transform', (d, i) => {
 				return 'translate(0, ' + (hscl * i + marg.barspacing / 2) + ')';
 			})
-			.attr('width', (d, i) => {
+			.attr('width', (d) => {
 				return (d.cost ? d.cost : 10) * wscl;
 			})
 			.attr('height', hscl - marg.barspacing)
-			.attr('fill', (d, i) => {
+			.attr('fill', (_, i) => {
 				return i % 2 == 0 ? '#ccc' : '#ddd';
 			})
-			.attr('onclick', d => {
+			.attr('onclick', (d) => {
 				return '$("#uname-inp").val("' + d.name + '"); $("#ucosts-inp").val("' + d.cost + '");';
 			})
 			.append('title')
-			.text(d => {
+			.text((d) => {
 				return 'User: ' + d.name + '\nCost: $' + Math.round(d.cost * 100) / 100 + '/h';
 			})
 			.attr('class', 'tooltip');
@@ -113,12 +111,12 @@ $(document).ready(function(){
 	}
 
 	function createTitleBar(svg, dat, tcl, inx, iny, wscl, hscl){
-		var usrbar = svg
+		let usrbar = svg
 			.append('g')
 			.attr('transform', 'translate(' + (marg.left / 2 - marg.lbar + inx) + ', ' + (iny + marg.barspacing * 2) + ')')
 			.attr('class', tcl);
 
-		var usrbarrow = usrbar.selectAll('g').data(dat).enter().append('g').attr('transform', (d, i) => {
+		let usrbarrow = usrbar.selectAll('g').data(dat).enter().append('g').attr('transform', (d, i) => {
 			return 'translate(0,' + (hscl * i + marg.barspacing / 2) + ')';
 		});
 
@@ -130,19 +128,19 @@ $(document).ready(function(){
 				return i % 2 == 0 ? '#ccc' : '#ddd';
 			})
 			.attr('class', tcl + '-row-rect')
-			.attr('onclick', d => {
+			.attr('onclick', (d) => {
 				return '$("#uname-inp").val("' + d.name + '")';
 			});
 
 		usrbarrow
 			.append('text')
 			.attr('x', marg.left / 2)
-			.attr('y', (d, i) => {
+			.attr('y', () => {
 				return hscl / 2 + 5;
 			})
 			.attr('fill', '#111')
 			.attr('class', tcl + '-row-rect')
-			.text(d => {
+			.text((d) => {
 				return d.name;
 			});
 

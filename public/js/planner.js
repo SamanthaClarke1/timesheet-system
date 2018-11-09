@@ -2,27 +2,30 @@
 
 // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
 
-var indexToName = [ 'Id', 'User', 'Start', 'End', 'Project', 'Vacation', 'Note' ];
-var searchField = '';
+let indexToName = [ 'Id', 'User', 'Start', 'End', 'Project', 'Vacation', 'Note' ];
+let searchField = '';
 
-$(document).ready(function(){
-	var toImplantHTML = '<option value="Date">Date</option>';
-	for (var i = 0; i < indexToName.length; i++) {
-		toImplantHTML += '<option value="' + indexToName[i] + '">' + indexToName[i] + '</option>';
-	}
-	$('#fieldSelect').html(toImplantHTML);
-	delete toImplantHTML;
+$(document).ready(function() {
+	(function() {
+		let toImplantHTML = '<option value="Date">Date</option>';
+		for (let i = 0; i < indexToName.length; i++) {
+			toImplantHTML += '<option value="' + indexToName[i] + '">' + indexToName[i] + '</option>';
+		}
+		$('#fieldSelect').html(toImplantHTML);
+	})();
 
-	function updateSearch(){
+	function updateSearch() {
 		searchField = $('#fieldSelect').val();
-		var search = $('#filterSearch').val().toUpperCase();
-		var hasWarned = false;
-		$('#plans-table').find('tr').each(function(){
+		let search = $('#filterSearch').val().toUpperCase();
+		let hasWarned = false;
+
+		$('#plans-table').find('tr').each(function() {
 			if (!hasWarned) {
 				if (searchField == 'Date') {
-					var startVal = new Date($(this).find('.Start-d').text()).getTime();
-					var endVal = new Date($(this).find('.End-d').text()).getTime();
-					var searchd = new Date(search).getTime();
+					let startVal = new Date($(this).find('.Start-d').text()).getTime();
+					let endVal = new Date($(this).find('.End-d').text()).getTime();
+					let searchd = new Date(search).getTime();
+
 					if (isNaN(searchd)) {
 						$(this).addClass('showing');
 					} else {
@@ -33,7 +36,8 @@ $(document).ready(function(){
 						}
 					}
 				} else {
-					var fieldVal = $(this).find('.' + searchField + '-d').html();
+					let fieldVal = $(this).find('.' + searchField + '-d').html();
+
 					if (fieldVal.toUpperCase().indexOf(search) != -1) {
 						$(this).addClass('showing');
 					} else {
@@ -45,9 +49,9 @@ $(document).ready(function(){
 		reshadePlans();
 	}
 
-	function reshadePlans(){
-		var total = 0;
-		$('.ts-planner-row.showing').each(function(){
+	function reshadePlans() {
+		let total = 0;
+		$('.ts-planner-row.showing').each(function() {
 			if (total % 2 == 0) {
 				$(this).addClass('even');
 			} else {
@@ -57,24 +61,24 @@ $(document).ready(function(){
 		});
 	}
 
-	$('#fieldSelect').bind('change', function(e){
+	$('#fieldSelect').bind('change', function() {
 		updateInputField();
 		updateSearch();
 	});
-	$('#filterSearch').bind('keyup', function(e){
+	$('#filterSearch').bind('keyup', function(e) {
 		if (e.keyCode == 13) {
 			updateSearch();
 		}
 	});
-	$('#fieldSelect').bind('change', function(e){
-		var fv = $('#fieldSelect').val();
+	$('#fieldSelect').bind('change', function() {
+		let fv = $('#fieldSelect').val();
 		if (fv == 'Date' || fv == 'Start' || fv == 'End') {
 			updateSearch();
 		}
 	});
 
-	$('#file-upload').on('change', function(){
-		var file = this.files[0];
+	$('#file-upload').on('change', function() {
+		let file = this.files[0];
 		if (file.size > 1048576 * 8) {
 			alert('max upload size is 8 MegaBytes (' + 1048576 * 8 + ' Bytes)');
 		}
@@ -83,19 +87,21 @@ $(document).ready(function(){
 		}
 	});
 
-	$('#submitFileWithAjax').click(function(){
+	$('#submitFileWithAjax').click(function() {
 		if (confirm('This will remove all conflicting spreadsheet data, are you sure?')) {
 			// if they click ok, run this code, otherwise, dont.
-			var refrBtn = $(this);
+			let refrBtn = $(this);
 			loadState = 0;
-			var offset = {
+			let offset = {
 				x: refrBtn.offset().left + refrBtn.width(),
 				y: refrBtn.offset().top + refrBtn.height() / 2,
 				opacity: 1,
 				speed: 1,
 			};
+
 			rect_loader.tune(offset).generate().replay();
 			rect_loaded.tune(offset).generate();
+
 			$.ajax({
 				url: '/ajax/planviaspreadsheet',
 				type: 'POST',
@@ -106,7 +112,7 @@ $(document).ready(function(){
 
 				// Custom XMLHttpRequest
 				xhr: function(){
-					var myXhr = $.ajaxSettings.xhr();
+					let myXhr = $.ajaxSettings.xhr();
 					if (myXhr.upload) {
 						// For handling the progress of the upload
 						myXhr.upload.addEventListener(
@@ -133,8 +139,8 @@ $(document).ready(function(){
 	});
 
 	function updateInputField(){
-		var field = document.getElementById('filterSearch');
-		var fv = $('#fieldSelect').val();
+		let field = document.getElementById('filterSearch');
+		let fv = $('#fieldSelect').val();
 		if (fv == 'Date' || fv == 'Start' || fv == 'End') {
 			field.type = 'date';
 		} else {
@@ -144,32 +150,28 @@ $(document).ready(function(){
 	updateInputField();
 
 	function updatePlans(){
-		$.get(
-			'/ajax/getplans',
-			function(data){
-				if (data.errcode == 200) {
-					data = data.data[0].rows;
-					var toSetAsHTML =
-						'<table class="col-12" style="margin-top: 20px; margin-bottom: 30px;"> <tr class="col-12"> <th class="col-2"> Id </th> <th class="col-2"> User </th>';
-					toSetAsHTML +=
-						'<th class="col-2"> Start </th> <th class="col-2"> End </th> <th class="col-2"> Project </th> <th class="col-2"> Vacation? </th> <th class="col-2"> Note </th> </tr> </table><table id="plans-table" class="col-12">';
-					var total = 0;
-					for (var row of data) {
-						toSetAsHTML += '<tr class="ts-planner-row ' + (total % 2 == 0 ? 'even ' : '') + 'showing col-12">';
-						for (var i in row) {
-							toSetAsHTML += '<td class="col-2 ' + indexToName[i] + '-d">' + row[i] + '</td>';
-						}
-						toSetAsHTML += '</tr>';
-						total++;
+		$.get('/ajax/getplans', function(data) {
+			if (data.errcode == 200) {
+				data = data.data[0].rows;
+				let toSetAsHTML =
+					'<table class="col-12" style="margin-top: 20px; margin-bottom: 30px;"> <tr class="col-12"> <th class="col-2"> Id </th> <th class="col-2"> User </th>';
+				toSetAsHTML +=
+					'<th class="col-2"> Start </th> <th class="col-2"> End </th> <th class="col-2"> Project </th> <th class="col-2"> Vacation? </th> <th class="col-2"> Note </th> </tr> </table><table id="plans-table" class="col-12">';
+				let total = 0;
+				for (let row of data) {
+					toSetAsHTML += '<tr class="ts-planner-row ' + (total % 2 == 0 ? 'even ' : '') + 'showing col-12">';
+					for (let i in row) {
+						toSetAsHTML += '<td class="col-2 ' + indexToName[i] + '-d">' + row[i] + '</td>';
 					}
-					toSetAsHTML += '</table>';
-					$('#plansHolder').html(toSetAsHTML);
-				} else {
-					alert('ERRORCODE: ' + data.errcode + ' ERROR: ' + data.err);
+					toSetAsHTML += '</tr>';
+					total++;
 				}
-			},
-			'json'
-		);
+				toSetAsHTML += '</table>';
+				$('#plansHolder').html(toSetAsHTML);
+			} else {
+				alert('ERRORCODE: ' + data.errcode + ' ERROR: ' + data.err);
+			}
+		}, 'json');
 	}
 	updatePlans();
 });
@@ -185,15 +187,14 @@ $(document).ready(function(){
 
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	*/
-	function Init(){
-		var fileSelect = document.getElementById('file-upload'),
-			fileDrag = document.getElementById('file-drag'),
-			submitButton = document.getElementById('submit-button');
+	function init() {
+		let fileSelect = document.getElementById('file-upload'),
+			fileDrag = document.getElementById('file-drag');
 
 		fileSelect.addEventListener('change', fileSelectHandler, false);
 
 		// Is XHR2 available?
-		var xhr = new XMLHttpRequest();
+		let xhr = new XMLHttpRequest();
 		if (xhr.upload) {
 			// File Drop
 			fileDrag.addEventListener('dragover', fileDragHover, false);
@@ -203,7 +204,7 @@ $(document).ready(function(){
 	}
 
 	function fileDragHover(e){
-		var fileDrag = document.getElementById('file-drag');
+		let fileDrag = document.getElementById('file-drag');
 
 		e.stopPropagation();
 		e.preventDefault();
@@ -213,20 +214,20 @@ $(document).ready(function(){
 
 	function fileSelectHandler(e){
 		// Fetch FileList object
-		var files = e.target.files || e.dataTransfer.files;
+		let files = e.target.files || e.dataTransfer.files;
 
 		// Cancel event and hover styling
 		fileDragHover(e);
 
 		// Process all File objects
-		for (var i = 0, f; (f = files[i]); i++) {
+		for (let i = 0, f; (f = files[i]); i++) {
 			parseFile(f);
 			uploadFile(f);
 		}
 	}
 
 	function output(msg){
-		var m = document.getElementById('messages');
+		let m = document.getElementById('messages');
 		m.innerHTML = msg;
 	}
 
@@ -247,7 +248,7 @@ $(document).ready(function(){
 	}
 
 	function setProgressMaxValue(e){
-		var pBar = document.getElementById('file-progress');
+		let pBar = document.getElementById('file-progress');
 
 		if (e.lengthComputable) {
 			pBar.max = e.total;
@@ -255,7 +256,7 @@ $(document).ready(function(){
 	}
 
 	function updateFileProgress(e){
-		var pBar = document.getElementById('file-progress');
+		let pBar = document.getElementById('file-progress');
 
 		if (e.lengthComputable) {
 			pBar.value = e.loaded;
@@ -263,8 +264,7 @@ $(document).ready(function(){
 	}
 
 	function uploadFile(file){
-		var xhr = new XMLHttpRequest(),
-			fileInput = document.getElementById('class-roster-file'),
+		let xhr = new XMLHttpRequest(),
 			pBar = document.getElementById('file-progress'),
 			fileSizeLimit = 1024; // In MB
 		if (xhr.upload) {
@@ -276,7 +276,7 @@ $(document).ready(function(){
 				xhr.upload.addEventListener('progress', updateFileProgress, false);
 
 				// File received / failed
-				xhr.onreadystatechange = function(e){
+				xhr.onreadystatechange = function(){
 					if (xhr.readyState == 4) {
 						// Everything is good!
 						// progress.className = (xhr.status == 200 ? "success" : "failure");
@@ -298,7 +298,7 @@ $(document).ready(function(){
 
 	// Check for the various File API support.
 	if (window.File && window.FileList && window.FileReader) {
-		Init();
+		init();
 	} else {
 		document.getElementById('file-drag').style.display = 'none';
 	}
