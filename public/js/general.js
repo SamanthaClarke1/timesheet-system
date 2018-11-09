@@ -4,14 +4,15 @@
 
 /* Code written by Samuel J. Clarke, May-June 2018, for CumulusVFX. */
 
-$.fn.classList = function() {return this[0].className.split(/\s+/)}; // jquery plugin for classList
-$.fn.safeVal   = function() {return (tmp=((this.attr('disabled')?' ':'')||(this.attr('hidden')?' ':'')||this.val()))==' '?'':tmp};
+let tmp;
+$.fn.classList = function() { return this[0].className.split(/\s+/); }; // jquery plugin for classList
+$.fn.safeVal   = function() { return (tmp=((this.attr('disabled')?' ':'')||(this.attr('hidden')?' ':'')||this.val()))==' '?'':tmp; };
 
 var rKeys = [];
 const easterEggString = 'me me big boy';
 const startDate = new Date().getTime();
 
-if(!IS_NODE) { console.log("Welcome to the timesheet webpage. It'll keep itself updated by restarting in 12h, if you leave it open.");
+if(!IS_NODE) { 
 	setInterval(function() {
 		let tDate = new Date().getTime();
 		if (Math.abs(tDate - startDate) > 12 * 60 * 60 * 1000) {
@@ -34,7 +35,7 @@ $(document).ready(function(){
 				if ($(this).children().length < 1)
 					$(this).text(
 						$(this).text().split('')
-							.sort((a, b) => {
+							.sort(() => {
 								return Math.random() - 0.5;
 							})
 							.join('')
@@ -43,7 +44,7 @@ $(document).ready(function(){
 		}
 	});
 
-	now = new Date();
+	let now = new Date();
 	if (now.getMonth() == 3 && now.getDate() == 1) {
 		// if the date is 1st of Apr
 		alert('please type `me me big boy` into an input field.');
@@ -53,14 +54,14 @@ $(document).ready(function(){
 		$('p, a, h1, h2, h3, h4, h5, h6, span, #text, td, option, input').each(function(){
 			if ($(this).children().length < 1) {
 				var xarr = $(this).text().split('');
-				for (i in xarr) xarr[i] = Math.random() < 0.5 ? xarr[i].toLowerCase() : xarr[i].toUpperCase();
+				for (let i in xarr) xarr[i] = Math.random() < 0.5 ? xarr[i].toLowerCase() : xarr[i].toUpperCase();
 				$(this).text(xarr.join(''));
 			}
 		});
 	}
 });
 
-pageToNaviDict = {
+let pageToNaviDict = {
 	login: 'login',
 	changepassword: 'account',
 	signup: 'adduser',
@@ -84,17 +85,17 @@ function highlightCurrentPage(){
 }
 
 try {
-	let es6testfunc = (x) => {return x+1;}
+	let es6testfunc = (x) => {return x+1;};
 	if(es6testfunc(14) != 15) declareSupportMissing('ES6');
 } catch (Exception) {
-	declareSupportMissing('ES6')
+	declareSupportMissing('ES6');
 }
 if(typeof(es6testfunc) !== 'undefined') {
-	declareSupportMissing('let scoping')
+	declareSupportMissing('let scoping');
 }
 
 function declareSupportMissing(support) {
-	alert("We're sorry, but the timesheet system relies on "+support+" support to function correctly, and, your browser doesn't support it! Please upgrade to a more recent browser, such as firefox, or ensure that your current browser is up to date.")
+	alert('We\'re sorry, but the timesheet system relies on '+support+' support to function correctly, and, your browser doesn\'t support it! Please upgrade to a more recent browser, such as firefox, or ensure that your current browser is up to date.');
 }
 
 // @license-end
