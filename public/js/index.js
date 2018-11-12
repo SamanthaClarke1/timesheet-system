@@ -2,6 +2,42 @@
 
 // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
 
+
+/*
+*                                                                 
+*                              NNNNNN                             
+*                      Ndhyoo+////////+ooyhdN                     
+*                  Nhs+//////////////////////+shN                 
+*               Nho//////////////////////////////ohN              
+*             ms////////////////////////////////////sm            
+*           ms////////////////////////////////////////sm          
+*          y////////////////////////////////////////////y         
+*        No//////////////////////////////////////////////oN       
+*       m+////////////////////////////////////////////////+m      
+*      N+//////////////////////////////////////////////////+N     
+*      s////////////////////////////////////////////////////s     
+*     d/ohhyyyyyyyyyyyyyyyyssshmmmhhy+///////////////////////d    
+*     osmo`                   `my`  oN+//////////////////////o    
+*    N+m+                     / -   .No//shmNNmdyo////////////N   
+*    m+mo  -/++++/.           / h+oydy/yN         mo//////////m   
+*    m+ms                     /    No/d             o/////////m   
+*    N+my  `..``````````````  / sys+/o              m/////////N   
+*     sms  :oooooooooooosso/  / ysydmN              d////////o    
+*     mmo                     +                     NNNmy////d    
+*       o  -+ooossssssssssy-  +                          h//s     
+*       s                     o                          h/+N     
+*       y  :++++++++++++++++` o Nmmmmmmmmmmmmmmmmmmmmmmds/+m      
+*       o  -::::--:::::::--.  o o////////////////////////oN       
+*       o                     o o///////////////////////y         
+*       o .hdhyyyyyyyyyyss+-  + +/////////////////////sm          
+*       /                     / +///////////////////sm            
+*    Nmmhoooo++++///+++oss+`  / +////////////////ohN              
+* d:`                 .yy.`   / +////////////+shN                 
+* h`                  oNy.`  .hm+/////+ooyhdN                     
+*  d/:////////////:/+osN  NmN   NNNNN                              
+*                                                                 
+*/
+
 // yeah, yeah, the whole idea of using ajax came in half way through development, so my code looks like spaghetti.
 // but, yknow, whatever, i could go some pasta, so who's the real winner here?
 // edit: i have eaten so much spaghetti that i've developed a gluten allergy
@@ -29,6 +65,7 @@ if(IS_NODE) {
 function makeShotSelect(shotel) {
 	let sel =  `<select name="shotcode" class="col-12 no-pad-right shot-inpc">
 					<option value="general">general</option>
+					<option value="assets">assets</option>
 					<!-- I'll be filled up with jquery, its okay :) -->
 				</select>`;
 
@@ -153,7 +190,7 @@ function getShots(shotel, projName, callback) {
 
 function updateShots(tshots, shotel) {
 	//console.log(tshots.length,"shots found when updating");
-	let htmlToIns = '<option value="general">general</option>';
+	let htmlToIns = '<option value="general">general</option>\n<option value="assets">assets</option>';
 	for(let i in tshots) {
 		htmlToIns += '<option value="'+tshots[i].code+'">'+tshots[i].code+'</option>';
 	}

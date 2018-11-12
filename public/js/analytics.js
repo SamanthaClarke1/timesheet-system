@@ -1,5 +1,41 @@
 // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
 
+
+/*
+*                                                                 
+*                              NNNNNN                             
+*                      Ndhyoo+////////+ooyhdN                     
+*                  Nhs+//////////////////////+shN                 
+*               Nho//////////////////////////////ohN              
+*             ms////////////////////////////////////sm            
+*           ms////////////////////////////////////////sm          
+*          y////////////////////////////////////////////y         
+*        No//////////////////////////////////////////////oN       
+*       m+////////////////////////////////////////////////+m      
+*      N+//////////////////////////////////////////////////+N     
+*      s////////////////////////////////////////////////////s     
+*     d/ohhyyyyyyyyyyyyyyyyssshmmmhhy+///////////////////////d    
+*     osmo`                   `my`  oN+//////////////////////o    
+*    N+m+                     / -   .No//shmNNmdyo////////////N   
+*    m+mo  -/++++/.           / h+oydy/yN         mo//////////m   
+*    m+ms                     /    No/d             o/////////m   
+*    N+my  `..``````````````  / sys+/o              m/////////N   
+*     sms  :oooooooooooosso/  / ysydmN              d////////o    
+*     mmo                     +                     NNNmy////d    
+*       o  -+ooossssssssssy-  +                          h//s     
+*       s                     o                          h/+N     
+*       y  :++++++++++++++++` o Nmmmmmmmmmmmmmmmmmmmmmmds/+m      
+*       o  -::::--:::::::--.  o o////////////////////////oN       
+*       o                     o o///////////////////////y         
+*       o .hdhyyyyyyyyyyss+-  + +/////////////////////sm          
+*       /                     / +///////////////////sm            
+*    Nmmhoooo++++///+++oss+`  / +////////////////ohN              
+* d:`                 .yy.`   / +////////////+shN                 
+* h`                  oNy.`  .hm+/////+ooyhdN                     
+*  d/:////////////:/+osN  NmN   NNNNN                              
+*                                                                 
+*/
+
 //#region setup
 var users = '';
 var viewMode = 'user';
@@ -25,8 +61,8 @@ $(document).ready(function() {
 
 	//#region jqClickHandlers
 
-	$('.bx-opt').click(() => {
-		$('.bx-switch').children().each(() => {
+	$('.bx-opt').click(function() {
+		$('.bx-switch').children().each(function() {
 			$(this).removeClass('active');
 		});
 		$(this).addClass('active');
@@ -330,7 +366,7 @@ $(document).ready(function() {
 
 			for (let j of d.jobs) {
 				j.date = getThisDate(new Date(d['unix-date'] + daysToMilliseconds(week.indexOf(j.day))));
-				j.shot = j.shot ? j.shot.toLowerCase().split(' ').join('') : 'general';
+				j.shot = j.shot ? j.shot.toLowerCase().split(' ').join('').split(/[\_\-\/\\]+/).join('_') : 'general';
 				j.cost = users[d.user].cost * j.time;
 
 				if (!jobOffsets[j.date]) jobOffsets[j.date] = 0;

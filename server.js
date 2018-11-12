@@ -179,6 +179,7 @@ const __DEBUG_FORCEUNIX__				= false; // !i!i! CAREFUL !i!i!  -  THIS WILL UPDAT
 const __DEBUG_FORCE_COSTS_TO_TEN_PH__	= false; // !i!i! CAREFUL !i!i!  -  THIS WILL FORCE ALL UNDEFINED COSTS OF EACH USER TO TEN DOLLARS PER HOUR.
 const __DEBUG_UNTEAR_DATA__				= false; // !i!i! CAREFUL !i!i!  -  WILL REMOVE ALL DUPLICATES ON A CERTAIN DATE, WITH A BIAS TOWARDS MORE JOBS.
 const __DEBUG_KNOCK_FROM_TO__			= false; // !i!i! CAREFUL !i!i!  -  WILL CHANGE UNIX-DATES FROM A CERTAIN DATE TO ANOTHER DATE
+const __DEBUG_FORCE_TIME_NUM__			= false; // !i!i! CAREFUL !i!i!  -  THIS WILL FORCE ALL TIMES IN JOBS TO A NUMBER RATHER THAN A STRING
 
 const __DEBUG_UNTEAR_DATA_DATE__		= 1531058400000;
 const __DEBUG_KNOCK_FROM__				= 1534082400000;
@@ -308,6 +309,58 @@ mongodb.connect(url, function mongConnect(err, db) {
 						if (err) throw err;
 						console.log('done i think');
 					});
+				}
+			});
+		}
+
+		if (__DEBUG_FORCE_TIME_NUM__) {
+			timesheetDB.find({}).toArray((err, data) => {
+				if (err) throw err;
+				for (let timesheet of data) {
+					let original = JSON.parse(JSON.stringify(timesheet));
+					for (let i in timesheet.jobs) {
+						let ttime = parseFloat(timesheet.jobs[i].time);
+						if(!isNaN(ttime))
+							timesheet.jobs[i].time = ttime;
+					}
+
+					timesheetDB.update(
+						{ user: original.user, date: original.date },
+						{ user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date'] }, (err) => {
+							if (err) throw err; //painfulpart (come on ECMAScript2018)
+							console.log('success i think (timesheet)');
+						}
+					);
+				}
+			});
+
+			usersDB.find({}).toArray((err, data) => {
+				if (err) throw err;
+				for(let user of data) {
+					let original = JSON.parse(JSON.stringify(user));
+
+					for(let i in user.timesheet.jobs) {
+						let ttime = parseFloat(user.timesheet.jobs[i].time);
+						if(!isNaN(ttime))
+							user.timesheet.jobs[i].time = ttime;
+					}
+
+					usersDB.update(
+						{name: user.name},
+						{
+							cost: user.cost,
+							name: user.name,
+							displayName: user.displayName,
+							dob: user.dob,
+							password: user.password,
+							isadmin: user.isadmin,
+							email: user.email,
+							timesheet: user.timesheet
+						}, (err) => {
+							if (err) throw err; //painfulpart
+							console.log('succes i think (user)')
+						}
+					)
 				}
 			});
 		}
@@ -640,8 +693,12 @@ mongodb.connect(url, function mongConnect(err, db) {
 							proj: req.body.project,
 							time: req.body.timespent,
 							task: req.body.task,
-							id: makeSlug(15, 15),
+							id: makeSlug(15, 15)
 						};
+
+						let ttime = parseFloat(toIns.time);
+						if(!isNaN(ttime)) toIns.time = ttime;
+
 						if (toIns.day.length && toIns.shot && toIns.proj && toIns.time && toIns.task) {
 							if (toIns.day.length > 11) return res.json({err: 'Day too long', errcode: 400, data: ''});
 							if (toIns.shot.length > 35) return res.json({err: 'Shot code too long', errcode: 400, data: ''});
@@ -728,7 +785,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 									(err) => {
 										if (err) throw err;
 										return res.json({err: '', errcode: 200}); 
-										//painfulpart //CMON ...
+										//painfulpart //CMON `...`, WE NEED YOU
 									}
 								);
 								break;
