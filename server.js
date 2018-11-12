@@ -337,8 +337,6 @@ mongodb.connect(url, function mongConnect(err, db) {
 			usersDB.find({}).toArray((err, data) => {
 				if (err) throw err;
 				for(let user of data) {
-					let original = JSON.parse(JSON.stringify(user));
-
 					for(let i in user.timesheet.jobs) {
 						let ttime = parseFloat(user.timesheet.jobs[i].time);
 						if(!isNaN(ttime))
@@ -358,9 +356,9 @@ mongodb.connect(url, function mongConnect(err, db) {
 							timesheet: user.timesheet
 						}, (err) => {
 							if (err) throw err; //painfulpart
-							console.log('succes i think (user)')
+							console.log('succes i think (user)');
 						}
-					)
+					);
 				}
 			});
 		}
