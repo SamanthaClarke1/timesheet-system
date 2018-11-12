@@ -366,7 +366,7 @@ $(document).ready(function() {
 
 			for (let j of d.jobs) {
 				j.date = getThisDate(new Date(d['unix-date'] + daysToMilliseconds(week.indexOf(j.day))));
-				j.shot = j.shot ? j.shot.toLowerCase().split(' ').join('').split(/[\_\-\/\\]+/).join('_') : 'general';
+				j.shot = j.shot ? j.shot.toLowerCase().split(' ').join('').split(/[_\-/\\]+/).join('_') : 'general';
 				j.cost = users[d.user].cost * j.time;
 
 				if (!jobOffsets[j.date]) jobOffsets[j.date] = 0;
