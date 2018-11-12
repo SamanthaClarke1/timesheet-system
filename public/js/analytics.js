@@ -343,11 +343,11 @@ $(document).ready(function() {
 		svg.append('g').attr('transform', 'translate(0,0)').attr('class', 'axisWhite').call(xAxis);
 
 		/*const yAxis = d3.axisLeft(yScale)
-      .ticks(nusers.length + nprojs.length + 1);
-  
-    svg.append("g")
-      .attr("transform", "translate(0,0)")
-      .call(yAxis);*/
+			.ticks(nusers.length + nprojs.length + 1);
+	
+		svg.append("g")
+			.attr("transform", "translate(0,0)")
+			.call(yAxis);*/
 	}
 
 	function prepData(data, dusers) {

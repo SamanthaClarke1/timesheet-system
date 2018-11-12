@@ -86,7 +86,7 @@ function projCheckerFunc(projel) {
 	let taskel = $(projel).parent().parent().find('.task-inpc');
 	let shotel = $(projel).parent().parent().find('.shot-inpc');
 	let tval   = $(projel).val().toLowerCase();
-
+	
 	if (tval == 'admin') {
 		updateTasks(fromSrv.tasks.admin, taskel);
 	} else {
@@ -113,6 +113,7 @@ function projCheckerFunc(projel) {
 		shotCache = fromSrv.sgHttpCache;
 		if(shotCache[tval] && shotCache[tval].length >= 1) {
 			makeShotSelect(shotel);
+			shotel = $(projel).parent().parent().find('.shot-inpc'); // retarget, if it changed the el target changes too!
 			updateShots(shotCache[tval], shotel);
 		} else {
 			makeShotInp(shotel);
