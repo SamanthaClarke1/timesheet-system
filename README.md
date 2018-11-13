@@ -4,7 +4,7 @@
 This timesheet system was originally created for CumulusVFX. It is made to allow users to log their hours, and for administrators to monitor how much everyone is working.
 Just run the local server on a server somewhere, and have people visit it in their browsers.
 
-**Version**: 1.8.6, **Codename**: Tenacious Timer.
+**Version**: 1.8.7, **Codename**: Tenacious Timer.
 
 # Installation
 
@@ -53,7 +53,7 @@ node ./server.js --help
 # TODO
 
 This part is just a roadmap of all the things I have left to do on the next version of the timesheet system.
-(That version is 1.9.1, from 1.8.6, right now)
+(That version is 1.9.1, from 1.8.7, right now)
 
 - [ ] Add instructions on how to better create nameTranslation
 - [ ] Edit already created shots?
@@ -68,6 +68,7 @@ This part is just a roadmap of all the things I have left to do on the next vers
 - [x] Cleaning up old console.logs
 - [ ] Logs
 - [ ] Customizable log paths (probably from the .env)
+- [ ] Wrap my front end javascript in IIFEs to keep vars out of the window scope
 - [x] Better command line options
 - [x] Refactoring
 - [x] New Icon

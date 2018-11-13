@@ -1356,13 +1356,11 @@ const correctionArr = [
 	[['add', 'ontribut', 'rm', 'del', 'ubtrac', 'gain', 'plus', 'pdate', 'task', 'proj', 'electio' ], 
 		'change-selections [remove|@add] [task|@proj] [admin|@default] <selection>', 'change-selections'],
 	[['add', 'user', 'person', 'client', 'admin'], 
-		'add-user <username> <password>', 'add-user'],
+		'add-user', 'add-user'],
 	[[ 'save', 'store', 'electio', 'task', 'proj', 'onfirm' ], 
 		'save-selections', 'save-selections' ],
 	[[ 'quit', 'xit', 'terminate', 'leave', 'end', 'fin' ], 
 		'exit', 'exit' ],
-	[[ 'big', 'boy', 'me me' ], 
-		'memebigboy', 'memebigboy' ],
 	[[ 'lear', 'cls', 'c;ear', 'wipe' ], 
 		'clear', 'clear' ],
 	[[ 'hash', 'get pass', 'password' ], 
@@ -1414,12 +1412,6 @@ rl.on('line', (input) => {
 		TKEY_IS_VALID=true;
 		setTimeout(()=>{TKEY_IS_VALID=false;}, TKEY_TIMEOUT);
 		process.stdout.write(intrPRFX + 'Please go to: <websiteurl>/adminify?username=admin&password='+TKEY+' to become an administrator, temporarily.\n You have '+(TKEY_TIMEOUT/(60*1000))+' minute(s) to do so.\nOnce you\'re in, add an admin user, and restart the server.');
-		
-		break;
-	}
-
-	case 'memebigboy': {
-		process.stdout.write(intrPRFX + 'go away josh');
 		
 		break;
 	}

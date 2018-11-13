@@ -8,8 +8,8 @@ let tmp;
 $.fn.classList = function() { return this[0].className.split(/\s+/); }; // jquery plugin for classList
 $.fn.safeVal   = function() { return (tmp=((this.attr('disabled')?' ':'')||(this.attr('hidden')?' ':'')||this.val()))==' '?'':tmp; };
 
-var rKeys = [];
-const easterEggString = 'me me big boy';
+//let rKeys = [];
+//const easterEggString = 'me me big boy';
 const startDate = new Date().getTime();
 
 if(!IS_NODE) { 
@@ -26,7 +26,7 @@ $(document).ready(function(){
 
 	highlightCurrentPage();
 
-	$('body').keypress(function(e){
+	/*$('body').keypress(function(e){
 		rKeys.push(e.key);
 		while (rKeys.length > easterEggString.length) rKeys.shift();
 		if (rKeys.join('') == easterEggString) {
@@ -42,7 +42,7 @@ $(document).ready(function(){
 					);
 			});
 		}
-	});
+	});*/
 
 	let now = new Date();
 	if (now.getMonth() == 3 && now.getDate() == 1) {
