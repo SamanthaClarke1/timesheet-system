@@ -47,10 +47,10 @@ Total:
 7975
 
 Total (with package-lock):
-48116
+12123
 
 Total (with package-lock and frontend libs):
-617306
+48116
 
-Total (with package-lock and node modules):
+Total (with package-lock and node modules and frontend libs):
 617306
