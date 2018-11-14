@@ -11,9 +11,7 @@
 	font-weight: bold;
 }
 
-.axisWhite path,
-.axisWhite line,
-.axisWhite text {
+.axisWhite path, .axisWhite line, .axisWhite text {
 	stroke: white;
 }
 

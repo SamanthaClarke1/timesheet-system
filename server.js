@@ -148,8 +148,6 @@ Number.prototype.npad = function(amt) { //stupid eval orders not wanting to hois
 let dirsplit = __dirname.split('/');
 let serverRel = dirsplit[dirsplit.length-1].split('-').reverse()[0];
 
-const fsPath = require('fs-path');
-
 let logStreams = {};
 logStreams.general = createLogStream('general');
 logStreams.sghttp = createLogStream('sghttp');
@@ -1655,14 +1653,29 @@ PS: I use standard arg formatting. IE:
 	process.stdout.write(`\n${promptr}`);
 });
 
+function recursiveMkdirSync(dir) {
+	if(fs.existsSync(dir)) {
+		return ;
+	}
+	try {
+		fs.mkdirSync(dir);
+	} catch(err) {
+		recursiveMkdirSync(path.dirname(dir)); // create parent dir
+		recursiveMkdirSync(dir); // create dir
+	}
+}
+
 function createLogStream(channel) {
-	if(fs.existsSync(__dirname+'/logs/'+getThisDate()+'/'+channel+'.log')) {
-		return fs.createWriteStream(__dirname+'/logs/'+getThisDate()+'/'+channel+'.log', {flags: 'a'});
+	let tmpDate = getThisDate();
+
+	if(fs.existsSync(__dirname+'/logs/'+tmpDate+'/'+channel+'.log')) {
+		return fs.createWriteStream(__dirname+'/logs/'+tmpDate+'/'+channel+'.log', {flags: 'a'});
 	}
 	else {
-		fsPath.writeFileSync(__dirname+'/logs/'+getThisDate()+'/'+channel+'.log', '');
+		recursiveMkdirSync(__dirname+'/logs/'+tmpDate+'/');
+		fs.writeFileSync(__dirname+'/logs/'+tmpDate+'/'+channel+'.log', '');
 		
-		return fs.createWriteStream(__dirname+'/logs/'+getThisDate()+'/'+channel+'.log', {flags: 'a'});
+		return fs.createWriteStream(__dirname+'/logs/'+tmpDate+'/'+channel+'.log', {flags: 'a'});
 	}
 }
 

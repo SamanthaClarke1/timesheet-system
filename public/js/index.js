@@ -148,6 +148,7 @@ function getProj(shotel, projName, callback) {
 	let URL=fromSrv.sgHttpServer+
 		'?req=find&limit=1&type=Project&fields=[%22name%22,%22id%22]&filters=[[%22name%22,%22contains%22,%22'
 		+projName+'%22]]';
+	
 	console.log('getProj - GET: ', URL);
 	
 	$.ajax({
@@ -192,10 +193,13 @@ function getShots(shotel, projName, callback) {
 function updateShots(tshots, shotel) {
 	//console.log(tshots.length,"shots found when updating");
 	let htmlToIns = '<option value="general">general</option>\n<option value="assets">assets</option>';
+	
 	for(let i in tshots) {
 		htmlToIns += '<option value="'+tshots[i].code+'">'+tshots[i].code+'</option>';
 	}
+
 	$(shotel).css('background', 'red !important').css('border', '4px solid red !important');
+	
 	shotel.empty();
 	shotel.append(htmlToIns);
 }
@@ -217,9 +221,11 @@ function bindDeleteBlocker(el) {
 function delJobEvent() {
 	$(this).bind('click', function(e) {
 		e.preventDefault(); // dont send off the form by visiting the page
+		
 		var parentForm = $(this).parent();
 		var parentTable = $(this).parent().parent().parent().parent().parent().find('.job-table'); // thatsa lotta parents
 		if (parentTable.length <= 0) parentTable = $(this).parent().parent().parent().parent().parent();
+		
 		var day = parentForm.find('.delj-day').val();
 		
 		parentForm.children('');
@@ -234,6 +240,7 @@ function delJobEvent() {
 				smokeflow_timeline.replay();
 
 				jobrow.addClass('shrinkme');
+
 				setTimeout(function(jobrow, parentTable, day) {
 					jobrow.remove(); // remove the job
 					updateTotalWeekBar();

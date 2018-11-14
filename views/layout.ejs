@@ -67,36 +67,36 @@
 				<ul class="navbar-nav mr-auto animated">
 					<% if(user) { %>
 					<li class="nav-item" id="home-navi">
-						<a class="nav-link faded-grn-text dim" href="/"><i class="fa fa-home" aria-hidden="true"></i> Home </a>
+						<a class="nav-link faded grn-text dim" href="/"><i class="fa fa-home" aria-hidden="true"></i> Home </a>
 					</li>
 					<% } else { %>
 						<li class="nav-item" id="login-navi">
-							<a class="nav-link faded-grn-text dim" href="/login"><i class="fa fa-sign-in" aria-hidden="true"></i> Login </a>
+							<a class="nav-link faded grn-text dim" href="/login"><i class="fa fa-sign-in" aria-hidden="true"></i> Login </a>
 						</li>
 					<% } if(user) { %>
 						<li class="nav-item" id="account-navi">
-							<a class="nav-link faded-grn-text dim" href="/changepassword"><i class="fa fa-lock" aria-hidden="true"></i> Change Password </a>
+							<a class="nav-link faded grn-text dim" href="/changepassword"><i class="fa fa-lock" aria-hidden="true"></i> Change Password </a>
 						</li>
 						<% if(user.isadmin == "true") { %>
 							<li class="nav-item" id="adduser-navi">
-								<a class="nav-link faded-grn-text dim" id="adduser" href="/signup"><i class="fa fa-user-plus" aria-hidden="true"></i> Add a user </a>
+								<a class="nav-link faded grn-text dim" id="adduser" href="/signup"><i class="fa fa-user-plus" aria-hidden="true"></i> Add a user </a>
 							</li>
 							<li class="nav-item" id="planner-navi">
-								<a class="nav-link faded-grn-text dim" id="planner" href="/planner"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Planner </a>
+								<a class="nav-link faded grn-text dim" id="planner" href="/planner"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Planner </a>
 							</li>
 							<li class="nav-item" id="analytics-navi">
-								<a class="nav-link faded-grn-text dim" id="analytics" href="/analytics"><i class="fa fa-line-chart"></i> Analytics </a>
+								<a class="nav-link faded grn-text dim" id="analytics" href="/analytics"><i class="fa fa-line-chart"></i> Analytics </a>
 							</li>
 							<li class="nav-item" id="usercosts-navi">
-								<a class="nav-link faded-grn-text dim" id="usercosts" href="/usercosts"><i class="fa fa-money"></i> User Costs </a>
+								<a class="nav-link faded grn-text dim" id="usercosts" href="/usercosts"><i class="fa fa-money"></i> User Costs </a>
 							</li>
 						<% } %>
 						<li class="nav-item" id="logout-navi">
-							<a class="nav-link faded-grn-text dim" id="logout" href="/auth/logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Logout </a>
+							<a class="nav-link faded grn-text dim" id="logout" href="/auth/logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Logout </a>
 						</li>
 					<% } %>
 					<li class="nav-item" id="help-navi" >
-						<a class="nav-link faded-grn-text dim" id="help" href="/help"><i class="fa fa-question-circle" aria-hidden="true"></i> Help </a>
+						<a class="nav-link faded grn-text dim" id="help" href="/help"><i class="fa fa-question-circle" aria-hidden="true"></i> Help </a>
 					</li>
 				</ul>
 			</div>
