@@ -140,15 +140,38 @@ const exit = (exitCode) => {
 	process.exit(exitCode);
 };
 
-// okay, yeah, redefining system functions probably isnt the best idea but it works damn fine, and you can still use stdout.write
-console.log = function(str, pers = srvrPRFX) { 
-	process.stdout.clearLine();
-	process.stdout.cursorTo(0);
-	process.stdout.write(pers + str + '\n' + promptr);
-};
+Number.prototype.npad = function(amt) { //stupid eval orders not wanting to hoist this statement >:(
+	return (this+'').padStart(amt, '0');
+}
+
 
 let dirsplit = __dirname.split('/');
 let serverRel = dirsplit[dirsplit.length-1].split('-').reverse()[0];
+
+const fsPath = require('fs-path');
+
+let logStreams = {};
+logStreams.general = createLogStream('general');
+logStreams.sghttp = createLogStream('sghttp');
+
+// okay, yeah, redefining system functions probably isnt the best idea but it works damn fine, and you can still use stdout.write
+console.log = function(str, pers = srvrPRFX, channel='general', group=0) {
+	// group (0 = print both to logs and to terminal, 1 = print just logs, -1 = print just terminal)
+	if(group < 1) {
+		process.stdout.clearLine();
+		process.stdout.cursorTo(0);
+		process.stdout.write(pers + str + '\n' + promptr);
+	}
+	if(group > -1) {
+		let tpers = pers.split(/\[([0-9]{0,4}(;|)){0,6}m/).join(''); // remove bash color changes
+
+		if(logStreams[channel]) {
+			logStreams[channel].write('['+getFineDate()+']'+tpers+str+'\n');
+		} else {
+			process.stdout.write('tried to log ' + channel + ' but it couldn\'t be found!\n');
+		}
+	}
+};
 
 var loaderShouldBePrinting = true;
 printLoader('Server in startup ');
@@ -199,6 +222,10 @@ const __DEV_RELEASE__					= (process.env.DEV_RELEASE == 'true');
 
 //#region mongoDB_connect
 // Use connect method to connect to the Server
+
+console.log('Starting server. Channel ' + serverRel + '. Version ' + pjson.version + '. Codename ' + pjson.codename);
+console.log('Starting server. Channel ' + serverRel + '. Version ' + pjson.version + '. Codename ' + pjson.codename, undefined, 'sghttp', 1);
+
 mongodb.connect(url, function mongConnect(err, db) {
 	if (err) {
 		console.log('Unable to connect to the mongoDB server. Error: ' + err);
@@ -697,6 +724,9 @@ mongodb.connect(url, function mongConnect(err, db) {
 						let ttime = parseFloat(toIns.time);
 						if(!isNaN(ttime)) toIns.time = ttime;
 
+						if(ttime > 16) return res.json({err: 'You cant have a job longer than 16 hours!', errcode: 504});
+						if(ttime < 0.25) return res.json({err: 'You cant have a job less than 0.25 hours!', errcode: 504});
+
 						if (toIns.day.length && toIns.shot && toIns.proj && toIns.time && toIns.task) {
 							if (toIns.day.length > 11) return res.json({err: 'Day too long', errcode: 400, data: ''});
 							if (toIns.shot.length > 35) return res.json({err: 'Shot code too long', errcode: 400, data: ''});
@@ -751,6 +781,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		app.post('/code/deljob', ensureAJAXAuthenticated, function slashCodeDeljobPOST(req, res) {
 			usersDB.findOne({name: req.body.jobuser}, (err, user) => {
+				if(err) throw err;
 				timesheetDB.findOne({user: user.name, date: req.body.date}, (err, timesheet) => {
 					if (err) throw err;
 					console.log('deleting ' + req.body.jobuser + '\'s job on date ' + req.body.date);
@@ -808,7 +839,75 @@ mongodb.connect(url, function mongConnect(err, db) {
 			});
 		});
 
-		app.post('/ajax/planviaspreadsheet', upload.single('file'), ensureAJAXAuthenticated, function slashAjackPlanviaspreadsheetPOST(req, res) {
+		// from the front end, the params are: {jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text()},
+		app.post('/code/edittime', ensureAJAXAuthenticated, function slashCodeEditTimePOST(req, res) {
+			req.body.jobtime = parseFloat(req.body.jobtime);
+			if(req.body.jobtime > 16) return res.json({err: 'Cant have a job longer than 16 hours!', errcode: 504});
+			if(req.body.jobtime < 0.25) return res.json({err: 'Cant have a job less than 0.25 hours!', errcode: 504});
+
+			if(isNaN(req.body.jobtime)) {
+				return res.json({'err': 'Couldn\'t parse body jobtime', errcode: 504});
+			}
+
+			usersDB.findOne({name: req.body.jobuser}, (err, user) => {
+				if(err) throw err;
+				timesheetDB.findOne({user: user.name, date: req.body.date}, (err, timesheet) => {
+					if (err) throw err;
+					console.log('editing ' + req.body.jobuser + '\'s jobtime on date ' + req.body.jobdate + ' to time ' + req.body.jobtime);
+
+					var truets = true;
+					if (!timesheet) {
+						timesheet = user.timesheet;
+						truets = false;
+					}
+
+					for (var i = 0; i < timesheet.jobs.length && i != -1; i++) {
+						if (timesheet.jobs[i].id == req.body.jobid) {
+							timesheet.jobs[i].time = req.body.jobtime;
+
+							if (!truets) {
+								req.user.timesheet = timesheet;
+								usersDB.update(
+									{name: user.name},
+									{
+										cost: user.cost,
+										name: user.name,
+										displayName: user.displayName,
+										dob: user.dob,
+										password: user.password,
+										isadmin: user.isadmin,
+										email: user.email,
+										timesheet: timesheet,
+									},
+									(err) => {
+										if (err) throw err;
+										return res.json({err: '', errcode: 200}); 
+										//painfulpart //CMON `...`, WE NEED YOU
+									}
+								);
+								break;
+							} else {
+								timesheetDB.update(
+									{user: user.name, date: req.body.date},
+									{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']},
+									(err) => {
+										if (err) throw err;
+										return res.json({err: '', errcode: 200}); 
+										//painfulpart // I NEED THAT `...`
+									}
+								);
+								break;
+							}
+						} else if (i >= timesheet.jobs.length - 1) {
+							// if its the last job, and its still not found anything, redirect them.
+							return res.json({err: 'Job Not Found', errcode: 400});
+						}
+					}
+				});
+			});
+		});
+
+		app.post('/ajax/planviaspreadsheet', upload.single('file'), ensureAJAXAuthenticated, function slashAjaxPlanviaspreadsheetPOST(req, res) {
 			// this ended up being such a large algorithm :/
 			// req.file is the spreadsheet file, loaded in memory. ty multer <3
 			if (req.user.isadmin != 'true') {
@@ -1250,7 +1349,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 								//console.log("(updateShotCache) -> shot req -> GET: " + turl);
 								request(turl, (err, res, body) => {
-									if(err) console.log(err); // no need to throw, its too common to die :/
+									if(err) console.log(err, undefined, 'sghttp', 1); // no need to throw, its too common to die :/
 									else {
 										if(res.statusCode == 200) {
 											//jres.echo at this point is the original project
@@ -1260,7 +1359,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 											
 											console.log('(updateShotCache) -> shot req: ' + jres.echo + 
 												' successfully returned.. ' + jres.result.length + 
-												' shots were returned.');
+												' shots were returned.', undefined, 'sghttp', 1);
 
 											// occasionally jres.result will be near-empty, like, only one 
 											// shot or whatever. its not completely reliable for some reason.
@@ -1279,21 +1378,21 @@ mongodb.connect(url, function mongConnect(err, db) {
 											//console.log(body);
 										} else {
 											console.log('(updateShotCache) -> shot req -> res failed with code: ' 
-												+ res.statusCode + ' echodata: ');
+												+ res.statusCode + ' echodata: ', undefined, 'sghttp', 1);
 										}
 									}
 								});
 							}
 						} else if (err) {
 							//exiting/throwing in this case probably isn't neccessary. but it should warn.
-							console.log(err);
+							console.log(err, undefined, 'sghttp', 1);
 						} else {
-							console.log('(updateShotCache) -> res failed with code: ' + res.statusCode);
+							console.log('(updateShotCache) -> res failed with code: ' + res.statusCode, undefined, 'sghttp', 1);
 						}
 					});
 				} else {
-					console.log('(updateShotCache) -> not sending a request for ' + projs[i] 
-						+ ' as it is not in the translation db');
+					console.log('(updateShotCache) -> not sending a request for ' + projs[i]
+						+ ' as it is not in the translation db', undefined, 'sghttp', 1);
 				}
 				//console.log(projs[i]);
 
@@ -1307,7 +1406,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 				}
 			} 
 			sendOffProj(() => {
-				console.log('\nProjects updated!\n');
+				console.log('Projects updated!\n', undefined, 'sghttp', 1);
 			});
 
 			setTimeout(updateShotCache, SHOTUPDATEFREQ);
@@ -1399,7 +1498,7 @@ rl.on('line', (input) => {
 
 	case 'log': {
 		try {
-			eval('try {\nconsole.log(' + params.join(' ') + ');} catch(err) { process.stdout.write(err.toString()+ "\\n"); }');
+			eval('try {\nprocess.stdout.write(' + params.join(' ') + ');} catch(err) { process.stdout.write(err.toString()+ "\\n"); }');
 		} catch (err) {
 			console.log(err);
 		}
@@ -1556,6 +1655,17 @@ PS: I use standard arg formatting. IE:
 	process.stdout.write(`\n${promptr}`);
 });
 
+function createLogStream(channel) {
+	if(fs.existsSync(__dirname+'/logs/'+getThisDate()+'/'+channel+'.log')) {
+		return fs.createWriteStream(__dirname+'/logs/'+getThisDate()+'/'+channel+'.log', {flags: 'a'});
+	}
+	else {
+		fsPath.writeFileSync(__dirname+'/logs/'+getThisDate()+'/'+channel+'.log', '');
+		
+		return fs.createWriteStream(__dirname+'/logs/'+getThisDate()+'/'+channel+'.log', {flags: 'a'});
+	}
+}
+
 function getNameTranslationList() {
 	var content = fs.readFileSync(process.env.TRANSLATIONFILE);
 	var nameList = JSON.parse(content);
@@ -1567,6 +1677,7 @@ function getNameTranslationList() {
 //	eg: to_ts means you want to translate from x to ts names.
 // cache is the cache gotten from getNameTranslationList.
 // translation returns false on failure, and name on success.
+// (really, type is just a key for the dict, but yknow, whatever, they're stored in the nameTranslation file)
 function translateToName(cache, type, sgName) {
 	sgName = sgName.toLowerCase().split(' ').join('');
 	let trans = cache[type];
@@ -1624,6 +1735,10 @@ function buildUrl(base, dict) {
 //#region DATE-TIME HELPER FUNCS
 function getThisDate(now = new Date()) {
 	return now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+}
+function getFineDate(now = new Date()) {
+	return now.getFullYear().npad(4) + '-' + (now.getMonth() + 1).npad(2) + '-' + now.getDate().npad(2) + ' ' + 
+		now.getHours().npad(2) + ':' + now.getMinutes().npad(2) + ':' + now.getSeconds().npad(2)
 }
 
 function printLoader(msg = 'Loading ', iter = 0) {

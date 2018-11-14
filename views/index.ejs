@@ -113,14 +113,28 @@
 						<table class="ts-body col-12 job-table">
 							<tbody>
 								<% var cc = 0; for (let job of timesheet.jobs) { if(job.day == day) { %>
-									<tr class="ts-row row<% if(cc % 2 == 0) { %> even<% } %> no-gutters col-12 job-row">
+									<tr class="ts-row row<% if(cc % 2 == 0) { %> even<% } %> no-gutters col-12 job-row job-id-<%= job.id %>">
 										<td class="col-3 job-proj"> <%= job.proj %> </td>
 										<td class="col-3 job-shot"> <%= job.shot %> </td>
 										<td class="col-3 job-task"> <%= job.task %> </td>
-										<td class="col-2 job-time"> <%= job.time %> </td>
-										<td class="col-1 job-del">
+										<td class="col-1 job-time"> <%= job.time %> </td>
+										<td class="col-1 job-edit row no-gutters text-center"> 
+											<div <% if (!editable) { %> disabled <% } %> style="height: 15px;" 
+												class="col-12" onclick="updateJobTime(0.25, '<%= (user.isadmin == 'true' ? tuser.name : user.name) %>',
+												'<%= job.id %>', '<%= job.day %>', '<%= targetdate %>');"> 
+											<i class="fa fa-caret-up job-edit-caret" aria-hidden="true"></i> </div>
+											<div <% if (!editable) { %> disabled <% } %> style="height: 15px;" 
+												class="col-12" onclick="updateJobTime(-0.25, '<%= (user.isadmin == 'true' ? tuser.name : user.name) %>',
+												'<%= job.id %>', '<%= job.day %>', '<%= targetdate %>');"> 
+											<i class="fa fa-caret-down" aria-hidden="true"></i> </div>
+										</td>
+										<td class="col-1 job-del text-center">
 											<form action="/code/deljob" method="POST">
-												<% if(user.isadmin) { %> <input name="jobuser" class="delj-user" value="<%= tuser.name %>" hidden /> <% } else { %> <input name="jobuser" class="delj-user" value="<%= user.name %>" hidden /> <% } %>
+												<% if(user.isadmin) { %> 
+													<input name="jobuser" class="delj-user" value="<%= tuser.name %>" hidden /> 
+												<% } else { %> 
+													<input name="jobuser" class="delj-user" value="<%= user.name %>" hidden /> 
+												<% } %>
 												<input name="jobid" class="delj-id" value="<%= job.id %>" hidden />
 												<input name="day" class="delj-day" value="<%= day %>" hidden />
 												<input name="date" class="delj-date" value="<%= targetdate %>" hidden />
@@ -212,7 +226,8 @@
 									</select>
 								</div>
 								<div class="col-3">
-									<input name="timespent" type="number" class="col-12 no-pad-right fill-y" value=1 step=.25 min=.25 max=<%=Math.min(24-dayhours[day], 24)%> placeholder="time spent (hours)" required>
+									<input name="timespent" type="number" class="col-12 no-pad-right fill-y" value=1 step=.25 min=.25 
+										max=<%=Math.min(24-dayhours[day], 24)%> placeholder="time spent (hours)" required>
 								</div>
 							</div>
 	

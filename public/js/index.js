@@ -236,7 +236,7 @@ function delJobEvent() {
 				jobrow.addClass('shrinkme');
 				setTimeout(function(jobrow, parentTable, day) {
 					jobrow.remove(); // remove the job
-					updateTotalWeekBar(parentTable);
+					updateTotalWeekBar();
 					var total = updateTotalDayBar(parentTable); // update the total
 					updateDayColor(day, total);
 					updateShading(parentTable); // update the colors
@@ -252,31 +252,76 @@ function bindSubmitJobClickEvent() {
 		$(this).bind('click', submitJobClickEvent);
 	});
 }
+
+function updateJobTime(amt, jobuser, jobid, jobday, jobdate) {
+	// i'd like to apologise, in advance, to the javascript/html gods for this code, and the fact that its just linked to an onclick attribute
+	let ptable = $("#"+jobday).find(".job-table");
+	let jobTimeEl = $("#"+jobday).find(".job-id-"+jobid).find(".job-time");
+
+	let tamt = parseFloat(jobTimeEl.text()) + amt;
+	
+	if(tamt < 16 && tamt >= 0.25) {
+		jobTimeEl.text(tamt);
+
+		let total = updateTotalDayBar(ptable);
+		updateDayColor(jobday, total);
+		updateTotalWeekBar();
+
+		$.post('/code/edittime', {jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text()}, function (data) { 
+			if(data.errcode < 200 || data.errcode > 300) {
+				alert("ERRCODE: " + data.errcode + " ERR: " + data.err);
+			} else {
+				if(data.errcode != 200) {
+					console.log("Recoverable error, code " + data.errcode + " err " + data.err);
+				}
+			}
+		}, 'json');
+	}
+}
+
+function getJobHTML(job, srv, tid) {
+	return `
+<tr class="ts-row row no-gutters col-12 job-row shrinkme job-id-` + job.id + `" id="tid-` + tid + `">
+	<td class="col-3 job-proj">` + job.proj + `</td>
+	<td class="col-3 job-shot">` + job.shot + `</td>
+	<td class="col-3 job-task">` + job.task + `</td>
+	<td class="col-1 job-time">` + job.time + `</td>
+	<td class="col-1 job-edit row no-gutters text-center">
+		<div `+(srv.editable == 'true' ? '' : 'disabled ')+
+			` style="height: 15px;" class="col-12" onclick="updateJobTime(0.25, '` +
+			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `', '` + job.id + `', '` + job.day + `', '` + srv.tdate + `');"> 
+			<i class="fa fa-caret-up job-edit-caret" aria-hidden="true">
+			</i>
+		</div>
+		<div `+(srv.editable == 'true' ? '' : 'disabled ')+
+			` style="height: 15px;" class="col-12" onclick="updateJobTime(-0.25, '` +
+			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `', '` + job.id + `', '` + job.day + `', '` + srv.tdate + `');"> 
+			<i class="fa fa-caret-down job-edit-caret" aria-hidden="true">
+			</i>
+		</div>
+	</td>
+	<td class="col-1 job-del text-center">
+		<form action="/code/deljob" method="POST">
+			<input name="jobuser" class="delj-user" value="` +
+			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `" hidden />
+			<input name="jobid" class="delj-id" value="` + job.id + `" hidden />
+			<input name="day" class="delj-day" value="` + job.day + `" hidden />
+			<input name="date" class="delj-date" value="` + srv.tdate + `" hidden />
+			<button id="deljob-` + job.id + '" class="btn-delj" type="submit" style="color: #e75045;"' +
+			(srv.editable == 'true' ? '' : ' disabled') +
+			`> <i class="fa fa-trash" aria-hidden="true"></i></button>
+		</form>
+	</td>
+</tr>`;
+}
+
 function submitJobCallback(parentForm) {
 	return function(data) {
 		if (data.errcode == 200) {
 			var srv = fromSrv;
 			let job = data.data;
 			var tid = Math.floor(Math.random() * 1000000);
-			var toIns = `
-				<tr class="ts-row row no-gutters col-12 job-row shrinkme" id="tid-` + tid + `">
-				<td class="col-3 job-proj">` + job.proj + `</td>
-				<td class="col-3 job-shot">` + job.shot + `</td>
-				<td class="col-3 job-task">` + job.task + `</td>
-				<td class="col-2 job-time">` + job.time + `</td>
-				<td class="col-1 job-del">
-					<form action="/code/deljob" method="POST">
-						<input name="jobuser" class="delj-user" value="` + 
-						(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `" hidden />
-						<input name="jobid" class="delj-id" value="` + job.id + `" hidden />
-						<input name="day" class="delj-day" value="` + job.day + `" hidden />
-						<input name="date" class="delj-date" value="` + srv.tdate + `" hidden />
-						<button id="deljob-` + job.id + '" class="btn-delj" type="submit" style="color: #e75045;"' + 
-						(srv.editable == 'true' ? '' : ' disabled') + 
-						`> <i class="fa fa-trash" aria-hidden="true"></i></button>
-					</form>
-				</td>
-			</tr>`;
+			var toIns = getJobHTML(job, srv, tid);
 
 			parentForm.parent().children('.job-table').each(function() {
 				var tbody = $(this).children('tbody').first();
@@ -294,7 +339,7 @@ function submitJobCallback(parentForm) {
 				setTimeout(function(njob) { njob.removeClass('shrinkme'); }, 10, njob);
 
 				bindDeleteBlocker($('#deljob-' + job.id));
-				updateTotalWeekBar(tbody);
+				updateTotalWeekBar();
 				var total = updateTotalDayBar($(this));
 				updateDayColor(job.day, total);
 				updateShading(tbody);
@@ -341,7 +386,6 @@ function updateTotalWeekBar() {
 	$('.job-time').each(function() {
 		total += parseFloat($(this).text());
 	});
-	if (total >= 24) $('#subm-btn').attr('disabled');
 	$('#total-week-bar').text(total + ' hours logged this week.');
 }
 
@@ -363,6 +407,9 @@ function updateTotalDayBar(tableEl) {
 			<td class="col-2">Total</td>
 		</tr>`;
 	tableEl.append(toIns);
+
+	if(parseFloat(total) >= 18) $(tableEl).parent().find("#subm-btn").attr('disabled', 'disabled');
+	else $(tableEl).parent().find("#subm-btn").removeAttr('disabled');
 
 	return total;
 }
