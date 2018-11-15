@@ -2,7 +2,9 @@
 
 // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
 
+
 (function() {
+
 
 /*
 *                                                                 
@@ -216,9 +218,11 @@ function updateTasks(ttasks, taskel) {
 //#endregion dropdown ajax
 
 //#region timetable edits
+
 function bindDeleteBlocker(el) {
 	el.parent().find('.btn-delj').each(delJobEvent); // bind a delete blocker to this el
 }
+
 function delJobEventCallback(btn, parentForm) {
 	return function(data) {
 		let parentTable = $(btn).parent().eq(4).find('.job-table'); // thatsa lotta parents
@@ -347,12 +351,24 @@ function submitJobCallback(parentForm) {
 function submitJobData(jobData, parentForm) {
 	$.post('/code/addjob', jobData, submitJobCallback(parentForm), 'json');
 }
+
+function validateParentForm(form) {
+	if (form.find('.shot-inpc').val() == '') return false;
+	if (form.find('#subm-btn').attr('disabled')) return false;
+
+	let thours = parseFloat(form.find('.time-inpc').val());
+	if (isNaN(thours)) return false;
+	if (thours < 0.25 || thours > 16) return false;
+
+	return true;
+}
+
 function submitJobClickEvent(e) {
 	var parentForm = $(this).parent();
 
 	e.preventDefault();
 
-	if (parentForm.find('.shot-inpc').val() != '' && !parentForm.find('#subm-btn').attr('disabled')) {
+	if (validateParentForm(parentForm)) {
 		parentForm.find('#subm-btn').attr('disabled', 'disabled');
 		$.post('/code/addjob', parentForm.serialize(), submitJobCallback(parentForm), 'json');
 	}
@@ -751,7 +767,9 @@ $(document).ready(function() {
 });
 //#endregion initial binds
 
-})();
+
+})(); // end of IIFE
+
 
 //#region updaters
 
