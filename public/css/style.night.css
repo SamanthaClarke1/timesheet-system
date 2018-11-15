@@ -73,8 +73,8 @@ hr {
    *   BTNS   *
    *==========* */
 
-.navbar.navbar-toggleable-md.navbar-inverse.bg-inverse {
-	background-color: #242830;
+nav.navbar.navbar-toggleable-md.navbar-inverse.bg-inverse {
+	background-color: #212630 !important; /*okay, fine, this one was needed*/
 }
 .btn.btn-outline-info:hover {
 	background: rgb(70, 154, 202);
