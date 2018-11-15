@@ -99,7 +99,6 @@ Personal todo list for v2.0.0
 - [x] Cleaning up old console.logs
 - [x] Logs
 - [x] Make my css !important free
-- [x] Wrap my front end javascript in IIFEs to keep vars out of the window scope (excluding the updaters, yeah its a hack, ik.)
 - [x] Better command line options
 - [x] Refactoring
 - [x] New Icon
@@ -107,6 +106,7 @@ Personal todo list for v2.0.0
 - [x] Letting servers create a temporary admin (via add-user in the cmd) (i know its not all that great but i wrote myself into a corner...)
 - [x] Better README :smile:
 - [ ] Better input validation for the front end
+- [ ] Actual animations for the rokyt launcher
 - [ ] Custom buttons and inputs for the front end (those defaults keep annoying me)
 
 #### Made by Samuel Clarke, 2018, for CumulusVFX.

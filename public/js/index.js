@@ -3,9 +3,6 @@
 // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
 
 
-(function() {
-
-
 /*
 *                                                                 
 *                              NNNNNN                             
@@ -41,9 +38,13 @@
 *                                                                 
 */
 
-// yeah, yeah, the whole idea of using ajax came in half way through development, so my code looks like spaghetti.
-// but, yknow, whatever, i could go some pasta, so who's the real winner here?
-// edit: i have eaten so much spaghetti that i've developed a gluten allergy
+
+// im seriously going to have nightmares about this code
+// why did i use onclick=""
+// ...
+// (because it was easy)
+
+
 
 //#region initial declarations
 let projCache = {};
@@ -62,6 +63,449 @@ if(IS_NODE) {
 	var {exec, spawn} = require('child_process'); // eslint-disable-line no-unused-vars
 }
 //#endregion initial declarations
+
+//#region helpers
+function makeSlug(min, max) {
+	var t = '';
+	for (var i = 0; i < min + Math.floor(Math.random() * (max - min)); i++) {
+		var base = 65 + Math.random() * 25;
+		if (Math.random() < 0.4) {
+			base += 32;
+		} else if (Math.random() < 0.3) {
+			base = 48 + Math.random() * 9;
+		}
+		t += String.fromCharCode(base);
+	}
+	return t;
+}
+function formatMilliToHourMin(milli) {
+	let m = Math.floor(milli / (60*1000));
+	let h = Math.floor(m / 60);
+	m %= 60;
+	return (h+'').padStart(1,0)+':'+(m+'').padStart(2,0);
+}
+function translateToName(cache, type, sgName) { // translation returns false on failure, and name on success.
+	sgName = sgName.toLowerCase().split(' ').join('');
+	let trans = cache[type];
+	return trans[sgName] || false;
+}
+//#endregion
+
+//#region updaters
+
+function updateJobTime(amt, jobuser, jobid, jobday, jobdate) {
+	// i'd like to apologise, in advance, to the javascript/html gods for this code, and the fact that its just linked to an onclick attribute
+	let ptable = $("#"+jobday).find(".job-table");
+	let jobTimeEl = $("#"+jobday).find(".job-id-"+jobid).find(".job-time");
+
+	let tamt = parseFloat(jobTimeEl.text()) + amt;
+	
+	if(tamt < 16 && tamt >= 0.25) {
+		jobTimeEl.text(tamt);
+
+		let total = updateTotalDayBar(ptable);
+		updateDayColor(jobday, total);
+		updateTotalWeekBar();
+
+		$.post('/code/edittime', {jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text()}, function (data) { 
+			if(data.errcode < 200 || data.errcode > 300) {
+				alert("ERRCODE: " + data.errcode + " ERR: " + data.err);
+			} else {
+				if(data.errcode != 200) {
+					console.log("Recoverable error, code " + data.errcode + " err " + data.err);
+				}
+			}
+		}, 'json');
+	}
+}
+
+function updateDayColor(day, total) {
+	var el = $('#' + day + '-daylink').children('a');
+	var classToAdd = total == 0 ? 'red' : total >= 8 ? 'green' : 'yellow';
+
+	var shouldBurst = true;
+	if (el.hasClass('green')) shouldBurst = false;
+	el.removeClass('red').removeClass('green').removeClass('yellow').addClass(classToAdd);
+	if (classToAdd == 'green' && shouldBurst) {
+		var coords = {x: el.offset().left + 10, y: el.offset().top + 10};
+		successburst.tune(coords).generate();
+		successburst_timeline.replay();
+	}
+}
+
+function updateTotalWeekBar() {
+	var total = 0;
+	$('.job-time').each(function() {
+		total += parseFloat($(this).text());
+	});
+	$('#total-week-bar').text(total + ' hours logged this week.');
+}
+
+function updateTotalDayBar(tableEl) {
+	tableEl.find('.total-day-bar').each(function() {
+		$(this).remove();
+	});
+	var total = 0;
+	tableEl.find('.job-row').each(function() {
+		$(this).children('.job-time').each(function() {
+			total += parseFloat($(this).text());
+		});
+	});
+
+	var toIns =
+		`<tr class="ts-row row no-gutters col-12 total-day-bar">
+			<td class="col-1 offset-9 total-day-bar-num" style="text-align: left;">` + total + `</td>
+			<td class="col-2">Total</td>
+		</tr>`;
+	tableEl.append(toIns);
+
+	if(parseFloat(total) >= 18) $(tableEl).parent().find("#subm-btn").attr('disabled', 'disabled');
+	else $(tableEl).parent().find("#subm-btn").removeAttr('disabled');
+
+	return total;
+}
+
+function updateShading(tableEl) {
+	var cc = 0;
+	tableEl.find('.job-row').each(function() {
+		if (cc % 2 != 0) {
+			$(this).removeClass('even');
+		} else {
+			$(this).addClass('even');
+		}
+		cc++;
+	});
+}
+//#endregion updaters
+
+//#region rokyt
+function rokytLaunchClickEvent(e) {
+	let jobForm = $('#rokyt-launcher').parent().find('.submitJobForm');
+	e.preventDefault();
+	let timer = createTimer(
+		jobForm.find('.proj-inpc').val(),	// proj
+		jobForm.find('.shot-inpc').val(),	// shot
+		jobForm.find('.task-inpc').val(),	// task
+		jobForm.find('.jobusr-inpc').val(),	// jobusr
+		jobForm.find('.day-inpc').val(),	// day
+		jobForm.find('.date-inpc').val(),	// date
+		currentProg,						// prog
+		$('.rokyt-xtra-opts').safeVal(),	// xtraopts
+		jobForm,							// parent form
+	);
+	addTimer(timer);
+}
+function bindRokytIcoClickEvents() {
+	$('.rokyt-ico').each(function() {
+		$(this).click(rokytIcoClickEvent);
+	});
+}
+function rokytIcoClickEvent() {
+	$('.rokyt-ico').each(function() {
+		$(this).removeClass('active');
+	});
+	$(this).addClass('active');
+
+	currentProg = this.className.match(/rokyt-ico-([A-z0-9]+)/)[1] || currentProg;
+
+	fillRokytOpts(this);
+}
+function fillRokytOpts(tt) {
+	let hadAMatch = false;
+	for (let prog in rokytProgOpts) {
+		if($(tt).hasClass('rokyt-ico-'+prog)) {
+			let toAppend = '';
+			hadAMatch = true;
+			for(let i in rokytProgOpts[prog]['pretty']) {
+				let optPretty = rokytProgOpts[prog].pretty[i];
+				let optTech = rokytProgOpts[prog].tech[i];
+				toAppend += `<option value=${optTech}>${optPretty}</option>`;
+			}
+			$('.rokyt-xtra-opts').empty().append(toAppend);
+			$('.rokyt-xtra-opts').removeAttr('disabled');
+		}
+	}
+	if(!hadAMatch) $('.rokyt-xtra-opts').attr('disabled', '');
+	return hadAMatch;
+}
+
+//#region rokyt-timers
+
+/// To explain "timers"...
+/// example timer, [0]:
+/// {
+///    "timeSpent": 0, // int, milliseconds
+///    "timeStarted": 1540961951344, // int, unix timestamp
+///    "proj": "Lambs Of God", // string, project
+///    "id": "abcdef", // string, 6 long slug
+///    "prog": "nuke", // string, program
+///    "xtraopts": "N", // string, value from xtra-opts dropdown
+///    "task": "Roto", // string, task
+///    "shot": "scb_010" // string, shot code
+/// }
+/// example timer, [0], gets ended at 1540962051344, and becomes:
+/// {
+///    "timeSpent": 100000, // timeSpent (0) + timeEnding (1540962051344) - timeStarted (1540961951344)
+///    "timeStarted": -1 // timeStarted becomes -1, which is a sentinel key for "paused".
+///    ...
+/// }
+/// example timer, [0], gets unpaused at 1540962151344, and becomes:
+/// {
+///    "timeSpent": 100000, // unchanged
+///    "timeStarted": 1540962151344 // updates to current time
+///    ...
+/// }
+/// i would love to use some OOP for this, but my current methodology for this page has not been OOP at all. 
+/// so, im not gonna stop that now, even if i dont really like function based programming as much as i like oop
+/// so instead, im going to work on the following functions...
+
+function updateTimerDisplay() {
+	$('.rokyt-body-top').empty();
+
+	let toAppend = '';
+	for(let i in timers) {
+		toAppend += getHTMLForTimer(timers[i], i, true);
+	}
+
+	$('.rokyt-body-top').append(toAppend);
+}
+
+// if it can ensure timer is a timer / find its id / theres a timer with index timer,
+// return timer, else return false. 
+function ensureTimerIsTimer(timer) {	
+	if (typeof timer == 'object') {
+		if(typeof timer.id == 'string' && typeof timer.timeStarted == 'number') {
+			return timer;
+		} return false;
+	}
+	else if(typeof timer == 'string') {
+		return getTimer(timer);
+	} else if(typeof timer == 'number') {
+		if(timers[timer]) return timers[timer];
+		return false;
+	}
+}
+
+function loadTimersFromSessionStorage() {
+	let x;
+	timers = JSON.parse((x=(sessionStorage.getItem('timesheet_timers')))?x:[]); // eslint-disable-line no-cond-assign
+	updateTimerDisplay();
+}
+
+function storeTimersToSessionStorage() {
+	sessionStorage.setItem('timesheet_timers', JSON.stringify(timers));
+}
+
+// creates a new timer and returns it.
+function createTimer(proj, shot, task, jobuser, day, date, prog, xtraopts, parentForm, 
+	id=makeSlug(6, 6), timeSpent=0, timeStarted=new Date() ) { 
+
+	let timer = {
+		'timeSpent': timeSpent, // int, milliseconds
+		'timeStarted': timeStarted-0, // int, unix timestamp 
+		// oh and timeStarted-0 is a great coercion trick: if its an int it wont do anything, 
+		// and if its a date it'll coerse it to an int
+		'proj': proj, // string, project
+		'id': id, // string, 6 long slug
+		'prog': prog, // string, program
+		'xtraopts': xtraopts, // string, value from xtra-opts dropdown
+		'task': task, // string, task
+		'shot': shot, // string, shot code
+		'jobuser': jobuser, // string, users name
+		'parentForm': parentForm,
+		'day': day, // string, day
+		'date': date, // string, week code (eg, Current, eg, 2018-10-29)
+	};
+
+	let suffix = translateToName(fromSrv.translationCache, 'to_suffix', timer.proj);
+	
+	if(timer.prog != 'unknown') {
+		timer.process = spawn('"/Volumes/RS01/Resources/Engineering/Sam/timesheet-desktop/'+
+			timer.prog+'_launch.sh"', [suffix, timer.xtraopts], { shell: true });
+
+		timer.process.stdout.on('data', timerProcStdoutEvent(timer));
+		timer.process.stderr.on('data', timerProcStderrEvent(timer));
+		timer.process.on('close', timerProcCloseEvent(timer));
+	}
+
+	return timer;
+}
+
+function timerProcStdoutEvent(timer) {
+	return function(data) {
+		console.log(`${timer.id}->stdout: ${data}`);
+	};
+}
+
+function timerProcStderrEvent(timer) {
+	return function(data) {
+		console.log(`${timer.id}->stdout: ${data}`);
+	};
+}
+
+function timerProcCloseEvent(timer) {
+	return function(code) {
+		pauseTimer(timer);
+		console.log(`${timer.id}->close: ${code}. timeSpent: ${timer.timeSpent}`);
+	};
+}
+
+// adds a timer and returns it, also updates the display, 
+// also calls unpauseTimer on timer (pausing all others),
+// returns timer if succesful, false otherwise
+function addTimer(timer, trusty=false) {
+	if(!trusty) timer = ensureTimerIsTimer(timer);
+	if(!timer) return false;
+	
+	timers.push(timer);
+	
+	unpauseTimer(timer);
+	updateTimerDisplay();
+
+	return timer;
+}
+
+// if the timers not already paused, pauses it, calculates its time (see above example), updates display,
+// and returns the timer if successful, false otherwise
+// if trusty evaluates to true, it wont bother trying to collapse timer to a timer, but assume it is one.
+function pauseTimer(timer, trusty=false, now=new Date()) {	
+	if(!trusty) timer = ensureTimerIsTimer(timer);
+	if(!timer) return false;
+
+	if(timer.timeStarted < 0) return false;
+	timer.timeSpent += now - timer.timeStarted;
+	timer.timeStarted = -1;
+
+	updateTimerDisplay();
+	return timer;
+}
+
+// unpauses a timer, pauses all others and returns it. 
+// returns timer if successful, false otherwise.
+function unpauseTimer(timer, trusty=false, now=new Date()) {
+	if(!trusty) timer = ensureTimerIsTimer(timer);
+	if(!timer) return false;
+
+	for(let ttim of timers) {
+		pauseTimer(ttim, true);
+	}
+	timer.timeStarted = now-0;
+	updateTimerDisplay();
+
+	return timer;
+}
+
+function convertTimerToJobData(timer, trusty=false) {
+	if(!trusty) timer = ensureTimerIsTimer(timer);
+	if(!timer) return false;
+
+	let jobData = {
+		'jobuser':	 timer.jobuser,		//str
+		'day':		 timer.day,			//str
+		'date':		 timer.date,		//str
+		'project':	 timer.proj,		//str
+		'shotcode':	 timer.shot,		//str
+		'task':		 timer.task,		//str
+		'timespent': timer.timeSpent,	//num
+	};
+	return jobData;
+}
+
+// publishes a timer to the timesheet bar, updates the display, returns timer and removes it if successful, false otherwise
+function publishTimer(timer, trusty=false) { // eslint-disable-line no-unused-vars
+	if(!trusty) timer = ensureTimerIsTimer(timer);
+	if(!timer) return false;
+	let parentForm = timer.parentForm;
+
+	pauseTimer(timer, true);
+	timer.timeSpent /= (60*60*1000); //edgy division
+	
+	if(Math.round(timer.timeSpent / .25) *.25 < .25) {
+		timer.timeSpent *= (60*60*1000); //undo my previous division
+		unpauseTimer(timer);
+		alert('Cannot publish timer yet, let it run for at least 15 Minutes!');
+		return false;
+	} else {
+		timer.timeSpent = Math.round(timer.timeSpent / .25) * .25;
+	}
+	
+	submitJobData(convertTimerToJobData(timer), parentForm);
+
+	removeTimer(timer, true);
+
+	return timer;
+}
+
+// removes a timer, updates the display, returns the timer
+function removeTimer(id) {
+	let removedTimer = timers.splice(getTimerIndex(id), 1)[0];
+	updateTimerDisplay();
+	return removedTimer;
+}
+
+// like getTimer, but it returns the index instead of the timer, still returns false on failure.
+function getTimerIndex(id) {
+	for(let i in timers) {
+		if(timers[i].id == id) {
+			return i-0; // coersion to int >:)
+		}
+	}
+	return false;
+}
+
+// returns a timer with the specified id
+function getTimer(id) {
+	for(let timer of timers) {
+		if(timer.id == id) {
+			return timer;
+		}
+	}
+	return false;
+}
+
+function getHTMLForTimer(timer, isOdd, trusty=false) {
+	if(!trusty) timer = ensureTimerIsTimer(timer);
+	isOdd %= 2;
+	return `
+	<tr class="col-12 row no-gutters rokyt-timer-bar ${(isOdd?'odd':'even')}">
+		<td class="col-3">
+			${timer.proj}
+			<img class="img icon24" alt="${timer.prog}"
+				src="/res/${timer.prog}/${timer.prog}24x24.ico" />
+			${timer.xtraopts}
+		</td>
+		<td class="col-3">${timer.shot}</td>
+		<td class="col-3">${timer.task}</td>
+		<td class="col-3 row no-gutters text-center">
+			<span class="col-3" onclick="${timer.timeStarted == -1 ? 'un' : ''}pauseTimer('${timer.id}')">
+				${timer.timeStarted == -1 ? '<i class="fa fa-play"></i>' : 
+					formatMilliToHourMin( timer.timeSpent + (Date.now() - timer.timeStarted) )}
+			</span>
+			<button class="col-3 offset-1 btn btn-outline-info" type="submit" style="color: #4550e7;" onclick="publishTimer('${timer.id}')" >
+				<i class="fa fa-send" aria-hidden="true"></i>
+			</button>
+			<button class="col-3 offset-1 btn btn-outline-danger" type="submit" style="color: #793025;" onclick="removeTimer('${timer.id}')" >
+				<i class="fa fa-trash" aria-hidden="true"></i>
+			</button>
+		</td>
+	</tr>
+	`;
+}
+//#endregion rokyt-timers
+
+window.addEventListener('beforeunload', function() {
+	if(IS_NODE) storeTimersToSessionStorage();
+}, false);
+
+//#endregion rokyt
+
+
+(function() {
+
+
+// yeah, yeah, the whole idea of using ajax came in half way through development, so my code looks like spaghetti.
+// but, yknow, whatever, i could go some pasta, so who's the real winner here?
+// edit: i have eaten so much spaghetti that i've developed a gluten allergy
 
 //#region dropdown ajax
 
@@ -397,352 +841,6 @@ function submitJobClickEvent(e) {
 }
 //#endregion timetable edits
 
-//#region helpers
-function makeSlug(min, max) {
-	var t = '';
-	for (var i = 0; i < min + Math.floor(Math.random() * (max - min)); i++) {
-		var base = 65 + Math.random() * 25;
-		if (Math.random() < 0.4) {
-			base += 32;
-		} else if (Math.random() < 0.3) {
-			base = 48 + Math.random() * 9;
-		}
-		t += String.fromCharCode(base);
-	}
-	return t;
-}
-function formatMilliToHourMin(milli) {
-	let m = Math.floor(milli / (60*1000));
-	let h = Math.floor(m / 60);
-	m %= 60;
-	return (h+'').padStart(1,0)+':'+(m+'').padStart(2,0);
-}
-function translateToName(cache, type, sgName) { // translation returns false on failure, and name on success.
-	sgName = sgName.toLowerCase().split(' ').join('');
-	let trans = cache[type];
-	return trans[sgName] || false;
-}
-//#endregion
-
-//#region rokyt
-function rokytLaunchClickEvent(e) {
-	let jobForm = $('#rokyt-launcher').parent().find('.submitJobForm');
-	e.preventDefault();
-	let timer = createTimer(
-		jobForm.find('.proj-inpc').val(),	// proj
-		jobForm.find('.shot-inpc').val(),	// shot
-		jobForm.find('.task-inpc').val(),	// task
-		jobForm.find('.jobusr-inpc').val(),	// jobusr
-		jobForm.find('.day-inpc').val(),	// day
-		jobForm.find('.date-inpc').val(),	// date
-		currentProg,						// prog
-		$('.rokyt-xtra-opts').safeVal(),	// xtraopts
-		jobForm,							// parent form
-	);
-	addTimer(timer);
-}
-function bindRokytIcoClickEvents() {
-	$('.rokyt-ico').each(function() {
-		$(this).click(rokytIcoClickEvent);
-	});
-}
-function rokytIcoClickEvent() {
-	$('.rokyt-ico').each(function() {
-		$(this).removeClass('active');
-	});
-	$(this).addClass('active');
-
-	currentProg = this.className.match(/rokyt-ico-([A-z0-9]+)/)[1] || currentProg;
-
-	fillRokytOpts(this);
-}
-function fillRokytOpts(tt) {
-	let hadAMatch = false;
-	for (let prog in rokytProgOpts) {
-		if($(tt).hasClass('rokyt-ico-'+prog)) {
-			let toAppend = '';
-			hadAMatch = true;
-			for(let i in rokytProgOpts[prog]['pretty']) {
-				let optPretty = rokytProgOpts[prog].pretty[i];
-				let optTech = rokytProgOpts[prog].tech[i];
-				toAppend += `<option value=${optTech}>${optPretty}</option>`;
-			}
-			$('.rokyt-xtra-opts').empty().append(toAppend);
-			$('.rokyt-xtra-opts').removeAttr('disabled');
-		}
-	}
-	if(!hadAMatch) $('.rokyt-xtra-opts').attr('disabled', '');
-	return hadAMatch;
-}
-
-//#region rokyt-timers
-
-/// To explain "timers"...
-/// example timer, [0]:
-/// {
-///    "timeSpent": 0, // int, milliseconds
-///    "timeStarted": 1540961951344, // int, unix timestamp
-///    "proj": "Lambs Of God", // string, project
-///    "id": "abcdef", // string, 6 long slug
-///    "prog": "nuke", // string, program
-///    "xtraopts": "N", // string, value from xtra-opts dropdown
-///    "task": "Roto", // string, task
-///    "shot": "scb_010" // string, shot code
-/// }
-/// example timer, [0], gets ended at 1540962051344, and becomes:
-/// {
-///    "timeSpent": 100000, // timeSpent (0) + timeEnding (1540962051344) - timeStarted (1540961951344)
-///    "timeStarted": -1 // timeStarted becomes -1, which is a sentinel key for "paused".
-///    ...
-/// }
-/// example timer, [0], gets unpaused at 1540962151344, and becomes:
-/// {
-///    "timeSpent": 100000, // unchanged
-///    "timeStarted": 1540962151344 // updates to current time
-///    ...
-/// }
-/// i would love to use some OOP for this, but my current methodology for this page has not been OOP at all. 
-/// so, im not gonna stop that now, even if i dont really like function based programming as much as i like oop
-/// so instead, im going to work on the following functions...
-
-function updateTimerDisplay() {
-	$('.rokyt-body-top').empty();
-
-	let toAppend = '';
-	for(let i in timers) {
-		toAppend += getHTMLForTimer(timers[i], i, true);
-	}
-
-	$('.rokyt-body-top').append(toAppend);
-}
-
-// if it can ensure timer is a timer / find its id / theres a timer with index timer,
-// return timer, else return false. 
-function ensureTimerIsTimer(timer) {	
-	if (typeof timer == 'object') {
-		if(typeof timer.id == 'string' && typeof timer.timeStarted == 'number') {
-			return timer;
-		} return false;
-	}
-	else if(typeof timer == 'string') {
-		return getTimer(timer);
-	} else if(typeof timer == 'number') {
-		if(timers[timer]) return timers[timer];
-		return false;
-	}
-}
-
-function loadTimersFromSessionStorage() {
-	let x;
-	timers = JSON.parse((x=(sessionStorage.getItem('timesheet_timers')))?x:[]); // eslint-disable-line no-cond-assign
-	updateTimerDisplay();
-}
-
-function storeTimersToSessionStorage() {
-	sessionStorage.setItem('timesheet_timers', JSON.stringify(timers));
-}
-
-// creates a new timer and returns it.
-function createTimer(proj, shot, task, jobuser, day, date, prog, xtraopts, parentForm, 
-	id=makeSlug(6, 6), timeSpent=0, timeStarted=new Date() ) { 
-
-	let timer = {
-		'timeSpent': timeSpent, // int, milliseconds
-		'timeStarted': timeStarted-0, // int, unix timestamp 
-		// oh and timeStarted-0 is a great coercion trick: if its an int it wont do anything, 
-		// and if its a date it'll coerse it to an int
-		'proj': proj, // string, project
-		'id': id, // string, 6 long slug
-		'prog': prog, // string, program
-		'xtraopts': xtraopts, // string, value from xtra-opts dropdown
-		'task': task, // string, task
-		'shot': shot, // string, shot code
-		'jobuser': jobuser, // string, users name
-		'parentForm': parentForm,
-		'day': day, // string, day
-		'date': date, // string, week code (eg, Current, eg, 2018-10-29)
-	};
-
-	let suffix = translateToName(fromSrv.translationCache, 'to_suffix', timer.proj);
-	
-	if(timer.prog != 'unknown') {
-		timer.process = spawn('"/Volumes/RS01/Resources/Engineering/Sam/timesheet-desktop/'+
-			timer.prog+'_launch.sh"', [suffix, timer.xtraopts], { shell: true });
-
-		timer.process.stdout.on('data', timerProcStdoutEvent(timer));
-		timer.process.stderr.on('data', timerProcStderrEvent(timer));
-		timer.process.on('close', timerProcCloseEvent(timer));
-	}
-
-	return timer;
-}
-
-function timerProcStdoutEvent(timer) {
-	return function(data) {
-		console.log(`${timer.id}->stdout: ${data}`);
-	};
-}
-
-function timerProcStderrEvent(timer) {
-	return function(data) {
-		console.log(`${timer.id}->stdout: ${data}`);
-	};
-}
-
-function timerProcCloseEvent(timer) {
-	return function(code) {
-		pauseTimer(timer);
-		console.log(`${timer.id}->close: ${code}. timeSpent: ${timer.timeSpent}`);
-	};
-}
-
-// adds a timer and returns it, also updates the display, 
-// also calls unpauseTimer on timer (pausing all others),
-// returns timer if succesful, false otherwise
-function addTimer(timer, trusty=false) {
-	if(!trusty) timer = ensureTimerIsTimer(timer);
-	if(!timer) return false;
-	
-	timers.push(timer);
-	
-	unpauseTimer(timer);
-	updateTimerDisplay();
-
-	return timer;
-}
-
-// if the timers not already paused, pauses it, calculates its time (see above example), updates display,
-// and returns the timer if successful, false otherwise
-// if trusty evaluates to true, it wont bother trying to collapse timer to a timer, but assume it is one.
-function pauseTimer(timer, trusty=false, now=new Date()) {	
-	if(!trusty) timer = ensureTimerIsTimer(timer);
-	if(!timer) return false;
-
-	if(timer.timeStarted < 0) return false;
-	timer.timeSpent += now - timer.timeStarted;
-	timer.timeStarted = -1;
-
-	updateTimerDisplay();
-	return timer;
-}
-
-// unpauses a timer, pauses all others and returns it. 
-// returns timer if successful, false otherwise.
-function unpauseTimer(timer, trusty=false, now=new Date()) {
-	if(!trusty) timer = ensureTimerIsTimer(timer);
-	if(!timer) return false;
-
-	for(let ttim of timers) {
-		pauseTimer(ttim, true);
-	}
-	timer.timeStarted = now-0;
-	updateTimerDisplay();
-
-	return timer;
-}
-
-function convertTimerToJobData(timer, trusty=false) {
-	if(!trusty) timer = ensureTimerIsTimer(timer);
-	if(!timer) return false;
-
-	let jobData = {
-		'jobuser':	 timer.jobuser,		//str
-		'day':		 timer.day,			//str
-		'date':		 timer.date,		//str
-		'project':	 timer.proj,		//str
-		'shotcode':	 timer.shot,		//str
-		'task':		 timer.task,		//str
-		'timespent': timer.timeSpent,	//num
-	};
-	return jobData;
-}
-
-// publishes a timer to the timesheet bar, updates the display, returns timer and removes it if successful, false otherwise
-function publishTimer(timer, trusty=false) { // eslint-disable-line no-unused-vars
-	if(!trusty) timer = ensureTimerIsTimer(timer);
-	if(!timer) return false;
-	let parentForm = timer.parentForm;
-
-	pauseTimer(timer, true);
-	timer.timeSpent /= (60*60*1000);
-	timer.timeSpent = Math.round(timer.timeSpent / .25) * .25;
-	
-	if(timer.timeSpent < .25) {
-		timer.timeSpent *= (60*60*1000);
-		alert('Cannot publish timer yet, let it run for at least 15 Minutes!');
-		return false;
-	}
-	
-	submitJobData(convertTimerToJobData(timer), parentForm);
-
-	removeTimer(timer, true);
-
-	return timer;
-}
-
-// removes a timer, updates the display, returns the timer
-function removeTimer(id) {
-	let removedTimer = timers.splice(getTimerIndex(id), 1)[0];
-	updateTimerDisplay();
-	return removedTimer;
-}
-
-// like getTimer, but it returns the index instead of the timer, still returns false on failure.
-function getTimerIndex(id) {
-	for(let i in timers) {
-		if(timers[i].id == id) {
-			return i-0; // coersion to int >:)
-		}
-	}
-	return false;
-}
-
-// returns a timer with the specified id
-function getTimer(id) {
-	for(let timer of timers) {
-		if(timer.id == id) {
-			return timer;
-		}
-	}
-	return false;
-}
-
-function getHTMLForTimer(timer, isOdd, trusty=false) {
-	if(!trusty) timer = ensureTimerIsTimer(timer);
-	isOdd %= 2;
-	return `
-	<tr class="col-12 row no-gutters rokyt-timer-bar ${(isOdd?'odd':'even')}">
-		<td class="col-3">
-			${timer.proj}
-			<img class="img icon24" alt="${timer.prog}"
-				src="/res/${timer.prog}/${timer.prog}24x24.ico" />
-			${timer.xtraopts}
-		</td>
-		<td class="col-3">${timer.shot}</td>
-		<td class="col-3">${timer.task}</td>
-		<td class="col-3 row no-gutters text-center">
-			<span class="col-3" onclick="${timer.timeStarted == -1 ? 'un' : ''}pauseTimer('${timer.id}')">
-				${timer.timeStarted == -1 ? '<i class="fa fa-play"></i>' : 
-					formatMilliToHourMin( timer.timeSpent + (Date.now() - timer.timeStarted) )}
-			</span>
-			<button class="col-3 offset-1 btn btn-outline-info" type="submit" style="color: #4550e7;" onclick="publishTimer('${timer.id}')" >
-				<i class="fa fa-send" aria-hidden="true"></i>
-			</button>
-			<button class="col-3 offset-1 btn btn-outline-danger" type="submit" style="color: #793025;" onclick="removeTimer('${timer.id}')" >
-				<i class="fa fa-trash" aria-hidden="true"></i>
-			</button>
-		</td>
-	</tr>
-	`;
-}
-//#endregion rokyt-timers
-
-window.addEventListener('beforeunload', function() {
-	if(IS_NODE) storeTimersToSessionStorage();
-}, false);
-
-//#endregion rokyt
-
 //#region initial binds
 $(document).ready(function() {
 	if(!IS_NODE) {
@@ -797,91 +895,6 @@ $(document).ready(function() {
 })(); // end of IIFE
 
 
-//#region updaters
 
-function updateJobTime(amt, jobuser, jobid, jobday, jobdate) {
-	// i'd like to apologise, in advance, to the javascript/html gods for this code, and the fact that its just linked to an onclick attribute
-	let ptable = $("#"+jobday).find(".job-table");
-	let jobTimeEl = $("#"+jobday).find(".job-id-"+jobid).find(".job-time");
-
-	let tamt = parseFloat(jobTimeEl.text()) + amt;
-	
-	if(tamt < 16 && tamt >= 0.25) {
-		jobTimeEl.text(tamt);
-
-		let total = updateTotalDayBar(ptable);
-		updateDayColor(jobday, total);
-		updateTotalWeekBar();
-
-		$.post('/code/edittime', {jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text()}, function (data) { 
-			if(data.errcode < 200 || data.errcode > 300) {
-				alert("ERRCODE: " + data.errcode + " ERR: " + data.err);
-			} else {
-				if(data.errcode != 200) {
-					console.log("Recoverable error, code " + data.errcode + " err " + data.err);
-				}
-			}
-		}, 'json');
-	}
-}
-
-function updateDayColor(day, total) {
-	var el = $('#' + day + '-daylink').children('a');
-	var classToAdd = total == 0 ? 'red' : total >= 8 ? 'green' : 'yellow';
-
-	var shouldBurst = true;
-	if (el.hasClass('green')) shouldBurst = false;
-	el.removeClass('red').removeClass('green').removeClass('yellow').addClass(classToAdd);
-	if (classToAdd == 'green' && shouldBurst) {
-		var coords = {x: el.offset().left + 10, y: el.offset().top + 10};
-		successburst.tune(coords).generate();
-		successburst_timeline.replay();
-	}
-}
-
-function updateTotalWeekBar() {
-	var total = 0;
-	$('.job-time').each(function() {
-		total += parseFloat($(this).text());
-	});
-	$('#total-week-bar').text(total + ' hours logged this week.');
-}
-
-function updateTotalDayBar(tableEl) {
-	tableEl.find('.total-day-bar').each(function() {
-		$(this).remove();
-	});
-	var total = 0;
-	tableEl.find('.job-row').each(function() {
-		$(this).children('.job-time').each(function() {
-			total += parseFloat($(this).text());
-		});
-	});
-
-	var toIns =
-		`<tr class="ts-row row no-gutters col-12 total-day-bar">
-			<td class="col-1 offset-9 total-day-bar-num" style="text-align: left;">` + total + `</td>
-			<td class="col-2">Total</td>
-		</tr>`;
-	tableEl.append(toIns);
-
-	if(parseFloat(total) >= 18) $(tableEl).parent().find("#subm-btn").attr('disabled', 'disabled');
-	else $(tableEl).parent().find("#subm-btn").removeAttr('disabled');
-
-	return total;
-}
-
-function updateShading(tableEl) {
-	var cc = 0;
-	tableEl.find('.job-row').each(function() {
-		if (cc % 2 != 0) {
-			$(this).removeClass('even');
-		} else {
-			$(this).addClass('even');
-		}
-		cc++;
-	});
-}
-//#endregion updaters
 
 // @license-end
