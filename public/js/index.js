@@ -2,6 +2,7 @@
 
 // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
 
+(function() {
 
 /*
 *                                                                 
@@ -260,32 +261,6 @@ function bindSubmitJobClickEvent() {
 	});
 }
 
-function updateJobTime(amt, jobuser, jobid, jobday, jobdate) {
-	// i'd like to apologise, in advance, to the javascript/html gods for this code, and the fact that its just linked to an onclick attribute
-	let ptable = $("#"+jobday).find(".job-table");
-	let jobTimeEl = $("#"+jobday).find(".job-id-"+jobid).find(".job-time");
-
-	let tamt = parseFloat(jobTimeEl.text()) + amt;
-	
-	if(tamt < 16 && tamt >= 0.25) {
-		jobTimeEl.text(tamt);
-
-		let total = updateTotalDayBar(ptable);
-		updateDayColor(jobday, total);
-		updateTotalWeekBar();
-
-		$.post('/code/edittime', {jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text()}, function (data) { 
-			if(data.errcode < 200 || data.errcode > 300) {
-				alert("ERRCODE: " + data.errcode + " ERR: " + data.err);
-			} else {
-				if(data.errcode != 200) {
-					console.log("Recoverable error, code " + data.errcode + " err " + data.err);
-				}
-			}
-		}, 'json');
-	}
-}
-
 function getJobHTML(job, srv, tid) {
 	return `
 <tr class="ts-row row no-gutters col-12 job-row shrinkme job-id-` + job.id + `" id="tid-` + tid + `">
@@ -372,67 +347,6 @@ function submitJobClickEvent(e) {
 	}
 }
 //#endregion timetable edits
-
-//#region updaters
-function updateDayColor(day, total) {
-	var el = $('#' + day + '-daylink').children('a');
-	var classToAdd = total == 0 ? 'red' : total >= 8 ? 'green' : 'yellow';
-
-	var shouldBurst = true;
-	if (el.hasClass('green')) shouldBurst = false;
-	el.removeClass('red').removeClass('green').removeClass('yellow').addClass(classToAdd);
-	if (classToAdd == 'green' && shouldBurst) {
-		var coords = {x: el.offset().left + 10, y: el.offset().top + 10};
-		successburst.tune(coords).generate();
-		successburst_timeline.replay();
-	}
-}
-
-function updateTotalWeekBar() {
-	var total = 0;
-	$('.job-time').each(function() {
-		total += parseFloat($(this).text());
-	});
-	$('#total-week-bar').text(total + ' hours logged this week.');
-}
-
-function updateTotalDayBar(tableEl) {
-	tableEl.find('.total-day-bar').each(function() {
-		$(this).remove();
-	});
-	var total = 0;
-	tableEl.find('.job-row').each(function() {
-		$(this).children('.job-time').each(function() {
-			total += parseFloat($(this).text());
-		});
-	});
-
-	var toIns =
-		`
-		<tr class="ts-row row no-gutters col-12 total-day-bar">
-			<td class="col-1 offset-9" style="text-align: left;">` + total + `</td>
-			<td class="col-2">Total</td>
-		</tr>`;
-	tableEl.append(toIns);
-
-	if(parseFloat(total) >= 18) $(tableEl).parent().find("#subm-btn").attr('disabled', 'disabled');
-	else $(tableEl).parent().find("#subm-btn").removeAttr('disabled');
-
-	return total;
-}
-
-function updateShading(tableEl) {
-	var cc = 0;
-	tableEl.find('.job-row').each(function() {
-		if (cc % 2 != 0) {
-			$(this).removeClass('even');
-		} else {
-			$(this).addClass('even');
-		}
-		cc++;
-	});
-}
-//#endregion updaters
 
 //#region helpers
 function makeSlug(min, max) {
@@ -825,5 +739,94 @@ $(document).ready(function() {
 	}
 });
 //#endregion initial binds
+
+})();
+
+//#region updaters
+
+function updateJobTime(amt, jobuser, jobid, jobday, jobdate) {
+	// i'd like to apologise, in advance, to the javascript/html gods for this code, and the fact that its just linked to an onclick attribute
+	let ptable = $("#"+jobday).find(".job-table");
+	let jobTimeEl = $("#"+jobday).find(".job-id-"+jobid).find(".job-time");
+
+	let tamt = parseFloat(jobTimeEl.text()) + amt;
+	
+	if(tamt < 16 && tamt >= 0.25) {
+		jobTimeEl.text(tamt);
+
+		let total = updateTotalDayBar(ptable);
+		updateDayColor(jobday, total);
+		updateTotalWeekBar();
+
+		$.post('/code/edittime', {jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text()}, function (data) { 
+			if(data.errcode < 200 || data.errcode > 300) {
+				alert("ERRCODE: " + data.errcode + " ERR: " + data.err);
+			} else {
+				if(data.errcode != 200) {
+					console.log("Recoverable error, code " + data.errcode + " err " + data.err);
+				}
+			}
+		}, 'json');
+	}
+}
+
+function updateDayColor(day, total) {
+	var el = $('#' + day + '-daylink').children('a');
+	var classToAdd = total == 0 ? 'red' : total >= 8 ? 'green' : 'yellow';
+
+	var shouldBurst = true;
+	if (el.hasClass('green')) shouldBurst = false;
+	el.removeClass('red').removeClass('green').removeClass('yellow').addClass(classToAdd);
+	if (classToAdd == 'green' && shouldBurst) {
+		var coords = {x: el.offset().left + 10, y: el.offset().top + 10};
+		successburst.tune(coords).generate();
+		successburst_timeline.replay();
+	}
+}
+
+function updateTotalWeekBar() {
+	var total = 0;
+	$('.job-time').each(function() {
+		total += parseFloat($(this).text());
+	});
+	$('#total-week-bar').text(total + ' hours logged this week.');
+}
+
+function updateTotalDayBar(tableEl) {
+	tableEl.find('.total-day-bar').each(function() {
+		$(this).remove();
+	});
+	var total = 0;
+	tableEl.find('.job-row').each(function() {
+		$(this).children('.job-time').each(function() {
+			total += parseFloat($(this).text());
+		});
+	});
+
+	var toIns =
+		`<tr class="ts-row row no-gutters col-12 total-day-bar">
+			<td class="col-1 offset-9" style="text-align: left;">` + total + `</td>
+			<td class="col-2">Total</td>
+		</tr>`;
+	tableEl.append(toIns);
+
+	if(parseFloat(total) >= 18) $(tableEl).parent().find("#subm-btn").attr('disabled', 'disabled');
+	else $(tableEl).parent().find("#subm-btn").removeAttr('disabled');
+
+	return total;
+}
+
+function updateShading(tableEl) {
+	var cc = 0;
+	tableEl.find('.job-row').each(function() {
+		if (cc % 2 != 0) {
+			$(this).removeClass('even');
+		} else {
+			$(this).addClass('even');
+		}
+		cc++;
+	});
+}
+//#endregion updaters
 
 // @license-end

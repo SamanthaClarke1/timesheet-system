@@ -1,9 +1,9 @@
 {
   "name": "timetable-manager",
-  "version": "1.8.8",
+  "version": "1.9.1",
   "description": "Manages the timetables for cmls. Recieves input from artists, that log their time, and stores it in a db.",
   "main": "server.js",
-  "codename": "Tenacious Timer",
+  "codename": "Cold Cobalt",
   "dependencies": {
     "body-parser": "^1.18.3",
     "boxen": "^2.0.0",
