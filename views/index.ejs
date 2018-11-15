@@ -150,7 +150,7 @@
 								} %>
 							</tbody>
 							<tr class="ts-row row no-gutters col-12 total-day-bar">
-								<td class="col-1 offset-9" style="text-align: left;"> <%= totaldaytime %> </td>
+								<td class="col-1 offset-9 total-day-bar-num" style="text-align: left;"> <%= totaldaytime %> </td>
 								<td class="col-2">Total</td>
 							</tr>
 						</table>
@@ -193,7 +193,7 @@
 						<hr style="margin-top: 25px; margin-bottom: 25px;"/>
 	
 						<!-- sends data to /addjob, which adds the job to the list and redirects back here. -->
-						<form id="submitJobForm-<%= day %>" class="row no-gutters col-12 submitJobForm" action="/code/addjob" method="POST">
+						<form id="submitJobForm-<%= day %>" class="row no-gutters col-12 submitJobForm" isvalid="valid" action="/code/addjob" method="POST">
 							<div class="row no-gutters col-12">
 								<% if(user.isadmin) { %> 
 									<input name="jobuser" value="<%= tuser.name %>" class="jobusr-inpc" hidden />

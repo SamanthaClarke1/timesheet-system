@@ -352,14 +352,36 @@ function submitJobData(jobData, parentForm) {
 	$.post('/code/addjob', jobData, submitJobCallback(parentForm), 'json');
 }
 
+function onParentFormChange(parentForm) { // stupid bubbling bubbling the this selector... making me curry... tsk
+	return function() {
+		let valid = validateParentForm(parentForm);
+	
+		$(parentForm).attr('isvalid', (valid ? 'valid' : 'invalid'));
+	}
+}
+
 function validateParentForm(form) {
+	//since im doing the validation manually i have to remove the invalid marker as well :/
+	form.find('.time-inpc')[0].setCustomValidity('');
+
 	if (form.find('.shot-inpc').val() == '') return false;
 	if (form.find('#subm-btn').attr('disabled')) return false;
 
 	let thours = parseFloat(form.find('.time-inpc').val());
-	if (isNaN(thours)) return false;
+	if (isNaN(thours)) {
+		form.find('.time-inpc')[0].setCustomValidity('This is not a number!');
+		return false;
+	}
 	if (thours < 0.25 || thours > 16) return false;
 
+	let hoursToday = parseFloat(form.parent().find('.total-day-bar-num').text());
+
+	if(hoursToday + thours > 16) {
+		// note the [0] to collapse from jquery to dom element
+		form.find('.time-inpc')[0].setCustomValidity('Trying to add too many hours in a day!');
+		return false;
+	}
+	
 	return true;
 }
 
@@ -368,7 +390,7 @@ function submitJobClickEvent(e) {
 
 	e.preventDefault();
 
-	if (validateParentForm(parentForm)) {
+	if (parentForm.attr('isvalid') == 'valid') {
 		parentForm.find('#subm-btn').attr('disabled', 'disabled');
 		$.post('/code/addjob', parentForm.serialize(), submitJobCallback(parentForm), 'json');
 	}
@@ -752,6 +774,10 @@ $(document).ready(function() {
 		});
 	});
 
+	$('.submitJobForm').each(function() {
+		$(this).on('change', 'input, select', onParentFormChange($(this)));
+	});
+
 	if(IS_NODE) {
 		bindRokytIcoClickEvents();
 		fillRokytOpts($('.rokyt-ico.active'));
@@ -834,7 +860,7 @@ function updateTotalDayBar(tableEl) {
 
 	var toIns =
 		`<tr class="ts-row row no-gutters col-12 total-day-bar">
-			<td class="col-1 offset-9" style="text-align: left;">` + total + `</td>
+			<td class="col-1 offset-9 total-day-bar-num" style="text-align: left;">` + total + `</td>
 			<td class="col-2">Total</td>
 		</tr>`;
 	tableEl.append(toIns);

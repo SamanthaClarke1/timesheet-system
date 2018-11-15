@@ -86,6 +86,8 @@ node ./server.js --help
 
 # TODO
 
+Personal todo list for v2.0.0
+
 - [x] Add instructions on how to better create nameTranslation
 - [x] Edit already created shots (time only)?
 - [x] Rokyt/Timers initial code
@@ -104,5 +106,7 @@ node ./server.js --help
 - [x] Changing the way urls were passed to the server.
 - [x] Letting servers create a temporary admin (via add-user in the cmd) (i know its not all that great but i wrote myself into a corner...)
 - [x] Better README :smile:
+- [ ] Better input validation for the front end
+- [ ] Custom buttons and inputs for the front end (those defaults keep annoying me)
 
 #### Made by Samuel Clarke, 2018, for CumulusVFX.
