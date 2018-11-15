@@ -74,7 +74,7 @@ hr {
    *==========* */
 
 .navbar.navbar-toggleable-md.navbar-inverse.bg-inverse {
-	background-color: #242830 !important;
+	background-color: #242830;
 }
 .btn.btn-outline-info:hover {
 	background: rgb(70, 154, 202);

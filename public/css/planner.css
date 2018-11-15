@@ -108,7 +108,7 @@ progress[value]::-moz-progress-bar {
 	color: black;
 }
 .ts-planner-row.showing {
-	display: inherit !important;
+	display: inherit;
 	background: rgb(232, 236, 236);
 	margin-bottom: 8px;
 	border-radius: 5px;

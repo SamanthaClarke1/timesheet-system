@@ -54,7 +54,7 @@ input[type="file"] {
 	color: #f9f9f9;
 }
 .ts-planner-row.showing {
-	display: inherit !important;
+	display: inherit;
 	background: #434c57;
 	margin-bottom: 8px;
 	border-radius: 5px;

@@ -5,21 +5,21 @@
 .avholder {
 	padding: 0px;
 	margin: 0px;
-	margin-right: 64px !important;
+	margin-right: 64px;
 }
 .missing-bar {
 	margin-top: 10px;
-	background: #df7878 !important;
+	background: #df7878;
 	text-align: center;
 }
 .total-day-bar {
 	margin-top: 10px;
-	background: #e9e9fd !important;
+	background: #e9e9fd;
 	text-align: center;
 }
 .total-bar {
 	margin-top: 10px;
-	background: #d4d4e6 !important;
+	background: #d4d4e6;
 	text-align: center;
 }
 .subnav-toggler {
@@ -33,29 +33,30 @@
 	font-family: 'Noto Sans', sans-serif;
 }
 
-.sub-nav-link.red {
-	color: #d34b4b !important;
+a.nav-link.sub-nav-link.red {
+	color: #d34b4b;
 }
-.sub-nav-link.yellow {
-	color: #dfc554 !important;
+a.nav-link.sub-nav-link.yellow {
+	color: #dfc554;
 }
-.sub-nav-link.green {
-	color: #62ca00 !important;
+a.nav-link.sub-nav-link.green {
+	color: #62ca00;
 }
-.sub-nav-link.grey {
-	color: #c0c0d4 !important;
+a.nav-link.sub-nav-link.grey {
+	color: #c0c0d4;
 }
-.sub-nav-link.red.active {
-	color: #ff7b7b !important;
+
+a.nav-link.sub-nav-link.red.active {
+	color: #ff7b7b;
 }
-.sub-nav-link.yellow.active {
-	color: #ffd495 !important;
+a.nav-link.sub-nav-link.yellow.active {
+	color: #ffd495;
 }
-.sub-nav-link.green.active {
-	color: #b3ff6c !important;
+a.nav-link.sub-nav-link.green.active {
+	color: #b3ff6c;
 }
-.sub-nav-link.grey.active {
-	color: #ffffff !important;
+a.nav-link.sub-nav-link.grey.active {
+	color: #ffffff;
 }
 
 /* *=======*
@@ -68,11 +69,6 @@
 }
 .rokyt-ico.active {
 	background: white;
-}
-
-.rokyt-body-top {
-}
-.rokyt-body-bot {
 }
 
 .rokyt-timer-bar {

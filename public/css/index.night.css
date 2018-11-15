@@ -1,11 +1,11 @@
 .missing-bar {
-	background: #4e2a2a !important;
+	background: #4e2a2a;
 }
 .total-day-bar {
-	background: #4c7c6d !important;
+	background: #4c7c6d;
 }
 .total-bar {
-	background: #4c7c6d !important;
+	background: #4c7c6d;
 }
 .subnav-toggler {
 	background: #2f363f;
@@ -18,27 +18,27 @@
 	font-family: 'Noto Sans', sans-serif;
 }
 
-.sub-nav-link.red {
-	color: #ff3c42 !important;
+a.nav-link.sub-nav-link.red {
+	color: #ff3c42;
 }
-.sub-nav-link.yellow {
-	color: #ffd449 !important;
+a.nav-link.sub-nav-link.yellow {
+	color: #ffd449;
 }
-.sub-nav-link.green {
-	color: rgb(74, 196, 94) !important;
+a.nav-link.sub-nav-link.green {
+	color: rgb(74, 196, 94);
 }
-.sub-nav-link.grey {
-	color: #6a6a6e !important;
+a.nav-link.sub-nav-link.grey {
+	color: #6a6a6e;
 }
-.sub-nav-link.red.active {
-	color: #ed716c !important;
+a.nav-link.sub-nav-link.red.active {
+	color: #ed716c;
 }
-.sub-nav-link.yellow.active {
-	color: #edd578 !important;
+a.nav-link.sub-nav-link.yellow.active {
+	color: #edd578;
 }
-.sub-nav-link.green.active {
-	color: rgb(115, 219, 143) !important;
+a.nav-link.sub-nav-link.green.active {
+	color: rgb(115, 219, 143);
 }
-.sub-nav-link.grey.active {
-	color: #adadad !important;
+a.nav-link.sub-nav-link.grey.active {
+	color: #adadad;
 }
