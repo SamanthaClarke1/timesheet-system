@@ -30,15 +30,15 @@ a.nav-link.sub-nav-link.green {
 a.nav-link.sub-nav-link.grey {
 	color: #6a6a6e;
 }
-a.nav-link.sub-nav-link.red.active {
+a.nav-link.sub-nav-link.red.active, a.nav-link.sub-nav-link.red:hover {
 	color: #ed716c;
 }
-a.nav-link.sub-nav-link.yellow.active {
+a.nav-link.sub-nav-link.yellow.active, a.nav-link.sub-nav-link.yellow:hover {
 	color: #edd578;
 }
-a.nav-link.sub-nav-link.green.active {
+a.nav-link.sub-nav-link.green.active, a.nav-link.sub-nav-link.green:hover {
 	color: rgb(115, 219, 143);
 }
-a.nav-link.sub-nav-link.grey.active {
+a.nav-link.sub-nav-link.grey.active, a.nav-link.sub-nav-link.gray:hover {
 	color: #adadad;
 }
