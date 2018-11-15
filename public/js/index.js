@@ -299,6 +299,8 @@ function getJobHTML(job, srv, tid) {
 
 function submitJobCallback(parentForm) {
 	return function(data) {
+		parentForm.find('#subm-btn').removeAttr('disabled');
+
 		if (data.errcode == 200) {
 			var srv = fromSrv;
 			let job = data.data;
@@ -340,9 +342,11 @@ function submitJobData(jobData, parentForm) {
 }
 function submitJobClickEvent(e) {
 	var parentForm = $(this).parent();
+	
+	e.preventDefault();
 
-	if (parentForm.find('.shot-inpc').val() != '') {
-		e.preventDefault();
+	if (parentForm.find('.shot-inpc').val() != '' && !parentForm.find('#subm-btn').attr('disabled')) {
+		parentForm.find('#subm-btn').attr('disabled', 'disabled');
 		$.post('/code/addjob', parentForm.serialize(), submitJobCallback(parentForm), 'json');
 	}
 }
