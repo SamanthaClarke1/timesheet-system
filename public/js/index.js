@@ -221,8 +221,8 @@ function bindDeleteBlocker(el) {
 }
 function delJobEventCallback(btn, parentForm) {
 	return function(data) {
-		let parentTable = $(btn).parent().eq(5).find('.job-table'); // thatsa lotta parents
-		if (parentTable.length <= 0) parentTable = $(btn).parent().eq(5);
+		let parentTable = $(btn).parent().eq(4).find('.job-table'); // thatsa lotta parents
+		if (parentTable.length <= 0) parentTable = $(btn).parent().parent().parent().parent().parent();
 		
 		let day = parentForm.find('.delj-day').val();
 
