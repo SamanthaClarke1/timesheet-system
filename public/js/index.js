@@ -219,40 +219,47 @@ function updateTasks(ttasks, taskel) {
 function bindDeleteBlocker(el) {
 	el.parent().find('.btn-delj').each(delJobEvent); // bind a delete blocker to this el
 }
+function delJobEventCallback(btn, parentForm) {
+	return function(data) {
+		let parentTable = $(btn).parent().eq(5).find('.job-table'); // thatsa lotta parents
+		if (parentTable.length <= 0) parentTable = $(btn).parent().eq(5);
+		
+		let day = parentForm.find('.delj-day').val();
+
+		if (data.err == '') {
+			let jobrow = parentForm.parent().parent();
+
+			let offset = jobrow.find('.btn-delj').first().offset();
+			let coords = {x: offset.left + 20, y: offset.top + 20};
+			smokeflow.tune(coords).generate();
+			smokeflow_timeline.replay();
+
+			jobrow.addClass('shrinkme');
+
+			setTimeout(function(jobrow, parentTable, day) { // we're waiting on the animation to finish!
+				jobrow.remove(); // remove the job
+				updateTotalWeekBar();
+				var total = updateTotalDayBar(parentTable); // update the total
+				updateDayColor(day, total);
+				updateShading(parentTable); // update the colors
+			}, 700, jobrow, parentTable, day);
+		} else {
+			alert(data.err);
+			$(btn).removeAttr('disabled');
+		}
+	};
+}
 function delJobEvent() {
 	$(this).bind('click', function(e) {
 		e.preventDefault(); // dont send off the form by visiting the page
-		
-		var parentForm = $(this).parent();
-		var parentTable = $(this).parent().parent().parent().parent().parent().find('.job-table'); // thatsa lotta parents
-		if (parentTable.length <= 0) parentTable = $(this).parent().parent().parent().parent().parent();
-		
-		var day = parentForm.find('.delj-day').val();
-		
-		parentForm.children('');
-		$.post('/code/deljob', parentForm.serialize(), function(data) {
-			// but use my js to send it off, it's async :)
-			if (data.err == '') {
-				var jobrow = parentForm.parent().parent();
 
-				var offset = jobrow.find('.btn-delj').first().offset();
-				var coords = {x: offset.left + 20, y: offset.top + 20};
-				smokeflow.tune(coords).generate();
-				smokeflow_timeline.replay();
-
-				jobrow.addClass('shrinkme');
-
-				setTimeout(function(jobrow, parentTable, day) {
-					jobrow.remove(); // remove the job
-					updateTotalWeekBar();
-					var total = updateTotalDayBar(parentTable); // update the total
-					updateDayColor(day, total);
-					updateShading(parentTable); // update the colors
-				}, 700, jobrow, parentTable, day);
-			} else {
-				alert(data.err);
-			}
-		}, 'json');
+		if(!$(this).attr('disabled')) {
+			$(this).attr('disabled', 'disabled');
+			
+			let parentForm = $(this).parent();
+			
+			$.post('/code/deljob', parentForm.serialize(), delJobEventCallback($(this), parentForm), 'json');
+		}
 	});
 }
 function bindSubmitJobClickEvent() {
@@ -342,7 +349,7 @@ function submitJobData(jobData, parentForm) {
 }
 function submitJobClickEvent(e) {
 	var parentForm = $(this).parent();
-	
+
 	e.preventDefault();
 
 	if (parentForm.find('.shot-inpc').val() != '' && !parentForm.find('#subm-btn').attr('disabled')) {
