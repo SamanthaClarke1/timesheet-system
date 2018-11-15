@@ -108,5 +108,6 @@ Personal todo list for v2.0.0
 - [ ] Better input validation for the front end
 - [ ] Actual animations for the rokyt launcher
 - [ ] Custom buttons and inputs for the front end (those defaults keep annoying me)
+- [ ] Bug hunting & bug fixes
 
 #### Made by Samuel Clarke, 2018, for CumulusVFX.

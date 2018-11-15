@@ -72,12 +72,12 @@ a.nav-link.sub-nav-link.grey.active {
 }
 
 .rokyt-timer-bar {
-	background: #2b3d46;
+	background-color: #2b3d46;
 	border-radius: 5px;
 	margin: 5px;
 }
 .rokyt-timer-bar.even {
-	background: #1b282e;
+	background-color: #1b282e;
 }
 .rokyt-row {
 	margin-top: 15px;

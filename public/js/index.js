@@ -60,7 +60,7 @@ if(IS_NODE) {
 	};
 	currentProg = 'nuke';
 	timers = [];
-	var {exec, spawn} = require('child_process'); // eslint-disable-line no-unused-vars
+	var { exec, spawn } = require('child_process'); // eslint-disable-line no-unused-vars
 }
 //#endregion initial declarations
 
@@ -91,6 +91,181 @@ function translateToName(cache, type, sgName) { // translation returns false on 
 }
 //#endregion
 
+//#region html generators
+
+function getHTMLForTimer(timer, isOdd, trusty=false) {
+	if(!trusty) timer = ensureTimerIsTimer(timer);
+
+	isOdd %= 2;
+
+	return `
+	<tr id="timer-tr-${timer.id}" class="col-12 ts-row row no-gutters rokyt-timer-bar ${(isOdd?'odd':'even')}">
+		<td class="col-3">
+			${timer.proj}
+			<img class="img icon24" alt="${timer.prog}"
+				src="/res/${timer.prog}/${timer.prog}24x24.ico" />
+			${timer.xtraopts}
+		</td>
+		<td class="col-3">${timer.shot}</td>
+		<td class="col-3">${timer.task}</td>
+		<td class="col-3 row no-gutters text-center">
+			<span class="col-3" onclick="${timer.timeStarted == -1 ? 'un' : ''}pauseTimer('${timer.id}')">
+				${timer.timeStarted == -1 ? '<i class="fa fa-play"></i>' : 
+					formatMilliToHourMin( timer.timeSpent + (Date.now() - timer.timeStarted) )}
+			</span>
+			<button class="col-3 offset-1 btn btn-outline-info" type="submit" style="color: #4550e7;" onclick="publishTimer('${timer.id}')" >
+				<i class="fa fa-send" aria-hidden="true"></i>
+			</button>
+			<button class="col-3 offset-1 btn btn-outline-danger" type="submit" style="color: #793025;" onclick="removeTimer('${timer.id}')" >
+				<i class="fa fa-trash" aria-hidden="true"></i>
+			</button>
+		</td>
+	</tr>
+	`;
+}
+
+function getJobHTML(job, srv, tid) {
+	return `
+<tr class="ts-row row no-gutters col-12 job-row shrinkme job-id-` + job.id + `" id="tid-` + tid + `">
+	<td class="col-3 job-proj">` + job.proj + `</td>
+	<td class="col-3 job-shot">` + job.shot + `</td>
+	<td class="col-3 job-task">` + job.task + `</td>
+	<td class="col-1 job-time">` + job.time + `</td>
+	<td class="col-1 job-edit row no-gutters text-center">
+		<div `+(srv.editable == 'true' ? '' : 'disabled ')+
+			` style="height: 15px;" class="col-12" onclick="updateJobTime(0.25, '` +
+			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `', '` + job.id + `', '` + job.day + `', '` + srv.tdate + `');"> 
+			<i class="fa fa-caret-up job-edit-caret" aria-hidden="true">
+			</i>
+		</div>
+		<div `+(srv.editable == 'true' ? '' : 'disabled ')+
+			` style="height: 15px;" class="col-12" onclick="updateJobTime(-0.25, '` +
+			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `', '` + job.id + `', '` + job.day + `', '` + srv.tdate + `');"> 
+			<i class="fa fa-caret-down job-edit-caret" aria-hidden="true">
+			</i>
+		</div>
+	</td>
+	<td class="col-1 job-del text-center">
+		<form action="/code/deljob" method="POST">
+			<input name="jobuser" class="delj-user" value="` +
+			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `" hidden />
+			<input name="jobid" class="delj-id" value="` + job.id + `" hidden />
+			<input name="day" class="delj-day" value="` + job.day + `" hidden />
+			<input name="date" class="delj-date" value="` + srv.tdate + `" hidden />
+			<button id="deljob-` + job.id + '" class="btn-delj" type="submit" style="color: #e75045;"' +
+			(srv.editable == 'true' ? '' : ' disabled') +
+			`> <i class="fa fa-trash" aria-hidden="true"></i></button>
+		</form>
+	</td>
+</tr>`;
+}
+
+//#endregion html generators
+
+//#region submitters
+
+function submitJobCallback(parentForm) {
+	return function(data) {
+		parentForm = $(parentForm);
+		parentForm.find('#subm-btn').removeAttr('disabled');
+
+		if (data.errcode == 200) {
+			var srv = fromSrv;
+			let job = data.data;
+			var tid = Math.floor(Math.random() * 1000000);
+			var toIns = getJobHTML(job, srv, tid);
+
+			parentForm.parent().children('.job-table').each(function() {
+				var tbody = $(this).children('tbody').first();
+				tbody.append(toIns);
+
+				var njob = $('#tid-' + tid);
+				var coords = { x: njob.offset().left + 20, y: njob.offset().top + 20 };
+				sparkflow.tune(coords).generate();
+				sparkflow_timeline.replay();
+
+				var coordsr = { x: coords.x + njob.width(), y: coords.y };
+				sparkflowr.tune(coordsr).generate();
+				sparkflowr_timeline.replay();
+
+				setTimeout(function(njob) { njob.removeClass('shrinkme'); }, 10, njob);
+
+				bindDeleteBlocker($('#deljob-' + job.id));
+				updateTotalWeekBar();
+				var total = updateTotalDayBar($(this));
+				updateDayColor(job.day, total);
+				updateShading(tbody);
+			});
+		} else if (data.err && data.errcode) {
+			alert('ERRCODE ' + data.errcode + ' : ' + data.err);
+			if (data.errcode == 403) location.reload();
+		} else {
+			alert('Empty / Malformed Data recieved. The page will now reload.');
+			location.reload();
+		}
+	};
+}
+
+function submitJobData(jobData, parentForm) {
+	$.post('/code/addjob', jobData, submitJobCallback(parentForm), 'json');
+}
+
+//#endregion submitters
+
+//#region deljob
+
+function bindDeleteBlocker(el) {
+	el.parent().find('.btn-delj').each(delJobEvent); // bind a delete blocker to this el
+}
+
+
+function delJobEventCallback(btn, parentForm) {
+	return function(data) {
+		let parentTable = $(btn).parent().eq(4).find('.job-table'); // thatsa lotta parents
+		if (parentTable.length <= 0) parentTable = $(btn).parent().parent().parent().parent().parent();
+		
+		let day = parentForm.find('.delj-day').val();
+
+		if (data.err == '') {
+			let jobrow = parentForm.parent().parent();
+
+			let offset = jobrow.find('.btn-delj').first().offset();
+			let coords = { x: offset.left + 20, y: offset.top + 20 };
+			smokeflow.tune(coords).generate();
+			smokeflow_timeline.replay();
+
+			jobrow.addClass('shrinkme');
+
+			setTimeout(function(jobrow, parentTable, day) { // we're waiting on the animation to finish!
+				jobrow.remove(); // remove the job
+				updateTotalWeekBar();
+				var total = updateTotalDayBar(parentTable); // update the total
+				updateDayColor(day, total);
+				updateShading(parentTable); // update the colors
+			}, 700, jobrow, parentTable, day);
+		} else {
+			alert(data.err);
+			$(btn).removeAttr('disabled');
+		}
+	};
+}
+
+function delJobEvent() {
+	$(this).bind('click', function(e) {
+		e.preventDefault(); // dont send off the form by visiting the page
+
+		if(!$(this).attr('disabled')) {
+			$(this).attr('disabled', 'disabled');
+			
+			let parentForm = $(this).parent();
+			
+			$.post('/code/deljob', parentForm.serialize(), delJobEventCallback($(this), parentForm), 'json');
+		}
+	});
+}
+
+//#endregion
+
 //#region updaters
 
 function updateJobTime(amt, jobuser, jobid, jobday, jobdate) {
@@ -107,7 +282,7 @@ function updateJobTime(amt, jobuser, jobid, jobday, jobdate) {
 		updateDayColor(jobday, total);
 		updateTotalWeekBar();
 
-		$.post('/code/edittime', {jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text()}, function (data) { 
+		$.post('/code/edittime', { jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text() }, function (data) { 
 			if(data.errcode < 200 || data.errcode > 300) {
 				alert("ERRCODE: " + data.errcode + " ERR: " + data.err);
 			} else {
@@ -127,7 +302,7 @@ function updateDayColor(day, total) {
 	if (el.hasClass('green')) shouldBurst = false;
 	el.removeClass('red').removeClass('green').removeClass('yellow').addClass(classToAdd);
 	if (classToAdd == 'green' && shouldBurst) {
-		var coords = {x: el.offset().left + 10, y: el.offset().top + 10};
+		var coords = { x: el.offset().left + 10, y: el.offset().top + 10 };
 		successburst.tune(coords).generate();
 		successburst_timeline.replay();
 	}
@@ -176,12 +351,15 @@ function updateShading(tableEl) {
 		cc++;
 	});
 }
+
 //#endregion updaters
 
 //#region rokyt
 function rokytLaunchClickEvent(e) {
-	let jobForm = $('#rokyt-launcher').parent().find('.submitJobForm');
+	let jobForm = $('#rokyt-launcher').parent().find('.submitJobForm').first();
+
 	e.preventDefault();
+
 	let timer = createTimer(
 		jobForm.find('.proj-inpc').val(),	// proj
 		jobForm.find('.shot-inpc').val(),	// shot
@@ -191,7 +369,8 @@ function rokytLaunchClickEvent(e) {
 		jobForm.find('.date-inpc').val(),	// date
 		currentProg,						// prog
 		$('.rokyt-xtra-opts').safeVal(),	// xtraopts
-		jobForm,							// parent form
+		jobForm[0],							// parent form
+		// submitting [0] to avoid some weird jquery bugs, ily html5
 	);
 	addTimer(timer);
 }
@@ -259,16 +438,38 @@ function fillRokytOpts(tt) {
 /// so, im not gonna stop that now, even if i dont really like function based programming as much as i like oop
 /// so instead, im going to work on the following functions...
 
-function updateTimerDisplay() {
-	$('.rokyt-body-top').empty();
+//#region rokyt-updaters
 
+function updateTimerDisplay() {
 	let toAppend = '';
-	for(let i in timers) {
+	for(let i in timers) { // get the html for each timer
 		toAppend += getHTMLForTimer(timers[i], i, true);
 	}
 
+	$('.rokyt-body-top').empty(); // and pop it in .rokyt-body-top
 	$('.rokyt-body-top').append(toAppend);
 }
+
+// update the timer colors, with the option to exclude a certain id
+// used by removeTimer to get the colors to animate properly 
+// (the whole re-render thing was a bad idea, it turns out.)
+function updateTimerColors(exclusion='') {
+	let i = 0;
+
+	$('.rokyt-body-top').find('.rokyt-timer-bar').each(function () {
+		// the rokyt-tr holding this id is the same as the element we're on, so skip it.
+		if(!$(this).is('#timer-tr-'+exclusion)) {
+			//otherwise, go ahead and wipe old classes, then add the appropriate one.
+			$(this).removeClass('even').removeClass('odd');
+			$(this).addClass(i % 2 == 0 ? 'even' : 'odd');
+			i += 1;
+		} else {
+			console.log('skipping #timer-tr-'+exclusion);
+		}
+	});
+}
+
+//#endregion
 
 // if it can ensure timer is a timer / find its id / theres a timer with index timer,
 // return timer, else return false. 
@@ -431,16 +632,34 @@ function publishTimer(timer, trusty=false) { // eslint-disable-line no-unused-va
 	
 	submitJobData(convertTimerToJobData(timer), parentForm);
 
-	removeTimer(timer, true);
+	removeTimer(timer.id);
 
 	return timer;
 }
 
 // removes a timer, updates the display, returns the timer
-function removeTimer(id) {
-	let removedTimer = timers.splice(getTimerIndex(id), 1)[0];
-	updateTimerDisplay();
-	return removedTimer;
+function removeTimer(id, callback=()=>{}) {
+	let timerEl = getTimerElement(id);
+	let offset = timerEl.find('i.fa.fa-trash').offset();
+	let coords = { x: offset.left + 20, y: offset.top + 20 };
+
+	updateTimerColors(id);
+
+	smokeflow.tune(coords).generate();
+	smokeflow_timeline.replay();
+
+	timerEl.addClass('shrinkme'); // TODO
+
+	setTimeout(function() {
+		let removedTimer = timers.splice(getTimerIndex(id), 1)[0];
+		updateTimerDisplay();
+		
+		callback(removedTimer);
+	}, 700);
+}
+
+function getTimerElement(id) {
+	return $('.rokyt-body-top').find('#timer-tr-'+id);
 }
 
 // like getTimer, but it returns the index instead of the timer, still returns false on failure.
@@ -463,34 +682,6 @@ function getTimer(id) {
 	return false;
 }
 
-function getHTMLForTimer(timer, isOdd, trusty=false) {
-	if(!trusty) timer = ensureTimerIsTimer(timer);
-	isOdd %= 2;
-	return `
-	<tr class="col-12 row no-gutters rokyt-timer-bar ${(isOdd?'odd':'even')}">
-		<td class="col-3">
-			${timer.proj}
-			<img class="img icon24" alt="${timer.prog}"
-				src="/res/${timer.prog}/${timer.prog}24x24.ico" />
-			${timer.xtraopts}
-		</td>
-		<td class="col-3">${timer.shot}</td>
-		<td class="col-3">${timer.task}</td>
-		<td class="col-3 row no-gutters text-center">
-			<span class="col-3" onclick="${timer.timeStarted == -1 ? 'un' : ''}pauseTimer('${timer.id}')">
-				${timer.timeStarted == -1 ? '<i class="fa fa-play"></i>' : 
-					formatMilliToHourMin( timer.timeSpent + (Date.now() - timer.timeStarted) )}
-			</span>
-			<button class="col-3 offset-1 btn btn-outline-info" type="submit" style="color: #4550e7;" onclick="publishTimer('${timer.id}')" >
-				<i class="fa fa-send" aria-hidden="true"></i>
-			</button>
-			<button class="col-3 offset-1 btn btn-outline-danger" type="submit" style="color: #793025;" onclick="removeTimer('${timer.id}')" >
-				<i class="fa fa-trash" aria-hidden="true"></i>
-			</button>
-		</td>
-	</tr>
-	`;
-}
 //#endregion rokyt-timers
 
 window.addEventListener('beforeunload', function() {
@@ -500,7 +691,7 @@ window.addEventListener('beforeunload', function() {
 //#endregion rokyt
 
 
-(function() {
+(function() { // the big boy iife
 
 
 // yeah, yeah, the whole idea of using ajax came in half way through development, so my code looks like spaghetti.
@@ -663,137 +854,10 @@ function updateTasks(ttasks, taskel) {
 
 //#region timetable edits
 
-function bindDeleteBlocker(el) {
-	el.parent().find('.btn-delj').each(delJobEvent); // bind a delete blocker to this el
-}
-
-function delJobEventCallback(btn, parentForm) {
-	return function(data) {
-		let parentTable = $(btn).parent().eq(4).find('.job-table'); // thatsa lotta parents
-		if (parentTable.length <= 0) parentTable = $(btn).parent().parent().parent().parent().parent();
-		
-		let day = parentForm.find('.delj-day').val();
-
-		if (data.err == '') {
-			let jobrow = parentForm.parent().parent();
-
-			let offset = jobrow.find('.btn-delj').first().offset();
-			let coords = {x: offset.left + 20, y: offset.top + 20};
-			smokeflow.tune(coords).generate();
-			smokeflow_timeline.replay();
-
-			jobrow.addClass('shrinkme');
-
-			setTimeout(function(jobrow, parentTable, day) { // we're waiting on the animation to finish!
-				jobrow.remove(); // remove the job
-				updateTotalWeekBar();
-				var total = updateTotalDayBar(parentTable); // update the total
-				updateDayColor(day, total);
-				updateShading(parentTable); // update the colors
-			}, 700, jobrow, parentTable, day);
-		} else {
-			alert(data.err);
-			$(btn).removeAttr('disabled');
-		}
-	};
-}
-function delJobEvent() {
-	$(this).bind('click', function(e) {
-		e.preventDefault(); // dont send off the form by visiting the page
-
-		if(!$(this).attr('disabled')) {
-			$(this).attr('disabled', 'disabled');
-			
-			let parentForm = $(this).parent();
-			
-			$.post('/code/deljob', parentForm.serialize(), delJobEventCallback($(this), parentForm), 'json');
-		}
-	});
-}
 function bindSubmitJobClickEvent() {
 	$('.btn-inpc').each(function() {
 		$(this).bind('click', submitJobClickEvent);
 	});
-}
-
-function getJobHTML(job, srv, tid) {
-	return `
-<tr class="ts-row row no-gutters col-12 job-row shrinkme job-id-` + job.id + `" id="tid-` + tid + `">
-	<td class="col-3 job-proj">` + job.proj + `</td>
-	<td class="col-3 job-shot">` + job.shot + `</td>
-	<td class="col-3 job-task">` + job.task + `</td>
-	<td class="col-1 job-time">` + job.time + `</td>
-	<td class="col-1 job-edit row no-gutters text-center">
-		<div `+(srv.editable == 'true' ? '' : 'disabled ')+
-			` style="height: 15px;" class="col-12" onclick="updateJobTime(0.25, '` +
-			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `', '` + job.id + `', '` + job.day + `', '` + srv.tdate + `');"> 
-			<i class="fa fa-caret-up job-edit-caret" aria-hidden="true">
-			</i>
-		</div>
-		<div `+(srv.editable == 'true' ? '' : 'disabled ')+
-			` style="height: 15px;" class="col-12" onclick="updateJobTime(-0.25, '` +
-			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `', '` + job.id + `', '` + job.day + `', '` + srv.tdate + `');"> 
-			<i class="fa fa-caret-down job-edit-caret" aria-hidden="true">
-			</i>
-		</div>
-	</td>
-	<td class="col-1 job-del text-center">
-		<form action="/code/deljob" method="POST">
-			<input name="jobuser" class="delj-user" value="` +
-			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `" hidden />
-			<input name="jobid" class="delj-id" value="` + job.id + `" hidden />
-			<input name="day" class="delj-day" value="` + job.day + `" hidden />
-			<input name="date" class="delj-date" value="` + srv.tdate + `" hidden />
-			<button id="deljob-` + job.id + '" class="btn-delj" type="submit" style="color: #e75045;"' +
-			(srv.editable == 'true' ? '' : ' disabled') +
-			`> <i class="fa fa-trash" aria-hidden="true"></i></button>
-		</form>
-	</td>
-</tr>`;
-}
-
-function submitJobCallback(parentForm) {
-	return function(data) {
-		parentForm.find('#subm-btn').removeAttr('disabled');
-
-		if (data.errcode == 200) {
-			var srv = fromSrv;
-			let job = data.data;
-			var tid = Math.floor(Math.random() * 1000000);
-			var toIns = getJobHTML(job, srv, tid);
-
-			parentForm.parent().children('.job-table').each(function() {
-				var tbody = $(this).children('tbody').first();
-				tbody.append(toIns);
-
-				var njob = $('#tid-' + tid);
-				var coords = {x: njob.offset().left + 20, y: njob.offset().top + 20};
-				sparkflow.tune(coords).generate();
-				sparkflow_timeline.replay();
-
-				var coordsr = {x: coords.x + njob.width(), y: coords.y};
-				sparkflowr.tune(coordsr).generate();
-				sparkflowr_timeline.replay();
-
-				setTimeout(function(njob) { njob.removeClass('shrinkme'); }, 10, njob);
-
-				bindDeleteBlocker($('#deljob-' + job.id));
-				updateTotalWeekBar();
-				var total = updateTotalDayBar($(this));
-				updateDayColor(job.day, total);
-				updateShading(tbody);
-			});
-		} else if (data.err && data.errcode) {
-			alert('ERRCODE ' + data.errcode + ' : ' + data.err);
-			if (data.errcode == 403) location.reload();
-		} else {
-			alert('Empty / Malformed Data recieved. The page will now reload.');
-			location.reload();
-		}
-	};
-}
-function submitJobData(jobData, parentForm) {
-	$.post('/code/addjob', jobData, submitJobCallback(parentForm), 'json');
 }
 
 function onParentFormChange(parentForm) { // stupid bubbling bubbling the this selector... making me curry... tsk
@@ -839,9 +903,11 @@ function submitJobClickEvent(e) {
 		$.post('/code/addjob', parentForm.serialize(), submitJobCallback(parentForm), 'json');
 	}
 }
+
 //#endregion timetable edits
 
 //#region initial binds
+
 $(document).ready(function() {
 	if(!IS_NODE) {
 		$('#rokyt-launcher').toggle();
@@ -889,11 +955,11 @@ $(document).ready(function() {
 		}
 	}
 });
+
 //#endregion initial binds
 
 
 })(); // end of IIFE
-
 
 
 
