@@ -55,10 +55,11 @@ const optionDefinitions = [
 	{ name: 'quickpush',	alias: 'q',		type: Boolean	}
 ];
 
-const boxen 			= require('boxen');
+const boxen				= require('boxen');
 const commandLineArgs	= require('command-line-args');
 const options			= commandLineArgs(optionDefinitions);
-const pjson 			= require('./package.json');
+const pjson				= require('./package.json');
+const pathDirname		= require('path-dirname'); // path.dirname ponyfill for lightness! ponyfill.com
 
 const request = require('request');
 
@@ -1661,7 +1662,7 @@ function recursiveMkdirSync(dir) {
 	try {
 		fs.mkdirSync(dir);
 	} catch(err) {
-		recursiveMkdirSync(path.dirname(dir)); // create parent dir
+		recursiveMkdirSync(pathDirname(dir)); // create parent dir
 		recursiveMkdirSync(dir); // create dir
 	}
 }
@@ -1752,7 +1753,7 @@ function getThisDate(now = new Date()) {
 }
 function getFineDate(now = new Date()) {
 	return now.getFullYear().npad(4) + '-' + (now.getMonth() + 1).npad(2) + '-' + now.getDate().npad(2) + ' ' + 
-		now.getHours().npad(2) + ':' + now.getMinutes().npad(2) + ':' + now.getSeconds().npad(2)
+		now.getHours().npad(2) + ':' + now.getMinutes().npad(2) + ':' + now.getSeconds().npad(2);
 }
 
 function printLoader(msg = 'Loading ', iter = 0) {
