@@ -1,7 +1,6 @@
-/* eslint-env browser, node, es6, jquery */
-
 // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
 
+/* eslint-env browser, node, es6, jquery */
 
 /*
 *                                                                 
@@ -37,6 +36,7 @@
 *  d/:////////////:/+osN  NmN   NNNNN                              
 *                                                                 
 */
+
 
 
 // im seriously going to have nightmares about this code
@@ -218,7 +218,6 @@ function bindDeleteBlocker(el) {
 	el.parent().find('.btn-delj').each(delJobEvent); // bind a delete blocker to this el
 }
 
-
 function delJobEventCallback(btn, parentForm) {
 	return function(data) {
 		let parentTable = $(btn).parent().eq(4).find('.job-table'); // thatsa lotta parents
@@ -355,6 +354,7 @@ function updateShading(tableEl) {
 //#endregion updaters
 
 //#region rokyt
+
 function rokytLaunchClickEvent(e) {
 	let jobForm = $('#rokyt-launcher').parent().find('.submitJobForm').first();
 
@@ -374,11 +374,13 @@ function rokytLaunchClickEvent(e) {
 	);
 	addTimer(timer);
 }
+
 function bindRokytIcoClickEvents() {
 	$('.rokyt-ico').each(function() {
 		$(this).click(rokytIcoClickEvent);
 	});
 }
+
 function rokytIcoClickEvent() {
 	$('.rokyt-ico').each(function() {
 		$(this).removeClass('active');
@@ -389,6 +391,7 @@ function rokytIcoClickEvent() {
 
 	fillRokytOpts(this);
 }
+
 function fillRokytOpts(tt) {
 	let hadAMatch = false;
 	for (let prog in rokytProgOpts) {
@@ -691,8 +694,9 @@ window.addEventListener('beforeunload', function() {
 //#endregion rokyt
 
 
-(function() { // the big boy iife
+//#region BIG BOY IIFE
 
+(function() { 
 
 // yeah, yeah, the whole idea of using ajax came in half way through development, so my code looks like spaghetti.
 // but, yknow, whatever, i could go some pasta, so who's the real winner here?
@@ -958,9 +962,9 @@ $(document).ready(function() {
 
 //#endregion initial binds
 
+})();
 
-})(); // end of IIFE
-
+//#endregion BIG BOY IIFE
 
 
 // @license-end
