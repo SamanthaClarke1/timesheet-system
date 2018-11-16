@@ -85,7 +85,7 @@ function highlightCurrentPage(){
 }
 
 try {
-	let es6testfunc = (x) => {return x+1;};
+	let es6testfunc = (x) => { return x+1; };
 	if(es6testfunc(14) != 15) declareSupportMissing('ES6');
 } catch (Exception) {
 	declareSupportMissing('ES6');
@@ -103,7 +103,7 @@ $(window).resize(function () {
 
 	$('body').find('div[data-name="mojs-shape"]').each(function() {
 		let offset = $(this).offset();
-		let noffset = {top: offset.y, left: offset.x};
+		let noffset = { top: offset.y, left: offset.x };
 
 		if((offset.x + offset.width) > borders[2]) noffset.left = borders[2] - offset.width;
 		if((offset.y + offset.height) > borders[3]) noffset.top = borders[3] - offset.height;

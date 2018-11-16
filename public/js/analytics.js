@@ -88,7 +88,7 @@ $(document).ready(function() {
 	});
 
 	$('#flush-cache-btn').click(function(e) {
-		var coords = {x: e.pageX, y: e.pageY};
+		var coords = { x: e.pageX, y: e.pageY };
 		littleburst.tune(coords).generate();
 		littleburst_timeline.replay();
 
@@ -105,7 +105,7 @@ $(document).ready(function() {
 			renderGraph(projCache, projUsersCache, marg);
 		}
 
-		var coords = {x: e.pageX, y: e.pageY};
+		var coords = { x: e.pageX, y: e.pageY };
 		littleburst.tune(coords).generate();
 		littleburst_timeline.replay();
 	});
@@ -138,7 +138,7 @@ $(document).ready(function() {
 
 		var toAppend = '';
 		for (var user of users) {
-			// the weird type check is because im passing both a user (eg. {name: 'user', displayName: 'User', _id: '123'} ) and a proj (eg. 'proj')
+			// the weird type check is because im passing both a user (eg. { name: 'user', displayName: 'User', _id: '123' } ) and a proj (eg. 'proj')
 			toAppend +=
 				'<option value="' + (typeof user == 'object' ? user.name : user) + '">' + (typeof user == 'object' ? user.displayName : user) + '</option>';
 		}
@@ -358,7 +358,7 @@ $(document).ready(function() {
 			let jobOffsets = {};
 
 			if (users[d.user] == undefined) {
-				users[d.user] = {id: objSize(users), jobs: [], total: 0};
+				users[d.user] = { id: objSize(users), jobs: [], total: 0 };
 			}
 
 			for (let i = 0; i < dusers.length && dusers[i].name != d.user; i++) 
@@ -375,7 +375,7 @@ $(document).ready(function() {
 				jobOffsets[j.date] += parseFloat(j.time);
 
 				if (!projs[j.proj]) {
-					projs[j.proj] = {id: objSize(projs), jobs: [], total: 0};
+					projs[j.proj] = { id: objSize(projs), jobs: [], total: 0 };
 				}
 
 				users[d.user].jobs.push(j);
@@ -460,7 +460,7 @@ $(document).ready(function() {
 				// organize by shot.
 				id++;
 				let shotsByShot = tproj.shots[i];
-				tproj.shots[i] = {jobs: dictToArr(shotsByShot), id: id};
+				tproj.shots[i] = { jobs: dictToArr(shotsByShot), id: id };
 
 				let total = 0, totalcost = 0;
 
@@ -626,7 +626,7 @@ $(document).ready(function() {
 			if (arr.hasOwnProperty(type)) {
 				let tt = arr[type];
 
-				if (typeof tt != 'object') tt = {tt};
+				if (typeof tt != 'object') tt = { tt };
 				tt.name = type;
 
 				narr.push(tt);

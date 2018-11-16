@@ -132,7 +132,7 @@ $(document).ready(function() {
 				},
 			}).done(function(){
 				loadState = 1;
-				rect_loader.tune({speed: 2}).generate();
+				rect_loader.tune({ speed: 2 }).generate();
 				updatePlans();
 			});
 		}

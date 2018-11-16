@@ -101,15 +101,15 @@ const mongodb			= require('mongodb').MongoClient;
 
 // inits
 const app 				= express();
-const upload 			= multer({inMemory: true});
+const upload 			= multer({ inMemory: true });
 
 // app.set/use
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.use(partials());
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(session({secret: process.env.SECRET, resave: false, saveUninitialized: false}));
+app.use(session({ secret: process.env.SECRET, resave: false, saveUninitialized: false }));
 app.use(express.static(__dirname + '/public'));
 
 // Initialize Passport!  Also use passport.session() middleware, to support
@@ -188,7 +188,7 @@ var selectList	= getSelectList();
 var tasks		= selectList.tasks;
 var projs		= selectList.projs;
 
-const RowEnum	= {id: 0, user: 1, start: 2, end: 3, proj: 4, vacation: 5, note: 6};
+const RowEnum	= { id: 0, user: 1, start: 2, end: 3, proj: 4, vacation: 5, note: 6 };
 const days		= [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday' ];
 
 //#endregion ev #### EASILY EDITABLE VARS END HERE #### //
@@ -253,8 +253,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 					console.log('updated ts date to: ' + timesheet['date'] + '  from: ' + original.date);
 
 					timesheetDB.update(
-						{user: original.user, 'unix-date': original['unix-date']},
-						{$set: {user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']}}, (err) => {
+						{ user: original.user, 'unix-date': original['unix-date'] },
+						{ $set: { user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date'] } }, (err) => {
 							if (err) throw err; //painfulpart (one day they'll fucking support spread functions)
 							console.log('success i think');
 						}
@@ -274,8 +274,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 					console.log(timesheet['unix-date']);
 					timesheetDB.update(
-						{user: original.user, date: original.date},
-						{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']}, (err) => {
+						{ user: original.user, date: original.date },
+						{ user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date'] }, (err) => {
 							if (err) throw err; //painfulpart (come on ECMAScript2018)
 							console.log('success i think');
 						}
@@ -288,13 +288,13 @@ mongodb.connect(url, function mongConnect(err, db) {
 			var untrdate = __DEBUG_UNTEAR_DATA_DATE__;
 			var peopleSeen = [];
 
-			timesheetDB.find({'unix-date': untrdate}).toArray((err, data) => {
+			timesheetDB.find({ 'unix-date': untrdate }).toArray((err, data) => {
 				if (err) throw err;
 				for (var timesheet of data) {
 					if (peopleSeen.indexOf(timesheet.user) != -1) {
 						peopleSeen.push(timesheet.user);
 					} else {
-						timesheetDB.remove({_id: timesheet['_id']}, {justOne: true}, (err) => {
+						timesheetDB.remove({ _id: timesheet['_id'] }, { justOne: true }, (err) => {
 							if (err) throw err; //painfulpart (im waiting, ES2018)
 							console.log('success i think');
 						});
@@ -307,7 +307,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 			var frmDate = __DEBUG_KNOCK_FROM__;
 			var toDate = new Date(__DEBUG_KNOCK_TO__);
 
-			timesheetDB.find({'unix-date': frmDate}).toArray((err, data) => {
+			timesheetDB.find({ 'unix-date': frmDate }).toArray((err, data) => {
 				if (err) throw err;
 				for (var timesheet of data) {
 					var original = JSON.parse(JSON.stringify(timesheet));
@@ -315,8 +315,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 					timesheet['unix-date'] = toDate.getTime();
 
 					timesheetDB.update(
-						{user: original.user, date: original.date},
-						{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']}, (err) => {
+						{ user: original.user, date: original.date },
+						{ user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date'] }, (err) => {
 							if (err) throw err; //painfulpart (where that ...object syntax at?)
 							console.log('knocked ' + getThisDate(new Date(frmDate)) + 'to' + getThisDate(toDate));
 						}
@@ -326,11 +326,11 @@ mongodb.connect(url, function mongConnect(err, db) {
 		}
 
 		if (__DEBUG_FORCE_COSTS_TO_TEN_PH__) {
-			usersDB.find({cost: {$exists: false}}).toArray((err, data) => {
+			usersDB.find({ cost: { $exists: false } }).toArray((err, data) => {
 				if (err) throw err;
 
 				for (let user of data) {
-					usersDB.update({name: user.name}, {$set: {cost: 10}}, (err) => {
+					usersDB.update({ name: user.name }, { $set: { cost: 10 } }, (err) => {
 						if (err) throw err;
 						console.log('done i think');
 					});
@@ -369,7 +369,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 					}
 
 					usersDB.update(
-						{name: user.name},
+						{ name: user.name },
 						{
 							cost: user.cost,
 							name: user.name,
@@ -406,7 +406,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 			//}
 
 			if (req.user.isadmin) {
-				usersDB.find({}).project({name: 1, displayName: 1}).toArray((err, users) => {
+				usersDB.find({}).project({ name: 1, displayName: 1 }).toArray((err, users) => {
 					if (err) throw err;
 
 					var tuser = req.user;
@@ -414,18 +414,18 @@ mongodb.connect(url, function mongConnect(err, db) {
 						tuser = req.query.tuser;
 					}
 
-					usersDB.findOne({name: tuser.name ? tuser.name : tuser}, (err, dbuser) => {
+					usersDB.findOne({ name: tuser.name ? tuser.name : tuser }, (err, dbuser) => {
 						if (err) throw err;
 
-						timesheetDB.find({user: dbuser.name}, {_id: 0, date: 1}).toArray((err, timesheets) => {
+						timesheetDB.find({ user: dbuser.name}, { _id: 0, date: 1 }).toArray((err, timesheets) => {
 							if (err) throw err;
 
 							timesheets.sort((a, b) => {
 								return b['unix-date'] - a['unix-date'];
 							});
-							timesheets.unshift({user: dbuser.name, jobs: dbuser.timesheet.jobs, date: thisdate});
+							timesheets.unshift({ user: dbuser.name, jobs: dbuser.timesheet.jobs, date: thisdate });
 							for (var i = 1; i <= 4; i++) {
-								timesheets.unshift({user: dbuser.name, jobs: [], date: getThisDate(getNextWeek(new Date(), 10, i))});
+								timesheets.unshift({ user: dbuser.name, jobs: [], date: getThisDate(getNextWeek(new Date(), 10, i)) });
 							}
 
 							var targetdate = req.query.tdate ? req.query.tdate : thisdate;
@@ -446,11 +446,11 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 							if (targetdate != 'Current' && new Date(targetdate).getTime() > getPreviousMonday().getTime()) {
 								// the target date is in the future, plans get the scans
-								plansDB.findOne({date: targetdate, $text: {$search: dbuser.name, $language: 'english', $caseSensitive: false}}, (err, data) => {
+								plansDB.findOne({ date: targetdate, $text: { $search: dbuser.name, $language: 'english', $caseSensitive: false } }, (err, data) => {
 									if (err) throw err;
 									if (!data) {
 										console.log('unable to find plan for user ' + req.user.name + ' on date ' + targetdate);
-										ttsheet = {date: targetdate, user: dbuser.name, jobs: []};
+										ttsheet = { date: targetdate, user: dbuser.name, jobs: [] };
 									} else {
 										ttsheet = data;
 									}
@@ -497,15 +497,15 @@ mongodb.connect(url, function mongConnect(err, db) {
 					});
 				});
 			} else {
-				timesheetDB.find({user: req.user.name}, {_id: 0, date: 1}).toArray((err, timesheets) => {
+				timesheetDB.find({ user: req.user.name }, { _id: 0, date: 1 }).toArray((err, timesheets) => {
 					if (err) throw err;
 
 					timesheets.sort((a, b) => {
 						return b['unix-date'] - a['unix-date'];
 					});
-					timesheets.unshift({user: req.user.name, jobs: req.user.timesheet.jobs, date: thisdate});
+					timesheets.unshift({ user: req.user.name, jobs: req.user.timesheet.jobs, date: thisdate });
 					for (var i = 1; i <= 4; i++) {
-						timesheets.unshift({user: req.user.name, jobs: [], date: getThisDate(getNextWeek(new Date(), 10, i))});
+						timesheets.unshift({ user: req.user.name, jobs: [], date: getThisDate(getNextWeek(new Date(), 10, i)) });
 					}
 
 					var targetdate = req.query.tdate ? req.query.tdate : thisdate;
@@ -531,11 +531,11 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 					if (targetdate != 'Current' && new Date(targetdate).getTime() > getPreviousMonday().getTime()) {
 						// the target date is in the future, plans get the scans
-						plansDB.findOne({date: targetdate, $text: {$search: req.user.name, $language: 'english', $caseSensitive: false}}, (err, data) => {
+						plansDB.findOne({ date: targetdate, $text: { $search: req.user.name, $language: 'english', $caseSensitive: false } }, (err, data) => {
 							if (err) throw err;
 
 							if (!data) {
-								ttsheet = {user: req.user.name, jobs: [], date: targetdate};
+								ttsheet = { user: req.user.name, jobs: [], date: targetdate };
 							} else {
 								ttsheet = data;
 							}
@@ -579,21 +579,21 @@ mongodb.connect(url, function mongConnect(err, db) {
 		});
 
 		app.get('/usercosts', ensureAuthenticated, function slashUsercostsGET(req, res) {
-			res.render('usercosts.ejs', {error: false, user: req.user});
+			res.render('usercosts.ejs', { error: false, user: req.user });
 		});
 
 		app.get('/analytics', ensureAuthenticated, function slashAnalyticsGET(req, res) {
 			if (req.user.isadmin != 'true') {
 				return res.redirect('/?err=You%20don\'t%20have%20permissions%20to%20use%20the%20planner');
 			}
-			res.render('analytics.ejs', {error: false, user: req.user, projs: projs});
+			res.render('analytics.ejs', { error: false, user: req.user, projs: projs });
 		});
 
 		app.get('/planner', ensureAuthenticated, function slashPlannerGET(req, res) {
 			if (req.user.isadmin != 'true') {
 				return res.redirect('/?err=You%20don\'t%20have%20permissions%20to%20use%20the%20planner');
 			}
-			return res.render('planner.ejs', {error: false, user: req.user});
+			return res.render('planner.ejs', { error: false, user: req.user });
 		});
 
 		app.get('/help', (req, res) => {
@@ -607,34 +607,34 @@ mongodb.connect(url, function mongConnect(err, db) {
 		//#region ajaxGetters
 
 		app.get('/ajax/getusercosts', ensureAJAXAuthenticated, function slashAjaxGetusercostsGET(req, res) {
-			if (req.user.isadmin != 'true') return res.json({err: 'User does not have the permissions to use this function', errcode: 403, data: {}});
+			if (req.user.isadmin != 'true') return res.json({ err: 'User does not have the permissions to use this function', errcode: 403, data: {} });
 
-			usersDB.find({}).project({name: 1, displayName: 1, cost: 1}).toArray((err, users) => {
+			usersDB.find({}).project({ name: 1, displayName: 1, cost: 1 }).toArray((err, users) => {
 				if (err) throw err;
 
-				return res.json({err: '', errcode: 200, users: users, data: users});
+				return res.json({ err: '', errcode: 200, users: users, data: users });
 			});
 		});
 
 		app.get('/ajax/getanalyticsdata', ensureAJAXAuthenticated, function slashAjaxGetanalyticsdataGET(req, res) {
-			if (req.user.isadmin != 'true') return res.json({err: 'User does not have the permissions to use this function', errcode: 403, data: {}});
+			if (req.user.isadmin != 'true') return res.json({ err: 'User does not have the permissions to use this function', errcode: 403, data: {} });
 
 			var fromdate = new Date(req.query.fromdate).getTime(),
 				todate = new Date(req.query.todate).getTime();
 
 			if (req.query.searchtype == 'proj') delete req.query.user;
 
-			var mongSearch = {'unix-date': {$gt: fromdate, $lt: todate}, user: {$in: req.query.user}};
+			var mongSearch = { 'unix-date': { $gt: fromdate, $lt: todate }, user: { $in: req.query.user } };
 			if (!mongSearch.user['$in']) delete mongSearch.user;
 			else if (!mongSearch.user['$in'].push) mongSearch.user = req.query.user; // first way i could think of to test for an array, sorry about the ugliness
 
 			timesheetDB.find(mongSearch).toArray((err, timesheets) => {
 				if (err) throw err;
 
-				usersDB.find({}).project({name: 1, displayName: 1, cost: 1}).toArray((err, users) => {
+				usersDB.find({}).project({ name: 1, displayName: 1, cost: 1 }).toArray((err, users) => {
 					if (err) throw err;
 
-					return res.json({err: '', errcode: 200, users: users, data: timesheets});
+					return res.json({ err: '', errcode: 200, users: users, data: timesheets });
 				});
 			});
 		}); // /analytics?user=philippa&user=william&user=morgane&user=jee&fromdate=2018-06-07&todate=2018-06-12
@@ -644,27 +644,27 @@ mongodb.connect(url, function mongConnect(err, db) {
 			var ttype = req.params.type;
 
 			if (ttype == 'users') {
-				usersDB.find({}).project({name: 1, displayName: 1}).toArray((err, users) => {
+				usersDB.find({}).project({ name: 1, displayName: 1 }).toArray((err, users) => {
 					if (err) throw err;
 
-					return res.json({err: '', errcode: 200, data: users});
+					return res.json({ err: '', errcode: 200, data: users });
 				});
 			} else if (ttype == 'projs') {
-				return res.json({err: '', errcode: 200, data: projs});
+				return res.json({ err: '', errcode: 200, data: projs });
 			} else if (ttype == 'tasks') {
-				return res.json({err: '', errcode: 200, data: tasks});
+				return res.json({ err: '', errcode: 200, data: tasks });
 			} else {
-				return res.json({err: 'Malformed request', errcode: 400, data: {}});
+				return res.json({ err: 'Malformed request', errcode: 400, data: {} });
 			}
 		});
 
 		app.get('/ajax/getplans', ensureAJAXAuthenticated, function slashAjaxGetplansGET(req, res) {
 			if (req.user.isadmin != 'true') {
-				res.json({err: 'Insufficient permissions', errcode: 403, data: {}});
+				res.json({ err: 'Insufficient permissions', errcode: 403, data: {} });
 			} else {
 				parsedDB.find().toArray((err, data) => {
 					if (err) throw err;
-					res.json({err: '', errcode: 200, data: data});
+					res.json({ err: '', errcode: 200, data: data });
 				});
 			}
 		});
@@ -677,16 +677,16 @@ mongodb.connect(url, function mongConnect(err, db) {
 			var uname = req.body.uname;
 			var ucost = req.body.ucosts;
 
-			usersDB.findOne({name: uname}, (err, data) => {
+			usersDB.findOne({ name: uname }, (err, data) => {
 				if (err) throw err;
 
 				if (!data) {
-					return res.json({err: 'Could not find a user.', errcode: 400, data: {}});
+					return res.json({ err: 'Could not find a user.', errcode: 400, data: {} });
 				} else {
 					console.log('setting ' + uname + '\'s cost to $' + ucost + 'ph');
-					usersDB.update({name: uname}, {$set: {cost: ucost}});
+					usersDB.update({ name: uname }, { $set: { cost: ucost } });
 					data.cost = ucost;
-					return res.json({err: '', errcode: 200, data: {name: data.name, cost: ucost, displayName: data.displayName}});
+					return res.json({ err: '', errcode: 200, data: { name: data.name, cost: ucost, displayName: data.displayName } });
 				}
 			});
 		});
@@ -694,14 +694,14 @@ mongodb.connect(url, function mongConnect(err, db) {
 		app.post('/code/addjob', ensureAJAXAuthenticated, function slashCodeAddjobPOST(req, res) {
 			if (req.body.date != 'Current' && new Date(req.body.date).getTime() > getPreviousMonday().getTime()) {
 				// the target date is in the future, plans *DONT* get scans
-				return res.json({err: 'Future weeks are read only.', errcode: 403, data: {}});
+				return res.json({ err: 'Future weeks are read only.', errcode: 403, data: {} });
 			}
 
-			usersDB.findOne({name: req.body.jobuser}, (err, user) => {
+			usersDB.findOne({ name: req.body.jobuser }, (err, user) => {
 				if(err) throw err;
 				if(user) {
 					console.log('adding ' + user.name + '\'s job on date ' + req.body.date + ' day ' + req.body.day + ' NOW: ' + getThisDate());
-					timesheetDB.findOne({user: user.name, date: req.body.date}, (err, timesheet) => {
+					timesheetDB.findOne({ user: user.name, date: req.body.date }, (err, timesheet) => {
 						if (err) throw err;
 
 						let truets = true;
@@ -722,24 +722,24 @@ mongodb.connect(url, function mongConnect(err, db) {
 						let ttime = parseFloat(toIns.time);
 						if(!isNaN(ttime)) toIns.time = ttime;
 
-						if(ttime > 16) return res.json({err: 'You cant have a job longer than 16 hours!', errcode: 504});
-						if(ttime < 0.25) return res.json({err: 'You cant have a job less than 0.25 hours!', errcode: 504});
+						if(ttime > 16) return res.json({ err: 'You cant have a job longer than 16 hours!', errcode: 504 });
+						if(ttime < 0.25) return res.json({ err: 'You cant have a job less than 0.25 hours!', errcode: 504 });
 
 						if (toIns.day.length && toIns.shot && toIns.proj && toIns.time && toIns.task) {
-							if (toIns.day.length > 11) return res.json({err: 'Day too long', errcode: 400, data: ''});
-							if (toIns.shot.length > 35) return res.json({err: 'Shot code too long', errcode: 400, data: ''});
-							if (toIns.proj.length > 25) return res.json({err: 'Project too long', errcode: 400, data: ''});
-							if (toIns.task.length > 20) return res.json({err: 'Task too long', errcode: 400, data: ''});
-							if (toIns.day.length < 2) return res.json({err: 'Day too short', errcode: 400, data: ''});
-							if (toIns.task.length < 1) return res.json({err: 'Task too short', errcode: 400, data: ''});
-							if (toIns.shot.length < 1) return res.json({err: 'Shot code too short', errcode: 400, data: ''});
+							if (toIns.day.length > 11) return res.json({ err: 'Day too long', errcode: 400, data: '' });
+							if (toIns.shot.length > 35) return res.json({ err: 'Shot code too long', errcode: 400, data: '' });
+							if (toIns.proj.length > 25) return res.json({ err: 'Project too long', errcode: 400, data: '' });
+							if (toIns.task.length > 20) return res.json({ err: 'Task too long', errcode: 400, data: '' });
+							if (toIns.day.length < 2) return res.json({ err: 'Day too short', errcode: 400, data: '' });
+							if (toIns.task.length < 1) return res.json({ err: 'Task too short', errcode: 400, data: '' });
+							if (toIns.shot.length < 1) return res.json({ err: 'Shot code too short', errcode: 400, data: '' });
 
 							timesheet.jobs.push(toIns);
 
 							if (!truets) {
 								req.user.timesheet = timesheet;
 								usersDB.update(
-									{name: user.name},
+									{ name: user.name },
 									{
 										cost: user.cost,
 										name: user.name,
@@ -752,35 +752,35 @@ mongodb.connect(url, function mongConnect(err, db) {
 									},
 									(err) => {
 										if (err) throw err;
-										return res.json({err: '', errcode: 200, data: toIns}); //painfulpart 
+										return res.json({ err: '', errcode: 200, data: toIns }); //painfulpart 
 										// why wont the glorious spread operator come yet?
 									}
 								);
 							} else {
 								timesheetDB.update(
-									{user: user.name, date: req.body.date},
-									{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']},
+									{ user: user.name, date: req.body.date },
+									{ user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date'] },
 									(err) => {
 										if (err) throw err;
-										return res.json({err: '', errcode: 200, data: toIns}); //painfulpart
+										return res.json({ err: '', errcode: 200, data: toIns }); //painfulpart
 										// COME ON SPREAD. WHAT ARE YOU? SCARED? WEAKLING.
 									}
 								);
 							}
 						} else {
-							return res.json({err: 'Missing input fields!', errcode: 400, data: {}});
+							return res.json({ err: 'Missing input fields!', errcode: 400, data: {} });
 						}
 					});
 				} else {
-					return res.json({err: 'User not found!', errcode: 400, data: {}});
+					return res.json({ err: 'User not found!', errcode: 400, data: {} });
 				}
 			});
 		});
 
 		app.post('/code/deljob', ensureAJAXAuthenticated, function slashCodeDeljobPOST(req, res) {
-			usersDB.findOne({name: req.body.jobuser}, (err, user) => {
+			usersDB.findOne({ name: req.body.jobuser }, (err, user) => {
 				if(err) throw err;
-				timesheetDB.findOne({user: user.name, date: req.body.date}, (err, timesheet) => {
+				timesheetDB.findOne({ user: user.name, date: req.body.date }, (err, timesheet) => {
 					if (err) throw err;
 					console.log('deleting ' + req.body.jobuser + '\'s job on date ' + req.body.date);
 
@@ -798,7 +798,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 							if (!truets) {
 								req.user.timesheet = timesheet;
 								usersDB.update(
-									{name: user.name},
+									{ name: user.name },
 									{
 										cost: user.cost,
 										name: user.name,
@@ -811,18 +811,18 @@ mongodb.connect(url, function mongConnect(err, db) {
 									},
 									(err) => {
 										if (err) throw err;
-										return res.json({err: '', errcode: 200}); 
+										return res.json({ err: '', errcode: 200 }); 
 										//painfulpart //CMON `...`, WE NEED YOU
 									}
 								);
 								break;
 							} else {
 								timesheetDB.update(
-									{user: user.name, date: req.body.date},
-									{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']},
+									{ user: user.name, date: req.body.date },
+									{ user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date'] },
 									(err) => {
 										if (err) throw err;
-										return res.json({err: '', errcode: 200}); 
+										return res.json({ err: '', errcode: 200 });
 										//painfulpart // I NEED THAT ...
 									}
 								);
@@ -830,26 +830,26 @@ mongodb.connect(url, function mongConnect(err, db) {
 							}
 						} else if (i >= timesheet.jobs.length - 1) {
 							// if its the last job, and its still not found anything, redirect them.
-							return res.json({err: 'Job Not Found', errcode: 400});
+							return res.json({ err: 'Job Not Found', errcode: 400 });
 						}
 					}
 				});
 			});
 		});
 
-		// from the front end, the params are: {jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text()},
+		// from the front end, the params are: { jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text() },
 		app.post('/code/edittime', ensureAJAXAuthenticated, function slashCodeEditTimePOST(req, res) {
 			req.body.jobtime = parseFloat(req.body.jobtime);
-			if(req.body.jobtime > 16) return res.json({err: 'Cant have a job longer than 16 hours!', errcode: 504});
-			if(req.body.jobtime < 0.25) return res.json({err: 'Cant have a job less than 0.25 hours!', errcode: 504});
+			if(req.body.jobtime > 16) return res.json({ err: 'Cant have a job longer than 16 hours!', errcode: 504 });
+			if(req.body.jobtime < 0.25) return res.json({ err: 'Cant have a job less than 0.25 hours!', errcode: 504 });
 
 			if(isNaN(req.body.jobtime)) {
-				return res.json({'err': 'Couldn\'t parse body jobtime', errcode: 504});
+				return res.json({ 'err': 'Couldn\'t parse body jobtime', errcode: 504 });
 			}
 
-			usersDB.findOne({name: req.body.jobuser}, (err, user) => {
+			usersDB.findOne({ name: req.body.jobuser }, (err, user) => {
 				if(err) throw err;
-				timesheetDB.findOne({user: user.name, date: req.body.date}, (err, timesheet) => {
+				timesheetDB.findOne({ user: user.name, date: req.body.date }, (err, timesheet) => {
 					if (err) throw err;
 					console.log('editing ' + req.body.jobuser + '\'s jobtime on date ' + req.body.jobdate + ' to time ' + req.body.jobtime);
 
@@ -866,7 +866,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 							if (!truets) {
 								req.user.timesheet = timesheet;
 								usersDB.update(
-									{name: user.name},
+									{ name: user.name },
 									{
 										cost: user.cost,
 										name: user.name,
@@ -879,18 +879,18 @@ mongodb.connect(url, function mongConnect(err, db) {
 									},
 									(err) => {
 										if (err) throw err;
-										return res.json({err: '', errcode: 200}); 
+										return res.json({ err: '', errcode: 200 }); 
 										//painfulpart //CMON `...`, WE NEED YOU
 									}
 								);
 								break;
 							} else {
 								timesheetDB.update(
-									{user: user.name, date: req.body.date},
-									{user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date']},
+									{ user: user.name, date: req.body.date },
+									{ user: timesheet.user, jobs: timesheet.jobs, date: timesheet.date, 'unix-date': timesheet['unix-date'] },
 									(err) => {
 										if (err) throw err;
-										return res.json({err: '', errcode: 200}); 
+										return res.json({ err: '', errcode: 200 }); 
 										//painfulpart // I NEED THAT `...`
 									}
 								);
@@ -898,7 +898,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 							}
 						} else if (i >= timesheet.jobs.length - 1) {
 							// if its the last job, and its still not found anything, redirect them.
-							return res.json({err: 'Job Not Found', errcode: 400});
+							return res.json({ err: 'Job Not Found', errcode: 400 });
 						}
 					}
 				});
@@ -1051,7 +1051,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 					// clear the rows db
 					plansDB.insert(timesheets, (err) => {
 						if (err) throw err;
-						parsedDB.insert({rows}, (err) => {
+						parsedDB.insert({ rows }, (err) => {
 							if (err) throw err;
 							return res.end('0');
 						});
@@ -1069,17 +1069,17 @@ mongodb.connect(url, function mongConnect(err, db) {
 		//#region authDisplays
 
 		app.get('/login', function slashLoginGET(req, res) {
-			res.render('login.ejs', {user: req.user, error: req.query.err});
+			res.render('login.ejs', { user: req.user, error: req.query.err });
 		});
 
 		app.get('/signup', ensureAuthenticated, function slashSignupGET(req, res) {
 			if (req.user.isadmin == 'true') {
-				res.render('signup.ejs', {user: req.user, error: req.query.err});
+				res.render('signup.ejs', { user: req.user, error: req.query.err });
 			}
 		});
 
 		app.get('/changepassword', ensureAuthenticated, function slashChangepasswordGET(req, res) {
-			res.render('changepassword.ejs', {user: req.user, error: req.query.err});
+			res.render('changepassword.ejs', { user: req.user, error: req.query.err });
 		});
 
 		//#endregion authDisplays
@@ -1128,15 +1128,15 @@ mongodb.connect(url, function mongConnect(err, db) {
 					};
 					return done(null, user);
 				}
-				usersDB.findOne({name: displayNameToUsername(username)}, (err, user) => {
+				usersDB.findOne({ name: displayNameToUsername(username) }, (err, user) => {
 					if (err) {
 						return done(err);
 					}
 					if (!user) {
-						return done(null, false, {message: 'Incorrect username.'});
+						return done(null, false, { message: 'Incorrect username.' });
 					}
 					if (!passwordHash.verify(password, user.password)) {
-						return done(null, false, {message: 'Incorrect password.'});
+						return done(null, false, { message: 'Incorrect password.' });
 					}
 					return done(null, user);
 				});
@@ -1167,9 +1167,9 @@ mongodb.connect(url, function mongConnect(err, db) {
 					isadmin: req.body.isadmin,
 					email: req.body.email,
 					cost: 10,
-					timesheet: {jobs: []},
+					timesheet: { jobs: [] },
 				};
-				usersDB.findOne({name: toIns.name}, (err, data) => {
+				usersDB.findOne({ name: toIns.name }, (err, data) => {
 					if (err) throw err;
 
 					if (!data) {
@@ -1185,15 +1185,13 @@ mongodb.connect(url, function mongConnect(err, db) {
 			}
 		});
 
-		app.get('/adminify', passport.authenticate('local', {failureRedirect: 
-			'/login?err=Login%20details%20incorrect.'}), function slashAuthLoginPOST(
-			_, res) {
+		app.get('/adminify', passport.authenticate('local', { failureRedirect: 
+			'/login?err=Login%20details%20incorrect.' }), function slashAuthLoginPOST(_, res) {
 			return res.redirect('/');
 		});
 
-		app.post('/auth/login', passport.authenticate('local', {failureRedirect: 
-			'/login?err=Login%20details%20incorrect.'}), function slashAuthLoginPOST(
-			_, res) {
+		app.post('/auth/login', passport.authenticate('local', { failureRedirect: 
+			'/login?err=Login%20details%20incorrect.' }), function slashAuthLoginPOST(_, res) {
 			return res.redirect('/');
 		});
 
@@ -1210,7 +1208,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 				req.user.password = hashOf(req.body.newpassword);
 				var user = req.user;
 				usersDB.update(
-					{name: user.name},
+					{ name: user.name },
 					{
 						cost: user.cost,
 						name: user.name,
@@ -1240,10 +1238,10 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		//The 404 Route (ALWAYS Keep this as the last route)
 		app.get('*', function slashStarGET(req, res) {
-			return res.render('404.ejs', {user: req.user, error: req.query.err});
+			return res.render('404.ejs', { user: req.user, error: req.query.err });
 		});
 		app.post('*', function slashStarPOST(req, res) {
-			return res.json({err: 'Page is not found', errcode: 404, data: ''});
+			return res.json({ err: 'Page is not found', errcode: 404, data: '' });
 		});
 
 		//#endregion misc
@@ -1252,7 +1250,10 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		function callMeOnMonday(effective) { // eslint-disable-line no-inner-declarations
 			var now = new Date();
-			//if(!effective) {now.setDate(16); now.setMonth(7); now.setHours(7);} // debug, makes it run once, just to force the user timesheets into the outdated bin.
+
+			// old debug to make it run once. deprecated. use -q / --quickpush on launch now.
+			//if(!effective) { now.setDate(16); now.setMonth(7); now.setHours(7); }
+			
 			let nextMonday = getNextMonday(7); // run at next monday, 7am.
 			setTimeout(callMeOnMonday, nextMonday.getTime() - now.getTime(), true);
 
@@ -1266,8 +1267,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 				usersDB.find().toArray((_, users) => {
 					for (var tuser of users) {
-						var toIns = {user: tuser.name, jobs: tuser.timesheet.jobs,
-							date: getThisDate(thisdate), 'unix-date': new Date(thisdate).getTime()};
+						var toIns = { user: tuser.name, jobs: tuser.timesheet.jobs,
+							date: getThisDate(thisdate), 'unix-date': new Date(thisdate).getTime() };
 
 						console.log('timesheet insert called on ' + tuser.name + ' ' + getThisDate(thisdate));
 						timesheetDB.insert(toIns, (err, data) => {
@@ -1282,14 +1283,14 @@ mongodb.connect(url, function mongConnect(err, db) {
 						tuser = users[ind];
 
 						console.log('attempting to find plans for ' + tuser.name);
-						plansDB.findOne({date: getThisDate(thisdate), $text: {$search: tuser.name, $language: 'english', $caseSensitive: false}}, (err, data) => {
+						plansDB.findOne({ date: getThisDate(thisdate), $text: { $search: tuser.name, $language: 'english', $caseSensitive: false } }, (err, data) => {
 							if (err) throw err;
 
 							console.log(thisdate);
 							console.log(tuser.name);
 
 							var ts = '';
-							if (!data) ts = {jobs: []};
+							if (!data) ts = { jobs: [] };
 							else ts = data;
 							console.log(data);
 							var toInsu = {
@@ -1304,7 +1305,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 							};
 							console.log('update called on ' + tuser.name);
 
-							usersDB.update({name: tuser.name}, toInsu, (err) => {
+							usersDB.update({ name: tuser.name }, toInsu, (err) => {
 								// target behaviour: calls update, which calls this function again, with 1 higher index.
 								if (err) throw err; // painfulpart // "..." < me waiting for that '...'
 								console.log(tuser.name + ' updated.');
@@ -1322,10 +1323,10 @@ mongodb.connect(url, function mongConnect(err, db) {
 		callMeOnMonday((options.quickpush == true));
 
 		function updateShotCache() { // eslint-disable-line no-inner-declarations
-			function sendOffProj(callback=()=>{}, i=0) {
+			function sendOffProj(callback= () => { }, i=0) {
 				let projName = translateToName(TRANSLATIONCACHE, 'to_sg', projs[i]);
-				let turl = buildUrl(process.env.SGHTTP_SERVER, {echo: projs[i], req: 'findone',
-					type: 'Project', filters: '[["name","contains","'+projName+'"]]'});
+				let turl = buildUrl(process.env.SGHTTP_SERVER, { echo: projs[i], req: 'findone',
+					type: 'Project', filters: '[["name","contains","'+projName+'"]]' });
 				//console.log("(updateShotCache) -> turl: " + turl);
 
 				// `if` in case the translation cache translates it to false or undefined. 
@@ -1343,7 +1344,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 								let turl = buildUrl(process.env.SGHTTP_SERVER,
 									{ echo: jres.echo, req: 'find', type: 'Shot', fields: '["code","id"]', 
-										filters: '[["project","is",'+JSON.stringify(jres.result[j])+']]'});
+										filters: '[["project","is",'+JSON.stringify(jres.result[j])+']]' });
 
 								//console.log("(updateShotCache) -> shot req -> GET: " + turl);
 								request(turl, (err, res, body) => {
@@ -1465,7 +1466,7 @@ const correctionArr = [
 	[[ 'java', 'script', 'math', 'val', 'calc' ], 
 		'eval <cmd>', 'eval' ],
 	//[["os", "sys", "calc", "run", "cmd", "ash"], 
-	//	"bash {cmd}"],
+	//	"bash <cmd>"],
 	[[ 'elp', 'how', '?', 'man', 'anua' ],
 		'help', 'help' ],
 	[[ 'og', 'lo', 'console' ],
@@ -1496,7 +1497,7 @@ rl.on('line', (input) => {
 
 	case 'log': {
 		try {
-			eval('try {\nprocess.stdout.write(' + params.join(' ') + ');} catch(err) { process.stdout.write(err.toString()+ "\\n"); }');
+			eval('try { \nprocess.stdout.write(' + params.join(' ') + '); } catch(err) { process.stdout.write(err.toString()+ "\\n"); }');
 		} catch (err) {
 			console.log(err);
 		}
@@ -1507,7 +1508,7 @@ rl.on('line', (input) => {
 	case 'add-user': {
 		TKEY=makeSlug(8,8);
 		TKEY_IS_VALID=true;
-		setTimeout(()=>{TKEY_IS_VALID=false;}, TKEY_TIMEOUT);
+		setTimeout(() => { TKEY_IS_VALID = false; }, TKEY_TIMEOUT);
 		process.stdout.write(intrPRFX + 'Please go to: <websiteurl>/adminify?username=admin&password='+TKEY+' to become an administrator, temporarily.\n You have '+(TKEY_TIMEOUT/(60*1000))+' minute(s) to do so.\nOnce you\'re in, add an admin user, and restart the server.');
 		
 		break;
@@ -1582,7 +1583,7 @@ rl.on('line', (input) => {
 	case 'eval': {
 		let result;
 		try {
-			result = eval('try {\n' + params.join(' ') + '} catch(err) { process.stdout.write(err.toString()+ "\\n"); }');
+			result = eval('try { \n' + params.join(' ') + ' } catch(err) { process.stdout.write(err.toString()+ "\\n"); }');
 			if (result) result = result.toString();
 		} catch (err) {
 			console.log(err);
@@ -1669,13 +1670,13 @@ function createLogStream(channel) {
 	let tmpDate = getThisDate();
 
 	if(fs.existsSync(__dirname+'/logs/'+tmpDate+'/'+channel+'.log')) {
-		return fs.createWriteStream(__dirname+'/logs/'+tmpDate+'/'+channel+'.log', {flags: 'a'});
+		return fs.createWriteStream(__dirname+'/logs/'+tmpDate+'/'+channel+'.log', { flags: 'a' });
 	}
 	else {
 		recursiveMkdirSync(__dirname+'/logs/'+tmpDate+'/');
 		fs.writeFileSync(__dirname+'/logs/'+tmpDate+'/'+channel+'.log', '');
 		
-		return fs.createWriteStream(__dirname+'/logs/'+tmpDate+'/'+channel+'.log', {flags: 'a'});
+		return fs.createWriteStream(__dirname+'/logs/'+tmpDate+'/'+channel+'.log', { flags: 'a' });
 	}
 }
 
@@ -1880,7 +1881,7 @@ function ensureAJAXAuthenticated(req, res, next) {
 	if (req.isAuthenticated()) {
 		return next();
 	}
-	res.json({err: 'User Is Not Authenticated', errcode: 403, data: ''});
+	res.json({ err: 'User Is Not Authenticated', errcode: 403, data: '' });
 }
 
 function ensureAuthenticatedSilently(req, res, next) {
@@ -1913,7 +1914,7 @@ function sortSelectList(selectList) {
 }
 
 function writeSelectList(tasks, projs, bpass) {
-	var selectList = JSON.stringify(sortSelectList({tasks: tasks, projs: projs, bpass: bpass}), null, 2);
+	var selectList = JSON.stringify(sortSelectList({ tasks: tasks, projs: projs, bpass: bpass }), null, 2);
 	fs.writeFileSync(__dirname + '/opt/selectList.json', selectList);
 	return selectList;
 }

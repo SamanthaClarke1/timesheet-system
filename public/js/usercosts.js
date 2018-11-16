@@ -61,7 +61,7 @@ $(document).ready(function(){
 
 	$('#usubm-btn').click(function(e){
 		e.preventDefault();
-		littleburst.tune({x: $(this).offset().left, y: $(this).offset().top}).generate();
+		littleburst.tune({ x: $(this).offset().left, y: $(this).offset().top }).generate();
 		littleburst_timeline.replay();
 		$('#uname-inp').val($('#uname-inp').val().toLowerCase());
 
