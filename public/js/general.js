@@ -98,4 +98,18 @@ function declareSupportMissing(support) {
 	alert('We\'re sorry, but the timesheet system relies on '+support+' support to function correctly, and, your browser doesn\'t support it! Please upgrade to a more recent browser, such as firefox, or ensure that your current browser is up to date.');
 }
 
+$(window).resize(function () {
+	let borders = [0, 0, innerWidth - 20, innerHeight - 20]; // x, y, w, h
+
+	$('body').find('div[data-name="mojs-shape"]').each(function() {
+		let offset = $(this).offset();
+		let noffset = {top: offset.y, left: offset.x};
+
+		if((offset.x + offset.width) > borders[2]) noffset.left = borders[2] - offset.width;
+		if((offset.y + offset.height) > borders[3]) noffset.top = borders[3] - offset.height;
+
+		$(this).offset(noffset);
+	});
+});
+
 // @license-end

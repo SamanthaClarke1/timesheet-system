@@ -1,6 +1,9 @@
 // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
 
+//#region file-meta
+
 /* eslint-env browser, node, es6, jquery */
+
 
 /*
 *                                                                 
@@ -38,13 +41,12 @@
 */
 
 
-
 // im seriously going to have nightmares about this code
 // why did i use onclick=""
 // ...
 // (because it was easy)
 
-
+//#endregion
 
 //#region initial declarations
 let projCache = {};
@@ -694,7 +696,7 @@ window.addEventListener('beforeunload', function() {
 //#endregion rokyt
 
 
-//#region BIG BOY IIFE
+// #region BIG BOY IIFE
 
 (function() { 
 
