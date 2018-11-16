@@ -134,6 +134,8 @@ const SHOTUPDATEFREQ = 1000 * 60 * 10;
 let SHOTCACHE = {};
 let TRANSLATIONCACHE = {};
 
+let BROWSERCONNECTIONS = {};
+
 TRANSLATIONCACHE = getNameTranslationList();
 
 const exit = (exitCode) => {
@@ -674,9 +676,25 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		//#region ajaxSetters
 
+		app.get('/ajax/browsertracker', ensureAJAXAuthenticated, function slashAjaxBrowserTracker(req, res) {
+			// ik this is some really adhoc shit but i just needed it for my local deployment purposes.
+			// really secretly hope that somebody starts sending off fake requests with like, ?browser=KingZargloopsMagicScroll or something.
+			
+			let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+			
+			ip = ip.split(':')[3] || ip; // i just want the numbers!
+
+			if(!BROWSERCONNECTIONS[ip]) BROWSERCONNECTIONS[ip] = [];
+			BROWSERCONNECTIONS[ip].push({ user: req.user.name, browser: req.query.browser, version: req.query.version });
+
+			console.log(req.user.name + ' at ip: ' + ip + '  connected with browser: ' + req.query.browser + '  (version: ' + req.query.version + ')');
+
+			return res.json({ err: '', errcode: 200, data: {} });
+		});
+
 		app.post('/ajax/setusercost', ensureAJAXAuthenticated, function slashAjaxSetusercostPOST(req, res) {
-			var uname = req.body.uname;
-			var ucost = req.body.ucosts;
+			let uname = req.body.uname;
+			let ucost = req.body.ucosts;
 
 			usersDB.findOne({ name: uname }, (err, data) => {
 				if (err) throw err;
