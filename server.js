@@ -679,13 +679,17 @@ mongodb.connect(url, function mongConnect(err, db) {
 		app.get('/ajax/browsertracker', ensureAJAXAuthenticated, function slashAjaxBrowserTracker(req, res) {
 			// ik this is some really adhoc shit but i just needed it for my local deployment purposes.
 			// really secretly hope that somebody starts sending off fake requests with like, ?browser=KingZargloopsMagicScroll or something.
-			
+
 			let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 			
 			ip = ip.split(':')[3] || ip; // i just want the numbers!
 
-			if(!BROWSERCONNECTIONS[ip]) BROWSERCONNECTIONS[ip] = [];
-			BROWSERCONNECTIONS[ip].push({ user: req.user.name, browser: req.query.browser, version: req.query.version });
+			if(!BROWSERCONNECTIONS[ip]) BROWSERCONNECTIONS[ip] = {};
+
+			// yuck! whatever, it stored the info in an easy enough to split way.
+			let tid = '{u}'+req.user.name+'{b}'+req.query.browser+'{v}'+req.query.version;
+
+			BROWSERCONNECTIONS[ip][tid] = (BROWSERCONNECTIONS[ip][tid] + 1) || 1; 
 
 			console.log(req.user.name + ' at ip: ' + ip + '  connected with browser: ' + req.query.browser + '  (version: ' + req.query.version + ')');
 
