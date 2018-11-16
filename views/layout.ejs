@@ -40,7 +40,7 @@
 
 	<body>
 			<!-- Navbar -->
-		<nav class="navbar navbar-toggleable-md navbar-inverse bg-inverse font-main">
+		<nav id="mnav" class="navbar navbar-toggleable-md navbar-inverse bg-inverse font-main nav-shade">
 			<% if(user) { %>
 				<div class="navbar-toggler-right navbar-username-right-holder avholder font-big">
 					<p class="navbar-username-right"><%= user.displayName %></p>
@@ -110,7 +110,7 @@
 		<div class="secondarybody font-main">
 			<%- body %>
 		</div>
-		<div class="text-center version-footer font-main grn-text semi-dim">
+		<div class="text-center version-footer font-main grn-text semi-dim up-shade">
 			<small> Developed by Samuel Clarke 2018, for CumulusVFX <br/> Version 1.9.1 | Codename: Cold Cobalt </small>
 		</div>
 	</body>
