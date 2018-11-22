@@ -1,50 +1,49 @@
 <div class="mincon" style="text-align: left;">
+	<script>
+		var srvprojs = '<%= projs %>'.split(',');
+	</script>
 
-    <script>
-        var srvprojs = '<%= projs %>'.split(',');
-    </script>
+	<div class="bx-switch row no-gutters">
+		<span class="bx-opt active" id="usr-view-btn">
+			<span class="box col-12">User View</span>
+		</span>
+		<div class="seperator"></div>
+		<span class="bx-opt" id="proj-view-btn">
+			<span class="box col-12 active">Project View</span>
+		</span>
+	</div>
+	<div class="col-12 text-center">
+		<button id="flush-cache-btn" class="btn btn-outline-danger col-4 col-offset-4 inactive flush-cache">Refresh Cache</button>
+	</div><br/>
 
-    <div class="bx-switch row no-gutters">
-        <span class="bx-opt active" id="usr-view-btn">
-            <span class="box col-12">User View</span>
-        </span>
-        <div class="seperator"></div>
-        <span class="bx-opt" id="proj-view-btn">
-            <span class="box col-12 active">Project View</span>
-        </span>
-    </div>
-    <div class="col-12 text-center">
-        <button id="flush-cache-btn" class="btn btn-outline-danger col-4 col-offset-4 inactive flush-cache">Refresh Cache</button>
-    </div><br/>
+	<form id="graph-params-form" class="col-12 row no-gutters" action="/analytics" method=GET> <!-- will be serialized through ajax, then load the timesheet tables through ajax + d3. -->
 
-    <form id="graph-params-form" class="col-12 row no-gutters" action="/analytics" method=GET> <!-- will be serialized through ajax, then load the timesheet tables through ajax + d3. -->
+		<input id="search-type-val" name="searchtype" type="text" hidden />
+		<select id="user-list" name="user" class="col-3 form-control" multiple>
+		</select>
 
-        <input id="search-type-val" name="searchtype" type="text" hidden />
-        <select id="user-list" name="user" class="col-3 form-control" multiple>
-        </select>
-
-        <div class="col-3">
-            <input name="fromdate" type="date" id="from-date" class="col-12" placeholder="Start date" required/>
-        </div>
-        <div class="col-3">
-            <input name="todate" type="date" id="to-date" class="col-12" placeholder="End date" required/>
-        </div>
-        <div class="col-3">
-            <button id="submit-btn" class="col-12 btn btn-outline-info">search</button>
-        </div>
-    </form>
-    
-    <div id="tables" class="col-12"></div>
+		<div class="col-3">
+			<input name="fromdate" type="date" id="from-date" class="col-12" placeholder="Start date" required/>
+		</div>
+		<div class="col-3">
+			<input name="todate" type="date" id="to-date" class="col-12" placeholder="End date" required/>
+		</div>
+		<div class="col-3">
+			<button id="submit-btn" class="col-12 btn btn-outline-info">search</button>
+		</div>
+	</form>
+	
+	<div id="tables" class="col-12"></div>
 </div>
 <head>
-    <!-- MOJS -->
-    <script src="./lib/mo.js" crossorigin="anonymous"></script>
-    <!-- D3 -->
-    <script src="./lib/d3.js"></script>
-    <!-- CUSTOM -->
-    <link rel="stylesheet" href="./css/calendar-extender.css"></link>
-    <link rel="stylesheet" href="./css/analytics.css"></link>
-    <script src="./js/burstpack.anim.js"></script>
-    <script src="./js/analytics.js"></script>
-    <script src="./js/calendar-extender.js"></script>
+	<!-- MOJS -->
+	<script src="./lib/mo.js" crossorigin="anonymous"></script>
+	<!-- D3 -->
+	<script src="./lib/d3.js"></script>
+	<!-- CUSTOM -->
+	<link rel="stylesheet" href="./css/calendar-extender.css"></link>
+	<link rel="stylesheet" href="./css/analytics.css"></link>
+	<script src="./js/burstpack.anim.js"></script>
+	<script src="./js/analytics.js"></script>
+	<script src="./js/calendar-extender.js"></script>
 </head>

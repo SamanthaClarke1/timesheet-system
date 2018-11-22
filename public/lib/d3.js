@@ -1,3 +1,5 @@
+// @license magnet:?xt=urn:btih:87f119ba0b429ba17a44b4bffcab33165ebdacc0&dn=freebsd.txt FreeBSD-License
+
 // https://d3js.org Version 5.5.0. Copyright 2018 Mike Bostock.
 (function(t, n){
 	'object' == typeof exports && 'undefined' != typeof module
@@ -13168,3 +13170,5 @@
 		(t.zoomIdentity = fb),
 		Object.defineProperty(t, '__esModule', {value: !0});
 });
+
+// @license-end

@@ -1,0 +1,54 @@
+{
+    "globals": {
+        "IS_NODE": true,
+        "fromSrv": true,
+        "declareSupportMissing": true,
+        "smokeflow": true,
+        "smokeflow_timeline": true,
+        "successburst": true,
+        "successburst_timeline": true,
+        "sparkflow": true,
+        "sparkflow_timeline": true,
+        "sparkflowr": true,
+        "sparkflowr_timeline": true,
+        "littleburst": true,
+        "littleburst_timeline": true,
+        "d3": true,
+		"srvprojs": true,
+		"rect_loader": true,
+		"rect_loaded": true,
+		"rect_loader_onRC": true,
+		"loadState": true,
+		"mojs": true
+    },
+    "env": {
+        "browser": true,
+	"es6": true,
+	"jquery": true
+    },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+        "ecmaVersion": 2018,
+        "sourceType": "module"
+    },
+    "rules": {
+	"no-console": 1,
+	"no-unused-vars": 1,
+        "indent": [
+            "warn",
+            "tab"
+        ],
+        "linebreak-style": [
+            "error",
+            "unix"
+        ],
+        "quotes": [
+            "warn",
+            "single"
+        ],
+        "semi": [
+            "error",
+            "always"
+        ]
+    }
+}

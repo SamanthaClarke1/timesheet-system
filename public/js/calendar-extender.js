@@ -1,4 +1,8 @@
-function calendarExtender(theInput){
+/* eslint-env browser, es6, jquery */
+
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
+
+function calendarExtender(theInput) {
 	var self = this;
 
 	this.theInput = theInput;
@@ -6,13 +10,13 @@ function calendarExtender(theInput){
 	this.theCalDiv = null;
 	this.selectedDate = new Date();
 
-	this.init = function(){
+	this.init = function() {
 		this.getDateFromInput();
 		this.createCal();
 	};
 
 	//update selectedDate with the date from the input, return true if changed
-	this.getDateFromInput = function(){
+	this.getDateFromInput = function() {
 		if (this.theInput.value) {
 			var possibleNewDate = new Date(this.theInput.value);
 			if (Date.parse(this.theInput.value) && possibleNewDate.toDateString() !== this.selectedDate.toDateString()) {
@@ -24,7 +28,7 @@ function calendarExtender(theInput){
 	};
 
 	//create the calendar html and events
-	this.createCal = function(){
+	this.createCal = function() {
 		//creating a container div around the input, the calendar will also be there
 		this.container = this.theInput.parentNode;
 		//this.container = document.getElementById("calendarContainer");
@@ -46,19 +50,19 @@ function calendarExtender(theInput){
 		this.createMonthTable();
 
 		//open the calendar when the input get focus, also on various click events to capture it in all corner cases
-		this.theInput.addEventListener('focus', function(){
+		this.theInput.addEventListener('focus', function() {
 			var fv = $('#fieldSelect').val();
 			if (fv == 'Date' || fv == 'Start' || fv == 'End' || !fv) {
 				self.theCalDiv.style.display = '';
 			}
 		});
-		this.theInput.addEventListener('mouseup', function(){
+		this.theInput.addEventListener('mouseup', function() {
 			var fv = $('#fieldSelect').val();
 			if (fv == 'Date' || fv == 'Start' || fv == 'End' || !fv) {
 				self.theCalDiv.style.display = '';
 			}
 		});
-		this.theInput.addEventListener('mousedown', function(){
+		this.theInput.addEventListener('mousedown', function() {
 			var fv = $('#fieldSelect').val();
 			if (fv == 'Date' || fv == 'Start' || fv == 'End' || !fv) {
 				self.theCalDiv.style.display = '';
@@ -66,14 +70,14 @@ function calendarExtender(theInput){
 		});
 
 		//update the calendar if the date changed manually in the input
-		this.theInput.addEventListener('keyup', function(){
+		this.theInput.addEventListener('keyup', function() {
 			if (self.getDateFromInput()) {
 				self.updateSelecteds();
 			}
 		});
 
 		//close the calendar when clicking outside of the input or calendar
-		document.addEventListener('click', function(e){
+		document.addEventListener('click', function(e) {
 			if (
 				e.target.parentNode !== self.container &&
 				e.target.parentNode.parentNode !== self.container &&
@@ -85,12 +89,12 @@ function calendarExtender(theInput){
 	};
 
 	//create the year and month selects html
-	this.creathYearAndMonthSelects = function(){
+	this.creathYearAndMonthSelects = function() {
 		//the year selector inside the calendar
 		var yearSelect = this.createRangeSelect(new Date().getFullYear() - 80, new Date().getFullYear() + 20, this.selectedDate.getFullYear());
 		yearSelect.className = 'yearSelect';
 		this.theCalDiv.appendChild(yearSelect);
-		yearSelect.onchange = function(){
+		yearSelect.onchange = function() {
 			self.selectedDate.setYear(this.value);
 			self.selectDate();
 			self.createMonthTable();
@@ -102,7 +106,7 @@ function calendarExtender(theInput){
 		var monthSelect = this.createRangeSelect(0, 11, this.selectedDate.getMonth(), monthsNames);
 		monthSelect.className = 'monthSelect';
 		this.theCalDiv.appendChild(monthSelect);
-		monthSelect.onchange = function(){
+		monthSelect.onchange = function() {
 			self.selectedDate.setMonth(this.value);
 			self.selectDate();
 			self.createMonthTable();
@@ -111,14 +115,14 @@ function calendarExtender(theInput){
 	};
 
 	//update the year and month selects with the right selected value (if date changed externally)
-	this.updateSelecteds = function(){
+	this.updateSelecteds = function() {
 		this.theCalDiv.querySelector('.yearSelect').value = this.selectedDate.getFullYear();
 		this.theCalDiv.querySelector('.monthSelect').value = this.selectedDate.getMonth();
 		this.createMonthTable();
 	};
 
 	//create the days table
-	this.createMonthTable = function(){
+	this.createMonthTable = function() {
 		var year = this.selectedDate.getFullYear(); //get the year (2015)
 		var month = this.selectedDate.getMonth(); //get the month number (0-11)
 		var startDay = new Date(year, month, 1).getDay(); //first weekday of month (0-6)
@@ -154,7 +158,7 @@ function calendarExtender(theInput){
 				}
 
 				//when clicking on a day in the days table
-				aCell.addEventListener('click', function(){
+				aCell.addEventListener('click', function() {
 					//mark the dey with 'selected' css class
 					self.theCalDiv.querySelector('.selected').className = '';
 					this.className = 'selected';
@@ -168,7 +172,7 @@ function calendarExtender(theInput){
 	};
 
 	//copy the selected date to the input field
-	this.selectDate = function(){
+	this.selectDate = function() {
 		var monthText = this.selectedDate.getMonth() + 1;
 		if (monthText < 10) {
 			monthText = '0' + monthText;
@@ -188,7 +192,7 @@ function calendarExtender(theInput){
 	};
 
 	//helper function to create html select tags
-	this.createRangeSelect = function(min, max, selected, namesArray){
+	this.createRangeSelect = function(min, max, selected, namesArray) {
 		var aOption;
 		var curNum;
 		var theText;
@@ -220,7 +224,7 @@ function calendarExtender(theInput){
 }
 
 //return false if the browser dont support input[type=date]
-function checkDateInputSupport(){
+function checkDateInputSupport() {
 	var input = document.createElement('input');
 	input.setAttribute('type', 'date');
 
@@ -231,10 +235,10 @@ function checkDateInputSupport(){
 }
 
 //will add the calendarExtender to all inputs in the page
-function addcalendarExtenderToDateInputs(){
+function addcalendarExtenderToDateInputs() {
 	//get and loop all the input[type=date]s in the page that dont have "haveCal" class yet
 	var dateInputs = document.querySelectorAll('input[type=date]:not(.haveCal)');
-	[].forEach.call(dateInputs, function(dateInput){
+	[].forEach.call(dateInputs, function(dateInput) {
 		//call calendarExtender function on the input
 		new calendarExtender(dateInput);
 		//mark that it have calendar
@@ -247,7 +251,7 @@ function addcalendarExtenderToDateInputs(){
 if (!checkDateInputSupport() && typeof window.orientation === 'undefined') {
 	addcalendarExtenderToDateInputs();
 	//this is also on mousedown event so it will capture new inputs that might joined to the dom dynamically
-	document.querySelector('body').addEventListener('mousedown', function(event){
+	document.querySelector('body').addEventListener('mousedown', function() {
 		addcalendarExtenderToDateInputs();
 	});
 }
@@ -262,3 +266,5 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
+// @license-end

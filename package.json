@@ -1,12 +1,13 @@
 {
   "name": "timetable-manager",
-  "version": "1.7.5",
+  "version": "1.9.1",
   "description": "Manages the timetables for cmls. Recieves input from artists, that log their time, and stores it in a db.",
   "main": "server.js",
-  "codename": "Red Rocket",
+  "codename": "Cold Cobalt",
   "dependencies": {
     "body-parser": "^1.18.3",
     "boxen": "^2.0.0",
+    "child_process": "^1.0.2",
     "command-line-args": "^5.0.2",
     "dotenv": "^5.0.1",
     "ejs": "^2.6.1",
@@ -20,21 +21,23 @@
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
     "password-hash": "^1.2.2",
+    "path-dirname": "^1.0.2",
+    "request": "^2.88.0",
     "supervisor": "^0.12.0",
     "xlsx": "^0.12.13"
   },
   "devDependencies": {},
   "scripts": {
-	"help": "node server.js --help",
-	"version": "node server.js --version",
-	"run": "node server.js"
+    "help": "node server.js --help",
+    "version": "node server.js --version",
+    "run": "node server.js"
   },
   "repository": "https://github.com/Samuel-Clarke123/timesheet-system",
   "keywords": [
     "cmls",
     "timetables",
-	"cumulus",
-	"timesheets"
+    "cumulus",
+    "timesheets"
   ],
   "author": "Samuel J. Clarke",
   "license": "MIT"

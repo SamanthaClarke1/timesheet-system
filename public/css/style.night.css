@@ -2,13 +2,14 @@ body {
 	background-color: #2e2f35;
 	color: white;
 }
+
 .card a {
 	color: #58b19e;
 }
-a:hover,
-a:active {
+a:hover, a:active {
 	color: #5a8d7d;
 }
+
 .grn-text {
 	color: #57bea8;
 	font-family: 'Noto Sans', sans-serif;
@@ -16,8 +17,7 @@ a:active {
 .grn-link-text {
 	color: #58b19e;
 }
-.grn-link-text:hover,
-.grn-link-text:active {
+.grn-link-text:hover, .grn-link-text:active {
 	color: #5a8d7d;
 }
 .grn-text.dim {
@@ -26,16 +26,18 @@ a:active {
 .grn-text.semi-dim {
 	color: #48a38f;
 }
-.faded-grn-text {
-	color: #73a89d !important;
+
+.faded.grn-text {
+	color: #73a89d;
 	font-family: 'Noto Sans', sans-serif;
 }
-.faded-grn-text.dim {
-	color: #62706d !important;
+.faded.grn-text.dim {
+	color: #62706d;
 }
-.faded-grn-text.semi-dim {
-	color: #667a76 !important;
+.faded.grn-text.semi-dim {
+	color: #667a76;
 }
+
 .mincon {
 	background: #2e2f35;
 	color: white;
@@ -49,6 +51,7 @@ a:active {
 	border-left: 1px solid #282829;
 	border-bottom: 1px solid #282829;
 }
+
 hr {
 	background: rgb(166, 173, 175);
 }
@@ -64,11 +67,14 @@ hr {
 .ts-row.even {
 	background-color: rgb(49, 59, 71);
 }
+
+
 /* *==========*
    *   BTNS   *
    *==========* */
-.navbar.navbar-toggleable-md.navbar-inverse.bg-inverse {
-	background-color: #242830 !important;
+
+nav.navbar.navbar-toggleable-md.navbar-inverse.bg-inverse {
+	background-color: #212630 !important; /*okay, fine, this one was needed*/
 }
 .btn.btn-outline-info:hover {
 	background: rgb(70, 154, 202);
@@ -105,6 +111,8 @@ hr {
 		opacity: 0;
 	}
 }
+
+
 /* *========*
    *  NAVS  *
    *========* */

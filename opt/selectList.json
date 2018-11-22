@@ -1,4 +1,11 @@
 {
+  "bpass": [
+	"CMLS",
+	"password",
+	"PASSWORD",
+	"PASSWORD123",
+	"abc123"
+  ],
   "tasks": {
     "default": [
       "3d",
@@ -25,6 +32,6 @@
     ]
   },
   "projs": [
-    "Admin"
+    "exampleProject1"
   ]
 }
