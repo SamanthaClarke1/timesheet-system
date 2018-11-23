@@ -681,7 +681,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 			// really secretly hope that somebody starts sending off fake requests with like, ?browser=KingZargloopsMagicScroll or something.
 
 			let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-			
+			if(!ip) return false;
+
 			ip = ip.split(':')[3] || ip; // i just want the numbers!
 
 			if(!BROWSERCONNECTIONS[ip]) BROWSERCONNECTIONS[ip] = {};
