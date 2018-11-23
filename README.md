@@ -1,5 +1,5 @@
 # timesheet-system
-![Logo](https://raw.githubusercontent.com/Samuel-Clarke123/timesheet-system/master/public/res/tslogo.png)
+![Logo](https://raw.githubusercontent.com/Samuel-Clarke123/timesheet-system/master/public/res/tslogo/tslogo128x128.ico)
 
 This timesheet system was originally created for CumulusVFX. It is made to allow users to log their hours, and for administrators to monitor how much everyone is working.
 Just run the local server on a server somewhere, and have people visit it in their browsers.
