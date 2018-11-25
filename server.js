@@ -1685,8 +1685,14 @@ function recursiveMkdirSync(dir) {
 	try {
 		fs.mkdirSync(dir);
 	} catch(err) {
-		recursiveMkdirSync(pathDirname(dir)); // create parent dir
-		recursiveMkdirSync(dir); // create dir
+		try {
+			recursiveMkdirSync(pathDirname(dir)); // create parent dir
+			recursiveMkdirSync(dir); // create dir
+		} catch(err) {
+			console.log('err');
+			console.log('couldn\'t create log files!');
+			return ;
+		}
 	}
 }
 
@@ -1774,6 +1780,7 @@ function buildUrl(base, dict) {
 function getThisDate(now = new Date()) {
 	return now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
 }
+
 function getFineDate(now = new Date()) {
 	return now.getFullYear().npad(4) + '-' + (now.getMonth() + 1).npad(2) + '-' + now.getDate().npad(2) + ' ' + 
 		now.getHours().npad(2) + ':' + now.getMinutes().npad(2) + ':' + now.getSeconds().npad(2);

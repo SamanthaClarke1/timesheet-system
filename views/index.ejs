@@ -6,7 +6,9 @@
 	var dayhours = {}; // stores the total of each job for each day.
 	var rdays = JSON.parse(JSON.stringify(days));
 	var totaltime = 0;
+
 	if(targetdate == "Current") rdays.splice(new Date().getDay(), 7 - new Date().getDay());
+	
 	if(new Date(targetdate).getTime() > new Date().getTime()) {
 		rdays.splice(0, 7);
 		editable = false;
