@@ -81,7 +81,7 @@ $(document).ready(function(){
 	});
 
 	function createUserCostBars(svg, dat, tcl, inx, iny, wscl, hscl){
-		let usrbar = svg.append('g').attr('transform', 'translate(' + escJQuot(inx) + ', ' + escJQuot(iny + marg.barspacing * 2) + ')').attr('class', escJQuot(tcl));
+		let usrbar = svg.append('g').attr('transform', 'translate(' + (inx) + ', ' + (iny + marg.barspacing * 2) + ')').attr('class', escHTML(tcl));
 
 		usrbar
 			.selectAll('g')
@@ -89,7 +89,7 @@ $(document).ready(function(){
 			.enter()
 			.append('rect')
 			.attr('transform', (d, i) => {
-				return 'translate(0, ' + escJQuot(hscl * i + marg.barspacing / 2) + ')';
+				return 'translate(0, ' + (hscl * i + marg.barspacing / 2) + ')';
 			})
 			.attr('width', (d) => {
 				return (d.cost ? d.cost : 10) * wscl;
@@ -99,11 +99,11 @@ $(document).ready(function(){
 				return i % 2 == 0 ? '#ccc' : '#ddd';
 			})
 			.attr('onclick', (d) => {
-				return '$("#uname-inp").val("' + escJQuot(d.name) + '"); $("#ucosts-inp").val("' + escJQuot(d.cost) + '");';
+				return '$("#uname-inp").val("' + escHTML(d.name) + '"); $("#ucosts-inp").val("' + escHTML(d.cost) + '");';
 			})
 			.append('title')
 			.text((d) => {
-				return 'User: ' + escJQuot(d.name) + '\nCost: $' + Math.round(d.cost * 100) / 100 + '/h';
+				return 'User: ' + (d.name) + '\nCost: $' + Math.round(d.cost * 100) / 100 + '/h';
 			})
 			.attr('class', 'tooltip');
 
@@ -129,7 +129,7 @@ $(document).ready(function(){
 			})
 			.attr('class', tcl + '-row-rect')
 			.attr('onclick', (d) => {
-				return '$("#uname-inp").val("' + escJQuot(d.name) + '")';
+				return '$("#uname-inp").val("' + escHTML(d.name) + '")';
 			});
 
 		usrbarrow

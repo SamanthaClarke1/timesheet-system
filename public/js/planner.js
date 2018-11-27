@@ -9,7 +9,7 @@ $(document).ready(function() {
 	(function() {
 		let toImplantHTML = '<option value="Date">Date</option>';
 		for (let i = 0; i < indexToName.length; i++) {
-			toImplantHTML += '<option value="' + escJQuot(indexToName[i]) + '">' + escHTML(indexToName[i]) + '</option>';
+			toImplantHTML += '<option value="' + escHTML(indexToName[i]) + '">' + escHTML(indexToName[i]) + '</option>';
 		}
 		$('#fieldSelect').html(toImplantHTML);
 	})();
@@ -161,7 +161,7 @@ $(document).ready(function() {
 				for (let row of data) {
 					toSetAsHTML += '<tr class="ts-planner-row ' + (total % 2 == 0 ? 'even ' : '') + 'showing col-12">';
 					for (let i in row) {
-						toSetAsHTML += '<td class="col-2 ' + escJQuot(indexToName[i]) + '-d">' + escHTML(row[i]) + '</td>';
+						toSetAsHTML += '<td class="col-2 ' + escHTML(indexToName[i]) + '-d">' + escHTML(row[i]) + '</td>';
 					}
 					toSetAsHTML += '</tr>';
 					total++;

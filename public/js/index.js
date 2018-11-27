@@ -103,24 +103,24 @@ function getHTMLForTimer(timer, isOdd, trusty=false) {
 	isOdd %= 2;
 
 	return `
-	<tr id="timer-tr-${escJQuot(timer.id)}" class="col-12 ts-row row no-gutters rokyt-timer-bar ${(isOdd?'odd':'even')}">
+	<tr id="timer-tr-${escHTML(timer.id)}" class="col-12 ts-row row no-gutters rokyt-timer-bar ${(isOdd?'odd':'even')}">
 		<td class="col-3">
 			${escHTML(timer.proj)}
-			<img class="img icon24" alt="${escJQuot(timer.prog)}"
-				src="/res/${escJQuot(timer.prog)}/${escJQuot(timer.prog)}24x24.ico" />
+			<img class="img icon24" alt="${escHTML(timer.prog)}"
+				src="/res/${escHTML(timer.prog)}/${escHTML(timer.prog)}24x24.ico" />
 			${escHTML(timer.xtraopts)}
 		</td>
 		<td class="col-3">${escHTML(timer.shot)}</td>
 		<td class="col-3">${escHTML(timer.task)}</td>
 		<td class="col-3 row no-gutters text-center">
-			<span class="col-3" onclick="${timer.timeStarted == -1 ? 'un' : ''}pauseTimer('${escJQuot(timer.id)}')">
+			<span class="col-3" onclick="${timer.timeStarted == -1 ? 'un' : ''}pauseTimer('${escHTML(timer.id)}')">
 				${timer.timeStarted == -1 ? '<i class="fa fa-play"></i>' : 
 					formatMilliToHourMin( timer.timeSpent + (Date.now() - timer.timeStarted) )}
 			</span>
-			<button class="col-3 offset-1 btn btn-outline-info" type="submit" style="color: #4550e7;" onclick="publishTimer('${escJQuot(timer.id)}')" >
+			<button class="col-3 offset-1 btn btn-outline-info" type="submit" style="color: #4550e7;" onclick="publishTimer('${escHTML(timer.id)}')" >
 				<i class="fa fa-send" aria-hidden="true"></i>
 			</button>
-			<button class="col-3 offset-1 btn btn-outline-danger" type="submit" style="color: #793025;" onclick="removeTimer('${escJQuot(timer.id)}')" >
+			<button class="col-3 offset-1 btn btn-outline-danger" type="submit" style="color: #793025;" onclick="removeTimer('${escHTML(timer.id)}')" >
 				<i class="fa fa-trash" aria-hidden="true"></i>
 			</button>
 		</td>
@@ -130,7 +130,7 @@ function getHTMLForTimer(timer, isOdd, trusty=false) {
 
 function getJobHTML(job, srv, tid) {
 	return `
-<tr class="ts-row row no-gutters col-12 job-row shrinkme job-id-` + escJQuot(job.id) + `" id="tid-` + escJQuot(tid) + `">
+<tr class="ts-row row no-gutters col-12 job-row shrinkme job-id-` + escHTML(job.id) + `" id="tid-` + escHTML(tid) + `">
 	<td class="col-3 job-proj">` + escHTML(job.proj) + `</td>
 	<td class="col-3 job-shot">` + escHTML(job.shot) + `</td>
 	<td class="col-3 job-task">` + escHTML(job.task) + `</td>
@@ -138,13 +138,13 @@ function getJobHTML(job, srv, tid) {
 	<td class="col-1 job-edit row no-gutters text-center">
 		<div `+(srv.editable == 'true' ? '' : 'disabled ')+
 			` style="height: 15px;" class="col-12" onclick="updateJobTime(0.25, '` +
-			escHTML(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `', '` + escJQuot(job.id) + `', '` + escJQuot(job.day) + `', '` + escJQuot(srv.tdate) + `');"> 
+			escHTML(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `', '` + escHTML(job.id) + `', '` + escHTML(job.day) + `', '` + escHTML(srv.tdate) + `');"> 
 			<i class="fa fa-caret-up job-edit-caret" aria-hidden="true">
 			</i>
 		</div>
 		<div `+(srv.editable == 'true' ? '' : 'disabled ')+
 			` style="height: 15px;" class="col-12" onclick="updateJobTime(-0.25, '` +
-			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `', '` + escJQuot(job.id) + `', '` + escJQuot(job.day) + `', '` + escJQuot(srv.tdate) + `');"> 
+			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `', '` + escHTML(job.id) + `', '` + escHTML(job.day) + `', '` + escHTML(srv.tdate) + `');"> 
 			<i class="fa fa-caret-down job-edit-caret" aria-hidden="true">
 			</i>
 		</div>
@@ -152,11 +152,11 @@ function getJobHTML(job, srv, tid) {
 	<td class="col-1 job-del text-center">
 		<form action="/code/deljob" method="POST">
 			<input name="jobuser" class="delj-user" value="` +
-			escJQuot(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `" hidden />
-			<input name="jobid" class="delj-id" value="` + escJQuot(job.id) + `" hidden />
-			<input name="day" class="delj-day" value="` + escJQuot(job.day) + `" hidden />
-			<input name="date" class="delj-date" value="` + escJQuot(srv.tdate) + `" hidden />
-			<button id="deljob-` + escJQuot(job.id) + '" class="btn-delj" type="submit" style="color: #e75045;"' +
+			escHTML(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `" hidden />
+			<input name="jobid" class="delj-id" value="` + escHTML(job.id) + `" hidden />
+			<input name="day" class="delj-day" value="` + escHTML(job.day) + `" hidden />
+			<input name="date" class="delj-date" value="` + escHTML(srv.tdate) + `" hidden />
+			<button id="deljob-` + escHTML(job.id) + '" class="btn-delj" type="submit" style="color: #e75045;"' +
 			(srv.editable == 'true' ? '' : ' disabled') +
 			`> <i class="fa fa-trash" aria-hidden="true"></i></button>
 		</form>
@@ -194,7 +194,7 @@ function submitJobCallback(parentForm) {
 
 				setTimeout(function(njob) { njob.removeClass('shrinkme'); }, 10, njob);
 
-				bindDeleteBlocker($('#deljob-' + escJQuot(job.id))); // this could *theoretically* be set by an attacker, so ima escape the quots
+				bindDeleteBlocker($('#deljob-' + escHTML(job.id))); // this could *theoretically* be set by an attacker, so ima escape the quots
 				updateTotalWeekBar();
 				var total = updateTotalDayBar($(this));
 				updateDayColor(job.day, total);
@@ -405,7 +405,7 @@ function fillRokytOpts(tt) {
 			for(let i in rokytProgOpts[prog]['pretty']) {
 				let optPretty = rokytProgOpts[prog].pretty[i];
 				let optTech = rokytProgOpts[prog].tech[i];
-				toAppend += `<option value="${escJQuot(optTech)}">${escHTML(optPretty)}</option>`;
+				toAppend += `<option value="${escHTML(optTech)}">${escHTML(optPretty)}</option>`;
 			}
 			$('.rokyt-xtra-opts').empty().append(toAppend);
 			$('.rokyt-xtra-opts').removeAttr('disabled');
@@ -841,7 +841,7 @@ function updateShots(tshots, shotel) {
 	let htmlToIns = '<option value="general">general</option>\n<option value="assets">assets</option>';
 	
 	for(let i in tshots) {
-		htmlToIns += '<option value="'+escJQuot(tshots[i].code)+'">'+escHTML(tshots[i].code)+'</option>';
+		htmlToIns += '<option value="'+escHTML(tshots[i].code)+'">'+escHTML(tshots[i].code)+'</option>';
 	}
 
 	$(shotel).css('background', 'red !important').css('border', '4px solid red !important');
@@ -853,7 +853,7 @@ function updateShots(tshots, shotel) {
 function updateTasks(ttasks, taskel) {
 	var html = '';
 	for (var task of ttasks) {
-		html += '<option value="' + escJQuot(task) + '">' + escHTML(task) + '</option>';
+		html += '<option value="' + escHTML(task) + '">' + escHTML(task) + '</option>';
 	}
 	taskel.empty();
 	taskel.append(html);
