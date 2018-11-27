@@ -71,15 +71,37 @@ function detectBrowser() { // tasty ponyfill adapted from https://stackoverflow.
 
 let BROWSER = detectBrowser();
 
-// ik bad code but its a lazy track for my own purposes that will prolly get removed later
-$.get('/ajax/browsertracker?browser=' + BROWSER.name + '&version=' + BROWSER.version, function (data) {
-	if(data.errcode > 300 || data.errcode < 200) console.log('ERROR IN DATA TRACK: ' + data.err + ' ERRCODE: ' + data.errcode);
-});
-
 
 let tmp;
 $.fn.classList = function() { return this[0].className.split(/\s+/); }; // jquery plugin for classList
 $.fn.safeVal   = function() { return (tmp=((this.attr('disabled')?' ':'')||(this.attr('hidden')?' ':'')||this.val()))==' '?'':tmp; };
+
+function escURI(str) {
+	return encodeURIComponent(String(str));
+}
+function escHTML(str) {
+	return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+function escQuot(str) {
+	return String(str).replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+function escJQuot(str) {
+	return String(str).replace(/'/g, '\x27').replace(/"/g, '\x22');
+}
+function escSQuot(str) {
+	return String(str).replace(/'/g, '\\\'').replace(/"/g, '\\"');
+}
+String.prototype.escHTML = function () {
+	return this.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+String.prototype.escURI = function () {
+	return encodeURIComponent(this);
+}
+
+// ik bad code but its a lazy track for my own purposes that will prolly get removed later
+$.get('/ajax/browsertracker?browser=' + escURI(BROWSER.name) + '&version=' + escURI(BROWSER.version), function (data) {
+	if(data.errcode > 300 || data.errcode < 200) console.log('ERROR IN DATA TRACK: ' + escHTML(data.err) + ' ERRCODE: ' + escHTML(data.errcode));
+});
 
 const startDate = new Date().getTime();
 

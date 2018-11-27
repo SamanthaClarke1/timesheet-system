@@ -156,7 +156,7 @@ logStreams.general = createLogStream('general');
 logStreams.sghttp = createLogStream('sghttp');
 
 // okay, yeah, redefining system functions probably isnt the best idea but it works damn fine, and you can still use stdout.write
-console.log = function(str, pers = srvrPRFX, channel='general', group=0) {
+console.log = function(str, pers = srvrPRFX, channel = 'general', group=0) {
 	// group (0 = print both to logs and to terminal, 1 = print just logs, -1 = print just terminal)
 	if(group < 1) {
 		process.stdout.clearLine();

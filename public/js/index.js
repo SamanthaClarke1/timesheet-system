@@ -84,7 +84,9 @@ function formatMilliToHourMin(milli) {
 	let m = Math.floor(milli / (60*1000));
 	let h = Math.floor(m / 60);
 	m %= 60;
-	return (h+'').padStart(1,0)+':'+(m+'').padStart(2,0);
+	return escHTML(h).padStart(1,0)+':'+escHTML(m).padStart(2,0); // i hate the fact that js makes me do shit like this
+	// like i just know some crazy dude is gonna figure out a way to make a script tag out of like, NaN array accesses like
+	// (milli / 60)[0] = 'N' and then keep doing that with dumb shit to get all the way to a '<script> alert(1) </script>'
 }
 function translateToName(cache, type, sgName) { // translation returns false on failure, and name on success.
 	sgName = sgName.toLowerCase().split(' ').join('');
@@ -101,24 +103,24 @@ function getHTMLForTimer(timer, isOdd, trusty=false) {
 	isOdd %= 2;
 
 	return `
-	<tr id="timer-tr-${timer.id}" class="col-12 ts-row row no-gutters rokyt-timer-bar ${(isOdd?'odd':'even')}">
+	<tr id="timer-tr-${escJQuot(timer.id)}" class="col-12 ts-row row no-gutters rokyt-timer-bar ${(isOdd?'odd':'even')}">
 		<td class="col-3">
-			${timer.proj}
-			<img class="img icon24" alt="${timer.prog}"
-				src="/res/${timer.prog}/${timer.prog}24x24.ico" />
-			${timer.xtraopts}
+			${escHTML(timer.proj)}
+			<img class="img icon24" alt="${escJQuot(timer.prog)}"
+				src="/res/${escJQuot(timer.prog)}/${escJQuot(timer.prog)}24x24.ico" />
+			${escHTML(timer.xtraopts)}
 		</td>
-		<td class="col-3">${timer.shot}</td>
-		<td class="col-3">${timer.task}</td>
+		<td class="col-3">${escHTML(timer.shot)}</td>
+		<td class="col-3">${escHTML(timer.task)}</td>
 		<td class="col-3 row no-gutters text-center">
-			<span class="col-3" onclick="${timer.timeStarted == -1 ? 'un' : ''}pauseTimer('${timer.id}')">
+			<span class="col-3" onclick="${timer.timeStarted == -1 ? 'un' : ''}pauseTimer('${escJQuot(timer.id)}')">
 				${timer.timeStarted == -1 ? '<i class="fa fa-play"></i>' : 
 					formatMilliToHourMin( timer.timeSpent + (Date.now() - timer.timeStarted) )}
 			</span>
-			<button class="col-3 offset-1 btn btn-outline-info" type="submit" style="color: #4550e7;" onclick="publishTimer('${timer.id}')" >
+			<button class="col-3 offset-1 btn btn-outline-info" type="submit" style="color: #4550e7;" onclick="publishTimer('${escJQuot(timer.id)}')" >
 				<i class="fa fa-send" aria-hidden="true"></i>
 			</button>
-			<button class="col-3 offset-1 btn btn-outline-danger" type="submit" style="color: #793025;" onclick="removeTimer('${timer.id}')" >
+			<button class="col-3 offset-1 btn btn-outline-danger" type="submit" style="color: #793025;" onclick="removeTimer('${escJQuot(timer.id)}')" >
 				<i class="fa fa-trash" aria-hidden="true"></i>
 			</button>
 		</td>
@@ -128,21 +130,21 @@ function getHTMLForTimer(timer, isOdd, trusty=false) {
 
 function getJobHTML(job, srv, tid) {
 	return `
-<tr class="ts-row row no-gutters col-12 job-row shrinkme job-id-` + job.id + `" id="tid-` + tid + `">
-	<td class="col-3 job-proj">` + job.proj + `</td>
-	<td class="col-3 job-shot">` + job.shot + `</td>
-	<td class="col-3 job-task">` + job.task + `</td>
-	<td class="col-1 job-time">` + job.time + `</td>
+<tr class="ts-row row no-gutters col-12 job-row shrinkme job-id-` + escJQuot(job.id) + `" id="tid-` + escJQuot(tid) + `">
+	<td class="col-3 job-proj">` + escHTML(job.proj) + `</td>
+	<td class="col-3 job-shot">` + escHTML(job.shot) + `</td>
+	<td class="col-3 job-task">` + escHTML(job.task) + `</td>
+	<td class="col-1 job-time">` + escHTML(job.time) + `</td>
 	<td class="col-1 job-edit row no-gutters text-center">
 		<div `+(srv.editable == 'true' ? '' : 'disabled ')+
 			` style="height: 15px;" class="col-12" onclick="updateJobTime(0.25, '` +
-			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `', '` + job.id + `', '` + job.day + `', '` + srv.tdate + `');"> 
+			escHTML(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `', '` + escJQuot(job.id) + `', '` + escJQuot(job.day) + `', '` + escJQuot(srv.tdate) + `');"> 
 			<i class="fa fa-caret-up job-edit-caret" aria-hidden="true">
 			</i>
 		</div>
 		<div `+(srv.editable == 'true' ? '' : 'disabled ')+
 			` style="height: 15px;" class="col-12" onclick="updateJobTime(-0.25, '` +
-			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `', '` + job.id + `', '` + job.day + `', '` + srv.tdate + `');"> 
+			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `', '` + escJQuot(job.id) + `', '` + escJQuot(job.day) + `', '` + escJQuot(srv.tdate) + `');"> 
 			<i class="fa fa-caret-down job-edit-caret" aria-hidden="true">
 			</i>
 		</div>
@@ -150,11 +152,11 @@ function getJobHTML(job, srv, tid) {
 	<td class="col-1 job-del text-center">
 		<form action="/code/deljob" method="POST">
 			<input name="jobuser" class="delj-user" value="` +
-			(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `" hidden />
-			<input name="jobid" class="delj-id" value="` + job.id + `" hidden />
-			<input name="day" class="delj-day" value="` + job.day + `" hidden />
-			<input name="date" class="delj-date" value="` + srv.tdate + `" hidden />
-			<button id="deljob-` + job.id + '" class="btn-delj" type="submit" style="color: #e75045;"' +
+			escJQuot(srv.userIsAdmin == 'true' ? srv.tuserName : srv.userName) + `" hidden />
+			<input name="jobid" class="delj-id" value="` + escJQuot(job.id) + `" hidden />
+			<input name="day" class="delj-day" value="` + escJQuot(job.day) + `" hidden />
+			<input name="date" class="delj-date" value="` + escJQuot(srv.tdate) + `" hidden />
+			<button id="deljob-` + escJQuot(job.id) + '" class="btn-delj" type="submit" style="color: #e75045;"' +
 			(srv.editable == 'true' ? '' : ' disabled') +
 			`> <i class="fa fa-trash" aria-hidden="true"></i></button>
 		</form>
@@ -192,14 +194,14 @@ function submitJobCallback(parentForm) {
 
 				setTimeout(function(njob) { njob.removeClass('shrinkme'); }, 10, njob);
 
-				bindDeleteBlocker($('#deljob-' + job.id));
+				bindDeleteBlocker($('#deljob-' + escJQuot(job.id))); // this could *theoretically* be set by an attacker, so ima escape the quots
 				updateTotalWeekBar();
 				var total = updateTotalDayBar($(this));
 				updateDayColor(job.day, total);
 				updateShading(tbody);
 			});
 		} else if (data.err && data.errcode) {
-			alert('ERRCODE ' + data.errcode + ' : ' + data.err);
+			alert('ERRCODE ' + escHTML(data.errcode) + ' : ' + escHTML(data.err));
 			if (data.errcode == 403) location.reload();
 		} else {
 			alert('Empty / Malformed Data recieved. The page will now reload.');
@@ -285,10 +287,10 @@ function updateJobTime(amt, jobuser, jobid, jobday, jobdate) {
 
 		$.post('/code/edittime', { jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text() }, function (data) { 
 			if(data.errcode < 200 || data.errcode > 300) {
-				alert("ERRCODE: " + data.errcode + " ERR: " + data.err);
+				alert("ERRCODE: " + escHTML(data.errcode) + " ERR: " + escHTML(data.err));
 			} else {
 				if(data.errcode != 200) {
-					console.log("Recoverable error, code " + data.errcode + " err " + data.err);
+					console.log("Recoverable error, code " + escHTML(data.errcode) + " err " + escHTML(data.err));
 				}
 			}
 		}, 'json');
@@ -330,7 +332,7 @@ function updateTotalDayBar(tableEl) {
 
 	var toIns =
 		`<tr class="ts-row row no-gutters col-12 total-day-bar">
-			<td class="col-1 offset-9 total-day-bar-num" style="text-align: left;">` + total + `</td>
+			<td class="col-1 offset-9 total-day-bar-num" style="text-align: left;">` + escHTML(total) + `</td>
 			<td class="col-2">Total</td>
 		</tr>`;
 	tableEl.append(toIns);
@@ -403,7 +405,7 @@ function fillRokytOpts(tt) {
 			for(let i in rokytProgOpts[prog]['pretty']) {
 				let optPretty = rokytProgOpts[prog].pretty[i];
 				let optTech = rokytProgOpts[prog].tech[i];
-				toAppend += `<option value=${optTech}>${optPretty}</option>`;
+				toAppend += `<option value="${escJQuot(optTech)}">${escHTML(optPretty)}</option>`;
 			}
 			$('.rokyt-xtra-opts').empty().append(toAppend);
 			$('.rokyt-xtra-opts').removeAttr('disabled');
@@ -527,7 +529,7 @@ function createTimer(proj, shot, task, jobuser, day, date, prog, xtraopts, paren
 	
 	if(timer.prog != 'unknown') {
 		timer.process = spawn('"/Volumes/RS01/Resources/Engineering/Sam/timesheet-desktop/'+
-			timer.prog+'_launch.sh"', [suffix, timer.xtraopts], { shell: true });
+			escSQuot(timer.prog)+'_launch.sh"', [suffix, timer.xtraopts], { shell: true });
 
 		timer.process.stdout.on('data', timerProcStdoutEvent(timer));
 		timer.process.stderr.on('data', timerProcStderrEvent(timer));
@@ -791,7 +793,7 @@ function getProj(shotel, projName, callback) {
 
 	let URL=fromSrv.sgHttpServer+
 		'?req=find&limit=1&type=Project&fields=[%22name%22,%22id%22]&filters=[[%22name%22,%22contains%22,%22'
-		+projName+'%22]]';
+		+escURI(projName)+'%22]]';
 	
 	console.log('getProj - GET: ', URL);
 	
@@ -814,7 +816,7 @@ function getShots(shotel, projName, callback) {
 	if(!proj || !callback) return false;
 	let URL=fromSrv.sgHttpServer+
 		'?req=find&fields=[%22code%22,%22id%22]&type=Shot&filters=[[%22project%22,%22is%22,%7B%22id%22:'+
-		proj.id+',%20%22type%22:%22'+proj.stype+'%22%7D]]';
+		escURI(proj.id)+',%20%22type%22:%22'+escURI(proj.stype)+'%22%7D]]';
 	console.log('getShots', URL);
 
 	$.ajax({
@@ -839,7 +841,7 @@ function updateShots(tshots, shotel) {
 	let htmlToIns = '<option value="general">general</option>\n<option value="assets">assets</option>';
 	
 	for(let i in tshots) {
-		htmlToIns += '<option value="'+tshots[i].code+'">'+tshots[i].code+'</option>';
+		htmlToIns += '<option value="'+escJQuot(tshots[i].code)+'">'+escHTML(tshots[i].code)+'</option>';
 	}
 
 	$(shotel).css('background', 'red !important').css('border', '4px solid red !important');
@@ -851,7 +853,7 @@ function updateShots(tshots, shotel) {
 function updateTasks(ttasks, taskel) {
 	var html = '';
 	for (var task of ttasks) {
-		html += '<option value="' + task + '">' + task + '</option>';
+		html += '<option value="' + escJQuot(task) + '">' + escHTML(task) + '</option>';
 	}
 	taskel.empty();
 	taskel.append(html);

@@ -140,7 +140,7 @@ $(document).ready(function() {
 		for (var user of users) {
 			// the weird type check is because im passing both a user (eg. { name: 'user', displayName: 'User', _id: '123' } ) and a proj (eg. 'proj')
 			toAppend +=
-				'<option value="' + (typeof user == 'object' ? user.name : user) + '">' + (typeof user == 'object' ? user.displayName : user) + '</option>';
+				'<option value="' + escJQuot(typeof user == 'object' ? user.name : user) + '">' + escHTML(typeof user == 'object' ? user.displayName : user) + '</option>';
 		}
 		$('#user-list').empty().append(toAppend);
 	}
@@ -237,7 +237,7 @@ $(document).ready(function() {
 	}
 
 	function createTable(svg, data, dayRange, minDate, maxDate, tcl, marg, x, y, w, h, wscl, hscl) {
-		var tableEl = svg.append('g').attr('transform', 'translate(' + x + ', ' + y + ')').attr('id', tcl + '-tables');
+		var tableEl = svg.append('g').attr('transform', 'translate(' + escJQuot(x) + ', ' + escJQuot(y) + ')').attr('id', tcl + '-tables');
 
 		var svgr = tableEl.selectAll('g');
 
@@ -262,7 +262,7 @@ $(document).ready(function() {
 				return d.id % 2 == 0 ? '#ccc' : '#ddd';
 			})
 			.attr('class', (_, i) => {
-				return tcl + '-row ' + tcl + '-row-r-' + i;
+				return esJQuot(tcl) + '-row ' + escJQuot(tcl) + '-row-r-' + escJQuot(i);
 			});
 
 		usrrow
@@ -287,20 +287,20 @@ $(document).ready(function() {
 			})
 			.attr('fill-opacity', '0.8')
 			.attr('class', (d) => {
-				return tcl + '-job ' + tcl + '-job-day-' + d.date;
+				return escJQuot(tcl) + '-job ' + escJQuot(tcl) + '-job-day-' + escJQuot(d.date);
 			})
 			.append('title')
 			.text((d) => {
 				return (
 					'Project: ' +
-					d.proj +
+					escHTML(d.proj) +
 					'\nDay: ' +
-					d.day +
+					escHTML(d.day) +
 					'\nShot: ' +
-					(d.shot ? d.shot : 'general') +
+					escHTML(d.shot ? d.shot : 'general') +
 					'\nHours: ' +
-					d.time +
-					(viewMode == 'user' ? '\nTask: ' + d.task : '')
+					escHTML(d.time) +
+					(viewMode == 'user' ? '\nTask: ' + escHTML(d.task) : '')
 				);
 			})
 			.attr('class', 'tooltip');
@@ -505,8 +505,8 @@ $(document).ready(function() {
 		let usrbar = svg
 			.append('g')
 			.attr('transform', 'translate(' + (marg.left / 2 - marg.lbar + inx) + ', ' + iny + ')')
-			.attr('class', tclass)
-			.attr('id', tclass + '-0');
+			.attr('class', escJQuot(tclass))
+			.attr('id', escJQuot(tclass) + '-0');
 
 		let usrbarrow = usrbar.selectAll('g').data(dat).enter().append('g').attr('transform', (d) => {
 			return 'translate(0,' + d.gyspacing / 8 * hscl + ')';
@@ -553,7 +553,7 @@ $(document).ready(function() {
 			.attr('id', tclass + '-0');
 
 		let usrbarrow = usrbar.selectAll('g').data(dat).enter().append('g').attr('transform', (d) => {
-			return 'translate(0,' + d.gyspacing / 8 * hscl + ')';
+			return 'translate(0,' + escJQuot(d.gyspacing / 8 * hscl) + ')';
 		});
 
 		usrbarrow
@@ -582,7 +582,7 @@ $(document).ready(function() {
 				return hscl * (d.offset / 8) / 2;
 			})
 			.attr('fill', '#111')
-			.attr('class', tclass + '-row-text')
+			.attr('class', escJQuot(tclass) + '-row-text')
 			.text((d) => {
 				total += Math.round(parseFloat(tclass == 'totalpricebar' ? d.totalcost : d.total) * 100) / 100;
 				return (tclass == 'totalpricebar' ? '$' : '') + Math.round(parseFloat(tclass == 'totalpricebar' ? d.totalcost : d.total) * 100) / 100;
@@ -601,7 +601,7 @@ $(document).ready(function() {
 			.attr('fill', '#eee')
 			.attr('rx', marg.rxy)
 			.attr('ry', marg.rxy)
-			.attr('class', tclass + '-total-rect');
+			.attr('class', escJQuot(tclass) + '-total-rect');
 
 		totalbarrow
 			.append('text')
