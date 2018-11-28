@@ -12,6 +12,10 @@
 			<!--MANUAL LOGINS-->
 			
 			<form class="formBox rounded col-12 text-center manual-logins" id="main-form" action="/auth/signup" method="post">
+				<% if (XSRFToken) { %>
+					<input type="token" name="XSRFToken" value="<%- XSRFToken %>" hidden />
+				<% } %>
+			
 				<div class="login-header">
 					<h2 class="grn-text font-big"> Add a user </h2>
 					<hr class="title-underline">

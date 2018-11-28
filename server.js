@@ -156,12 +156,14 @@ app.set('view engine', 'ejs');
 app.use(partials());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(session({ secret: process.env.SECRET, resave: false, saveUninitialized: false }));
+// yes, those are 4-hour long sessions. it's terrible, i know. but my boss complains if people have to log in more than once-twice a day
+app.use(session({ secret: process.env.SECRET, resave: false, saveUninitialized: false, cookie: { maxAge: 4 * 60 * 60 * 1000 } }));
 app.use(express.static(__dirname + '/public'));
 
 // Initialize Passport!  Also use passport.session() middleware, to support
 // persistent login sessions (recommended).
 app.use(passport.initialize());
+// yes the double session use is indeed what i mean to do. see http://www.passportjs.org/docs/configure/ ctrl+f "passport.session"
 app.use(passport.session());
 
 //#endregion importConfig
@@ -177,7 +179,6 @@ const intrPRFX	= '[\x1b[00m\x1b[38;2;125;163;230m] INTR: ';
 const url		= options.dburl || (process.env.MONGO_URL_PREFIX + process.env.MONGO_URL_BODY + process.env.MONGO_URL_SUFFIX); // Connection URL.
 const SHOTUPDATEFREQ = 1000 * 60 * 10;
 const XSRF_TIMEOUT_MINS = 60; // please keep this under 60 for security reasons :) // 60 is the best number for it tho, to sync up with the general.js refresh.
-
 
 let SHOTCACHE = {};
 let TRANSLATIONCACHE = {};
@@ -221,6 +222,34 @@ console.log = function(str, pers = srvrPRFX, channel = 'general', group=0) {
 		}
 	}
 };
+
+// these are responses to be passed to getXSRFValidator
+function resResponseAJAX(res, errMsg, errcode) {
+	return res.json({ err: errMsg, errcode: errcode, data: {} })
+}
+function resResponseRedir(res, errMsg, errcode) {
+	return res.redirect('/?err='+errMsg);
+}
+
+// this is curried middle ware that should be called like below in express
+// app.get("/foo", getXSRFValidator(resResponseAJAX)), function () { /* my usual code */ });
+function getXSRFValidator(resResponse) {
+	return (
+		function (req, res, next) {
+			if(!req.user || !req.user.name) return resReponse(res, 'User not authenticated', 403);
+			
+			let tXSRFToken = '';
+			if(req.query && req.query.XSRFToken) tXSRFToken = req.query.XSRFToken;
+			if(req.body && req.body.XSRFToken) tXSRFToken = req.body.XSRFToken;
+
+			if(!tXSRFToken) return resResponse(res, 'No XSRF Token sent', 403);
+
+			if(!validateXSRFToken(tXSRFToken, req.user.name)) return resResponse(res, 'Invalid XSRF Token', 403);
+
+			return next()
+		}
+	);
+}
 
 var loaderShouldBePrinting = true;
 printLoader('Server in startup ');
@@ -675,15 +704,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		//#region ajaxGetters
 
-		app.get('/ajax/getusercosts', ensureAJAXAuthenticated, function slashAjaxGetusercostsGET(req, res) {
+		app.get('/ajax/getusercosts', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxGetusercostsGET(req, res) {
 			if (req.user.isadmin != 'true') return res.json({ err: 'User does not have the permissions to use this function', errcode: 403, data: {} });
-
-			if (!req.user.name || !req.query.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
 
 			usersDB.find({}).project({ name: 1, displayName: 1, cost: 1 }).toArray((err, users) => {
 				if (err) throw err;
@@ -692,15 +714,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 			});
 		});
 
-		app.get('/ajax/getanalyticsdata', ensureAJAXAuthenticated, function slashAjaxGetanalyticsdataGET(req, res) {
+		app.get('/ajax/getanalyticsdata', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxGetanalyticsdataGET(req, res) {
 			if (req.user.isadmin != 'true') return res.json({ err: 'User does not have the permissions to use this function', errcode: 403, data: {} });
-
-			if (!req.user.name || !req.query.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
 
 			var fromdate = new Date(req.query.fromdate).getTime(),
 				todate = new Date(req.query.todate).getTime();
@@ -722,16 +737,9 @@ mongodb.connect(url, function mongConnect(err, db) {
 			});
 		}); // /analytics?user=philippa&user=william&user=morgane&user=jee&fromdate=2018-06-07&todate=2018-06-12
 
-		app.get('/ajax/getallnames/:type', ensureAJAXAuthenticated, function slashAjaxGetallnamesGET(req, res) {
+		app.get('/ajax/getallnames/:type', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxGetallnamesGET(req, res) {
 			//req.params.type is the type.
 			var ttype = req.params.type;
-
-			if (!req.user.name || !req.query.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
 
 			if (ttype == 'users') {
 				usersDB.find({}).project({ name: 1, displayName: 1 }).toArray((err, users) => {
@@ -748,13 +756,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 			}
 		});
 
-		app.get('/ajax/getplans', ensureAJAXAuthenticated, function slashAjaxGetplansGET(req, res) {
-			if (!req.user.name || !req.query.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
+		app.get('/ajax/getplans', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxGetplansGET(req, res) {
 
 			if (req.user.isadmin != 'true') {
 				res.json({ err: 'Insufficient permissions', errcode: 403, data: {} });
@@ -770,16 +772,9 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		//#region ajaxSetters
 
-		app.get('/ajax/browsertracker', ensureAJAXAuthenticated, function slashAjaxBrowserTracker(req, res) {
+		app.get('/ajax/browsertracker', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxBrowserTracker(req, res) {
 			// ik this is some really adhoc shit but i just needed it for my local deployment purposes.
 			// really secretly hope that somebody starts sending off fake requests with like, ?browser=KingZargalsMagicScroll&version=666 or something.
-
-			if (!req.user.name || !req.query.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
 
 			let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 			if(!ip) return false;
@@ -798,16 +793,9 @@ mongodb.connect(url, function mongConnect(err, db) {
 			return res.json({ err: '', errcode: 200, data: {} });
 		});
 
-		app.post('/ajax/setusercost', ensureAJAXAuthenticated, function slashAjaxSetusercostPOST(req, res) {
+		app.post('/ajax/setusercost', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxSetusercostPOST(req, res) {
 			let uname = req.body.uname;
 			let ucost = req.body.ucosts;
-
-			if (!req.user.name || !req.body.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
 
 			usersDB.findOne({ name: uname }, (err, data) => {
 				if (err) throw err;
@@ -823,13 +811,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 			});
 		});
 
-		app.post('/code/addjob', ensureAJAXAuthenticated, function slashCodeAddjobPOST(req, res) {
-			if (!req.user.name || !req.body.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
+		app.post('/code/addjob', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashCodeAddjobPOST(req, res) {
 
 			if (req.body.date != 'Current' && new Date(req.body.date).getTime() > getPreviousMonday().getTime()) {
 				// the target date is in the future, plans *DONT* get scans
@@ -916,13 +898,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 			});
 		});
 
-		app.post('/code/deljob', ensureAJAXAuthenticated, function slashCodeDeljobPOST(req, res) {
-			if (!req.user.name || !req.body.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
+		app.post('/code/deljob', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashCodeDeljobPOST(req, res) {
 
 			usersDB.findOne({ name: req.body.jobuser }, (err, user) => {
 				if(err) throw err;
@@ -984,13 +960,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 		});
 
 		// from the front end, the params are: { jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text() },
-		app.post('/code/edittime', ensureAJAXAuthenticated, function slashCodeEditTimePOST(req, res) {
-			if (!req.user.name || !req.body.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
+		app.post('/code/edittime', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashCodeEditTimePOST(req, res) {
 
 			req.body.jobtime = parseFloat(req.body.jobtime);
 			if(req.body.jobtime > 16) return res.json({ err: 'Cant have a job longer than 16 hours!', errcode: 504 });
@@ -1058,18 +1028,11 @@ mongodb.connect(url, function mongConnect(err, db) {
 			});
 		});
 
-		app.post('/ajax/planviaspreadsheet', upload.single('file'), ensureAJAXAuthenticated, function slashAjaxPlanviaspreadsheetPOST(req, res) {
+		app.post('/ajax/planviaspreadsheet', upload.single('file'), ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxPlanviaspreadsheetPOST(req, res) {
 			// this ended up being such a large algorithm :/
 			// req.file is the spreadsheet file, loaded in memory. ty multer <3
 			if (req.user.isadmin != 'true') {
 				return res.redirect('/?err=You%20don\'t%20have%20permissions%20to%20use%20the%20planner');
-			}
-
-			if (!req.user.name || !req.body.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
 			}
 
 			let spreadsheet = XLSX.read(req.file.buffer);
@@ -1316,7 +1279,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		//#region authCodePages
 
-		app.post('/auth/signup', ensureAuthenticated, function slashAuthSignup(req, res) {
+		app.post('/auth/signup', ensureAuthenticated, getXSRFValidator(resResponseRedir), function slashAuthSignup(req, res) {
 			if (req.user.isadmin) {
 				if(req.body.password != req.body.confirmpassword)
 					return res.redirect('/?err=Your%20passwords%20dont%20match!');
@@ -1375,7 +1338,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 			return res.redirect('/login');
 		});
 
-		app.post('/auth/changepassword', ensureAuthenticated, function slashAuthChangepasswordPOST(req, res) {
+		app.post('/auth/changepassword', ensureAuthenticated, getXSRFValidator(resResponseRedir), function slashAuthChangepasswordPOST(req, res) {
 			let redir = verifyPassword(req.user.name, req.body.newpassword);
 			if(redir) return res.redirect('/?err='+redir);
 
@@ -1578,6 +1541,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 					setTimeout(sendOffProj, 1500, callback, i+1);
 					// since the shotgun api is somewhat unstable, i found that giving it more time in between api calls helped it not seg fault.
 					// if your sghttp server keeps seg faulting, up this timeout.
+					// luckily, there are practically no time restraints on this transfer since it's async
+					// (other than under 10 minutes, if thats what you have the refresh time set to)
 				}
 				else {
 					setTimeout(callback, 1500); // delayed to let the last project finish
@@ -2109,21 +2074,21 @@ function ensureAuthenticated(req, res, next) {
 	if (req.isAuthenticated()) {
 		return next();
 	}
-	res.redirect('/login?err=Unable%20to%20authenticate%20user.');
+	return res.redirect('/login?err=Unable%20to%20authenticate%20user.');
 }
 
 function ensureAJAXAuthenticated(req, res, next) {
 	if (req.isAuthenticated()) {
 		return next();
 	}
-	res.json({ err: 'User Is Not Authenticated', errcode: 403, data: '' });
+	return res.json({ err: 'User Is Not Authenticated', errcode: 403, data: '' });
 }
 
 function ensureAuthenticatedSilently(req, res, next) {
 	if (req.isAuthenticated()) {
 		return next();
 	}
-	res.redirect('/login');
+	return res.redirect('/login');
 }
 //#endregion passport funcs
 
