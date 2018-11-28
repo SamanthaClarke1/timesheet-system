@@ -110,7 +110,7 @@ Personal todo list for v2.0.0
 - [ ] Custom buttons and inputs for the front end (those defaults keep annoying me)
 - [x] Bug hunting & bug fixes
 - [x] Better XSS Security
-- [ ] Actual XSRF Token generation / validation
-- [ ] *Some* of a security *guide* layout in the top section of the code.
+- [x] Actual XSRF Token generation / validation
+- [x] *Some* of a security *guide* layout in the top section of the code.
 
 #### Made by Samuel Clarke, 2018, for CumulusVFX.
