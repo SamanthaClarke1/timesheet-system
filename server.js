@@ -1339,11 +1339,13 @@ mongodb.connect(url, function mongConnect(err, db) {
 		});
 
 		app.post('/auth/changepassword', ensureAuthenticated, getXSRFValidator(resResponseRedir), function slashAuthChangepasswordPOST(req, res) {
+			if(req.body.newpassword != req.body.newconfirmpassword) return res.redirect('/?err=Passwords%20do%20not%20match!');
+
 			let redir = verifyPassword(req.user.name, req.body.newpassword);
 			if(redir) return res.redirect('/?err='+redir);
 
 			if (passwordHash.verify(req.body.oldpassword, req.user.password)) {
-				req.user.password = hashOf(req.body.newpassword);
+				req.user.password = hashOf(req.body.newconfirmpassword);
 				var user = req.user;
 				usersDB.update(
 					{ name: user.name },
@@ -2015,31 +2017,33 @@ function AESdecrypt(str, key=AESKEY){
 }
 
 function verifyPassword(user, pass) {
+	let ppass = JSON.parse(JSON.stringify(pass));
+
 	let passwordIsBlocked = false;
 	for (let bpass of selectList.bpass) {
-		if (pass == bpass) passwordIsBlocked = true;
+		if (ppass == bpass) passwordIsBlocked = true;
 	}
 	if (passwordIsBlocked) {
 		return 'Your%20New%20Password%20Cant%20Be%20That.';
 	}
 
-	let nums = pass.replace(/[^0-9]/g, '').length;
-	let syms = pass.replace(/[a-zA-Z\d\s:]/g, '').length;
-	let lowerCase = pass.replace(/[^a-z]/g, '').length;
-	let upperCase = pass.replace(/[^A-Z]/g, '').length;
+	let nums = ppass.replace(/[^0-9]/g, '').length;
+	let syms = ppass.replace(/[a-zA-Z\d\s:]/g, '').length;
+	let lowerCase = ppass.replace(/[^a-z]/g, '').length;
+	let upperCase = ppass.replace(/[^A-Z]/g, '').length;
 
 	if (nums < 2) return 'You%20Must%20Have%20At%20Least%20Two%20Numbers!';
 	if (syms < 1) return 'You%20Must%20Have%20At%20Least%20One%20Symbol!';
 	if (lowerCase < 2) return 'You%20Must%20Have%20At%20Least%20Two%20Lower%20Case%20Letters!';
 	if (upperCase < 1) return 'You%20Must%20Have%20At%20Least%20One%20Upper%20Case%20Letter!';
 
-	if (pass.length < 4)  return 'Your%20Password%20Cant%20be%20that%20short!';
+	if (ppass.length < 4)  return 'Your%20Password%20Cant%20be%20that%20short!';
 	if (user.length < 3)  return 'Your%20Username%20Cant%20be%20that%20short!';
-	if (pass.length > 50) return 'Your%20Password%20Cant%20be%20that%20long!';
+	if (ppass.length > 50) return 'Your%20Password%20Cant%20be%20that%20long!';
 	if (user.length > 50) return 'Your%20Username%20Cant%20be%20that%20long!';
 
 	for (let upart in user.toLowerCase().split(' ')) {
-		if (pass.toLowerCase().indexOf(upart) != -1)
+		if (ppass.toLowerCase().indexOf(upart) != -1)
 			return 'Your%20Password%20Cant%20Contain%20Your%20Username!';
 	}
 
