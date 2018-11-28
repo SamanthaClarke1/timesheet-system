@@ -1339,7 +1339,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 					timesheet: { jobs: [] },
 				};
 				if(toIns.name.indexOf('}') != -1 || toIns.name.indexOf('{') != -1 || toIns.name.indexOf('>') != -1 || toIns.name.indexOf('<') != -1
-				|| toIns.name.indexOf('$') != -1 || toIns.name.indexOf('@') != -1 || toIns.name.indexOf('#') != -1 || toIns.name.indexOf('"') != -1) {
+				|| toIns.name.indexOf('$') != -1 || toIns.name.indexOf('@') != -1 || toIns.name.indexOf('#') != -1 || toIns.name.indexOf('"') != -1
+				|| toIns.name.indexOf('.') != -1 || toIns.name.indexOf('\\') != -1|| toIns.name.indexOf('/') != -1 || toIns.name.indexOf(',') != -1) {
 					return res.redirect('/?err=Your%20name%20contains%20illegal%20characters!');
 				}
 
