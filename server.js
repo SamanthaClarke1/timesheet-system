@@ -2015,7 +2015,7 @@ function validateXSRFToken(token, name, now = new Date()) {
 		let tokName = atoken.split('@')[0];
 		let tokTime = parseInt(atoken.split('@')[1]);
 
-		console.log('TOKEN RECEIVED: ' + atoken + '.  NAME: ' + tokName + '.  TIME: ' + tokTime + '.');
+		//console.log('TOKEN RECEIVED: ' + atoken + '.  NAME: ' + tokName + '.  TIME: ' + tokTime + '.');
 
 		if (atoken.split('@').length > 2) { // protects against a user name like 'bob@timestamp', generating tokens like 'bob@timestamp@timestamp'
 			return false;
@@ -2026,7 +2026,7 @@ function validateXSRFToken(token, name, now = new Date()) {
 		if(tokName != name) {
 			return false;
 		}
-		console.log('token considered valid!');
+		//console.log('token considered valid!');
 		return true;
 	} catch (err) {
 		console.log('Some form of invalid or broken XSRF token was received from ' + name);
