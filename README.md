@@ -98,16 +98,19 @@ Personal todo list for v2.0.0
 - [x] Cleaning up old files
 - [x] Cleaning up old console.logs
 - [x] Logs
-- [x] Make my css !important free
+- [x] Make my css !important free (ish)
 - [x] Better command line options
 - [x] Refactoring
 - [x] New Icon
 - [x] Changing the way urls were passed to the server.
 - [x] Letting servers create a temporary admin (via add-user in the cmd) (i know its not all that great but i wrote myself into a corner...)
 - [x] Better README :smile:
-- [ ] Better input validation for the front end
-- [ ] Actual animations for the rokyt launcher
+- [x] Better input validation for the front end
+- [x] Actual animations for the rokyt launcher
 - [ ] Custom buttons and inputs for the front end (those defaults keep annoying me)
-- [ ] Bug hunting & bug fixes
+- [x] Bug hunting & bug fixes
+- [x] Better XSS Security
+- [ ] Actual XSRF Token generation / validation
+- [ ] *Some* of a security *guide* layout in the top section of the code.
 
 #### Made by Samuel Clarke, 2018, for CumulusVFX.

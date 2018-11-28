@@ -17,6 +17,10 @@
 			let IS_NODE = (typeof module !== 'undefined');
 			if(IS_NODE) { console.log("Welcome to the timesheet desktop app."); }
 		</script>
+		<% if (XSRFToken) { %> 
+			<script> const sXSRFToken = "<%- XSRFToken %>"; </script> <!-- passes XSRF Tokens to the client side js -->
+			<!-- (yes, XSRFTokens rendered by the server are being considered to be XSS proof here) -->
+		<% } %>
 
 			<!-- jQuery -->
 		<script src="./lib/jquery.js"></script>

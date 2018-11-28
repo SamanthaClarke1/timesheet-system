@@ -50,7 +50,7 @@ $(document).ready(function(){
 		svg.append('g').attr('transform', 'translate(0, 0)').attr('class', 'axisWhite').call(xAxis);
 	}
 
-	$.get('/ajax/getusercosts', function(data){
+	$.get('/ajax/getusercosts', { XSRFToken: sXSRFToken }, function(data) {
 		if (data.errcode != 200) {
 			alert(data.err);
 		} else {
@@ -65,7 +65,9 @@ $(document).ready(function(){
 		littleburst_timeline.replay();
 		$('#uname-inp').val($('#uname-inp').val().toLowerCase());
 
-		$.post('/ajax/setusercost', $('#uc-mform').serialize(), function(data){
+		let tmForm = $('#uc-mform').serialize();
+		tmForm += '&XSRFToken='+sXSRFToken;
+		$.post('/ajax/setusercost', tmForm, function(data) {
 			if (data.errcode != 200) {
 				alert(data.err);
 			} else {

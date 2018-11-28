@@ -91,16 +91,10 @@ function escJQuot(str) {
 function escSQuot(str) {
 	return String(str).replace(/'/g, '\\\'').replace(/"/g, '\\"');
 }
-String.prototype.escHTML = function () {
-	return this.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-String.prototype.escURI = function () {
-	return encodeURIComponent(this);
-}
 
 // ik bad code but its a lazy track for my own purposes that will prolly get removed later
-$.get('/ajax/browsertracker?browser=' + escURI(BROWSER.name) + '&version=' + escURI(BROWSER.version), function (data) {
-	if(data.errcode > 300 || data.errcode < 200) console.log('ERROR IN DATA TRACK: ' + escHTML(data.err) + ' ERRCODE: ' + escHTML(data.errcode));
+$.get('/ajax/browsertracker', { browser: BROWSER.name, version: BROWSER.version, XSRFToken: sXSRFToken }, function (data) {
+	if(data.errcode > 300 || data.errcode < 200) console.log('ERROR IN DATA TRACK: ' + data.err + ' ERRCODE: ' + data.errcode);
 });
 
 const startDate = new Date().getTime();

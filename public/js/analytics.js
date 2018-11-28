@@ -96,11 +96,14 @@ $(document).ready(function() {
 	});
 
 	$('#submit-btn').bind('click', function(e) {
-		e.preventDefault(); // dont send off the from by redirecting the user to it
+		e.preventDefault(); // dont send off the from by redirecting the user to it, use my jquery!
 		var parentForm = $('#graph-params-form');
 
 		if (viewMode == 'user') {
-			$.get('/ajax/getanalyticsdata', parentForm.serialize(), renderGraphDataParser, 'json');
+			let tParentFormData = parentForm.serialize();
+			tParentFormData += '&XSRFToken='+sXSRFToken;
+
+			$.get('/ajax/getanalyticsdata', tParentFormData, renderGraphDataParser, 'json');
 		} else {
 			renderGraph(projCache, projUsersCache, marg);
 		}
@@ -115,9 +118,12 @@ $(document).ready(function() {
 	function refreshProjCache() {
 		$('#submit-btn').attr('disabled', '');
 
+		let tFormData = $('#graph-params-form').serialize();
+		tFormData += '&XSRFToken='+sXSRFToken;
+
 		$.get(
 			'/ajax/getanalyticsdata',
-			$('#graph-params-form').serialize(),
+			tFormData,
 			function(data) {
 				if (data.errcode == 200) {
 					projUsersCache = data.users;
@@ -147,6 +153,7 @@ $(document).ready(function() {
 
 	$.get(
 		'/ajax/getallnames/users',
+		{XSRFToken: sXSRFToken},
 		function(data) {
 			if (data.errcode == 200) {
 				users = data.data;

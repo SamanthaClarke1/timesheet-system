@@ -211,6 +211,7 @@ function submitJobCallback(parentForm) {
 }
 
 function submitJobData(jobData, parentForm) {
+	jobData.XSRFToken = sXSRFToken;
 	$.post('/code/addjob', jobData, submitJobCallback(parentForm), 'json');
 }
 
@@ -261,8 +262,10 @@ function delJobEvent() {
 			$(this).attr('disabled', 'disabled');
 			
 			let parentForm = $(this).parent();
+			let tParentFormData = parentForm.serialize();
+			tParentFormData += '&XSRFToken='+sXSRFToken;
 			
-			$.post('/code/deljob', parentForm.serialize(), delJobEventCallback($(this), parentForm), 'json');
+			$.post('/code/deljob', tParentFormData, delJobEventCallback($(this), parentForm), 'json');
 		}
 	});
 }
@@ -285,7 +288,7 @@ function updateJobTime(amt, jobuser, jobid, jobday, jobdate) {
 		updateDayColor(jobday, total);
 		updateTotalWeekBar();
 
-		$.post('/code/edittime', { jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text() }, function (data) { 
+		$.post('/code/edittime', { jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text(), XSRFToken: sXSRFToken }, function (data) { 
 			if(data.errcode < 200 || data.errcode > 300) {
 				alert("ERRCODE: " + escHTML(data.errcode) + " ERR: " + escHTML(data.err));
 			} else {
@@ -908,7 +911,9 @@ function submitJobClickEvent(e) {
 
 	if (parentForm.attr('isvalid') == 'valid') {
 		parentForm.find('#subm-btn').attr('disabled', 'disabled');
-		$.post('/code/addjob', parentForm.serialize(), submitJobCallback(parentForm), 'json');
+		let tParentFormData = parentForm.serialize();
+		tParentFormData += '&XSRFToken='+escURI(sXSRFToken); // ewwwww, ik, but it goes to an url not an object unfortunately...
+		$.post('/code/addjob', tParentFormData, submitJobCallback(parentForm), 'json');
 	}
 }
 

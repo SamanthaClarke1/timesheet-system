@@ -102,10 +102,13 @@ $(document).ready(function() {
 			rect_loader.tune(offset).generate().replay();
 			rect_loaded.tune(offset).generate();
 
+			let tFormData = new FormData($('form')[0]);
+			tFormData.XSRFToken = sXSRFToken;
+
 			$.ajax({
 				url: '/ajax/planviaspreadsheet',
 				type: 'POST',
-				data: new FormData($('form')[0]),
+				data: tFormData,
 				cache: false,
 				contentType: false,
 				processData: false,
@@ -117,7 +120,7 @@ $(document).ready(function() {
 						// For handling the progress of the upload
 						myXhr.upload.addEventListener(
 							'progress',
-							function(e){
+							function(e) {
 								if (e.lengthComputable) {
 									$('progress').attr({
 										value: e.loaded,
@@ -130,7 +133,7 @@ $(document).ready(function() {
 					}
 					return myXhr;
 				},
-			}).done(function(){
+			}).done(function() {
 				loadState = 1;
 				rect_loader.tune({ speed: 2 }).generate();
 				updatePlans();
@@ -138,7 +141,7 @@ $(document).ready(function() {
 		}
 	});
 
-	function updateInputField(){
+	function updateInputField() {
 		let field = document.getElementById('filterSearch');
 		let fv = $('#fieldSelect').val();
 		if (fv == 'Date' || fv == 'Start' || fv == 'End') {
@@ -149,8 +152,8 @@ $(document).ready(function() {
 	}
 	updateInputField();
 
-	function updatePlans(){
-		$.get('/ajax/getplans', function(data) {
+	function updatePlans() {
+		$.get('/ajax/getplans', { XSRFToken: sXSRFToken }, function(data) {
 			if (data.errcode == 200) {
 				data = data.data[0].rows;
 				let toSetAsHTML =
