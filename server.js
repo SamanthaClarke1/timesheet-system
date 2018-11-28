@@ -43,6 +43,48 @@
 *                                                                 
 */
 
+/* 
+			~==~==~==~  ON XSRF PROTECTION, AND THE IMPLEMENTATION THEREOF  ~==~==~==~
+
+	
+	Premise 1) All directories that render a page, and thus, have links on them to other directories,
+		SHOULD RETURN AN XSRF TOKEN in their res.render.
+
+
+	Premise 2) All directories that do not render a page, and thus, perform some action on the users behalf,
+		SHOULD BE VALIDATED BY AN XSRF TOKEN.
+
+		Premise 2.1) All directories that would otherwise protect against XSRF (such as the logout page),
+			SHOULD NOT NEED BE VALIDATED BY AN XSRF TOKEN.
+
+
+	Premise 3) All tokens should be valid only to their intended purposes, users, and time frames.
+
+		Premise 3.1) All tokens should be valid only to their user.
+			If not, user A can attack user B, as long as the time is still valid, by appending their own token!
+
+		Premise 3.2) All tokens should be valid only to their time frame, and expire within the hour.
+			If not, user A can steal user B's token, and perform an XSRF attack the following week, rather than hope they get user B within the hour!
+
+		Premise 3.3) No tokens should ever be stored in a cookie, or anything relative to a browser session.
+			IF they were, an XSRF attack would still work!
+
+		Premise 3.4) All tokens should be generated ONLY for validated users. As in, users already signed into the timesheet system.
+			If they were generated for user names that were sent over through requests, you could generate whatever tokens you liked!
+
+		Premise 3.5) All token parsing should be strict enough that it doesnt allow for user spoofing.
+			Assume somebody got around our server side validations, and had a name like "bob@<unixtimestamp>".
+			That would, in loose token parsing, still be validated as a token for bob, at time <unixtimestamp>.
+			So, to protect against this, all token parsing should REFUSE malformed tokens of any sort.
+			This also means that tokens should only be relevant to USER NAMES, NOT USER DISPLAY NAMES.
+	
+	
+	Premise 4) Tokens should not be regarded as solely 'private'. Through some security holes, it is almost *likely*
+		that tokens will be eventually stolen. The security set out here *MUST* still work even if the odd token is stolen.
+	
+*/
+// phew, okay, now that we're through that shit... (probably the most serious-ly written/worded thing in here, half the rest of the comments are half-jokes)
+
 //#endregion meta
 
 //#region optionParsing ## parses the options, and acts on *some* of them. ## //
@@ -96,6 +138,10 @@ const passport			= require('passport'),
 	LocalStrategy		= require('passport-local').Strategy;
 const mongodb			= require('mongodb').MongoClient;
 
+const crypto = require('crypto'),
+	AESKEY = new Buffer(crypto.randomBytes(32)),
+	AESIV = new Buffer(crypto.randomBytes(16)); 
+
 //#endregion imports
 
 //#region importConfig ## configuring express ## //
@@ -130,6 +176,8 @@ const srvrPRFX	= '[\x1b[00m\x1b[38;2;153;95;178m] SRVR: ';
 const intrPRFX	= '[\x1b[00m\x1b[38;2;125;163;230m] INTR: ';
 const url		= options.dburl || (process.env.MONGO_URL_PREFIX + process.env.MONGO_URL_BODY + process.env.MONGO_URL_SUFFIX); // Connection URL.
 const SHOTUPDATEFREQ = 1000 * 60 * 10;
+const XSRF_TIMEOUT_MINS = 60; // please keep this under 60 for security reasons :) // 60 is the best number for it tho, to sync up with the general.js refresh.
+
 
 let SHOTCACHE = {};
 let TRANSLATIONCACHE = {};
@@ -156,7 +204,7 @@ logStreams.general = createLogStream('general');
 logStreams.sghttp = createLogStream('sghttp');
 
 // okay, yeah, redefining system functions probably isnt the best idea but it works damn fine, and you can still use stdout.write
-console.log = function(str, pers = srvrPRFX, channel='general', group=0) {
+console.log = function(str, pers = srvrPRFX, channel = 'general', group=0) {
 	// group (0 = print both to logs and to terminal, 1 = print just logs, -1 = print just terminal)
 	if(group < 1) {
 		process.stdout.clearLine();
@@ -400,6 +448,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 			var thisdate = 'Current';
 			var tmp_sghttpurl = process.env.SGHTTP_SERVER;
 
+			let XSRFToken = generateXSRFToken(req.user.name);
+
 			if(process.env.SGHTTP_RETRIEVER == 'server') {
 				tmp_sghttpurl = '/sghttp/';
 			}
@@ -449,6 +499,11 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 							if (targetdate != 'Current' && new Date(targetdate).getTime() > getPreviousMonday().getTime()) {
 								// the target date is in the future, plans get the scans
+								// also, yes, the $text $search shit here is ugly, i get that! but I'm being given data that doesnt include
+								// names that match up exactly with the timesheet system. and as such, this is the easiest way to still get that working.
+								// i am fully aware that, theoretically, someone could have a very similar name to another person, and get their plans.
+								// as such, plans shouldnt be regarded as secure. but the bounty on stealing plans is so low, that im going to let this slide.
+								// especially since they would need to break a bunch of other security layers just to get to this.
 								plansDB.findOne({ date: targetdate, $text: { $search: dbuser.name, $language: 'english', $caseSensitive: false } }, (err, data) => {
 									if (err) throw err;
 									if (!data) {
@@ -473,7 +528,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 										sgHttpEnabled: process.env.SGHTTP_ENABLED,
 										sgHttpRetriever: process.env.SGHTTP_RETRIEVER,
 										sgHttpCache: SHOTCACHE,
-										translationCache: TRANSLATIONCACHE
+										translationCache: TRANSLATIONCACHE,
+										XSRFToken: XSRFToken
 									});
 								});
 							} else {
@@ -493,7 +549,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 									sgHttpEnabled: process.env.SGHTTP_ENABLED,
 									sgHttpRetriever: process.env.SGHTTP_RETRIEVER,
 									sgHttpCache: SHOTCACHE,
-									translationCache: TRANSLATIONCACHE
+									translationCache: TRANSLATIONCACHE,
+									XSRFToken: XSRFToken
 								});
 							}
 						});
@@ -556,7 +613,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 								sgHttpEnabled: process.env.SGHTTP_ENABLED,
 								sgHttpRetriever: process.env.SGHTTP_RETRIEVER,
 								sgHttpCache: SHOTCACHE,
-								translationCache: TRANSLATIONCACHE
+								translationCache: TRANSLATIONCACHE,
+								XSRFToken: XSRFToken
 							});
 						});
 					} else {
@@ -574,7 +632,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 							sgHttpEnabled: process.env.SGHTTP_ENABLED,
 							sgHttpRetriever: process.env.SGHTTP_RETRIEVER,
 							sgHttpCache: SHOTCACHE,
-							translationCache: TRANSLATIONCACHE
+							translationCache: TRANSLATIONCACHE,
+							XSRFToken: XSRFToken
 						});
 					}
 				});
@@ -582,25 +641,32 @@ mongodb.connect(url, function mongConnect(err, db) {
 		});
 
 		app.get('/usercosts', ensureAuthenticated, function slashUsercostsGET(req, res) {
-			res.render('usercosts.ejs', { error: false, user: req.user });
+			let XSRFToken = generateXSRFToken(req.user.name);
+			return res.render('usercosts.ejs', { error: false, user: req.user, XSRFToken: XSRFToken });
 		});
 
 		app.get('/analytics', ensureAuthenticated, function slashAnalyticsGET(req, res) {
 			if (req.user.isadmin != 'true') {
 				return res.redirect('/?err=You%20don\'t%20have%20permissions%20to%20use%20the%20planner');
 			}
-			res.render('analytics.ejs', { error: false, user: req.user, projs: projs });
+			let XSRFToken = generateXSRFToken(req.user.name);
+			return res.render('analytics.ejs', { error: false, user: req.user, projs: projs, XSRFToken: XSRFToken });
 		});
 
 		app.get('/planner', ensureAuthenticated, function slashPlannerGET(req, res) {
 			if (req.user.isadmin != 'true') {
 				return res.redirect('/?err=You%20don\'t%20have%20permissions%20to%20use%20the%20planner');
 			}
-			return res.render('planner.ejs', { error: false, user: req.user });
+			let XSRFToken = generateXSRFToken(req.user.name);
+			return res.render('planner.ejs', { error: false, user: req.user, XSRFToken: XSRFToken });
 		});
 
 		app.get('/help', (req, res) => {
-			res.render('help.ejs', { user: req.user, error: req.query.err });
+			let XSRFToken;
+			if(req.user && req.user.name) {
+				XSRFToken = generateXSRFToken(req.user.name);
+			}
+			res.render('help.ejs', { user: req.user, error: req.query.err, XSRFToken: XSRFToken });
 		});
 
 		//#endregion
@@ -612,6 +678,13 @@ mongodb.connect(url, function mongConnect(err, db) {
 		app.get('/ajax/getusercosts', ensureAJAXAuthenticated, function slashAjaxGetusercostsGET(req, res) {
 			if (req.user.isadmin != 'true') return res.json({ err: 'User does not have the permissions to use this function', errcode: 403, data: {} });
 
+			if (!req.user.name || !req.query.XSRFToken) {
+				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
+			}
+			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
+				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
+			}
+
 			usersDB.find({}).project({ name: 1, displayName: 1, cost: 1 }).toArray((err, users) => {
 				if (err) throw err;
 
@@ -621,6 +694,13 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		app.get('/ajax/getanalyticsdata', ensureAJAXAuthenticated, function slashAjaxGetanalyticsdataGET(req, res) {
 			if (req.user.isadmin != 'true') return res.json({ err: 'User does not have the permissions to use this function', errcode: 403, data: {} });
+
+			if (!req.user.name || !req.query.XSRFToken) {
+				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
+			}
+			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
+				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
+			}
 
 			var fromdate = new Date(req.query.fromdate).getTime(),
 				todate = new Date(req.query.todate).getTime();
@@ -646,6 +726,13 @@ mongodb.connect(url, function mongConnect(err, db) {
 			//req.params.type is the type.
 			var ttype = req.params.type;
 
+			if (!req.user.name || !req.query.XSRFToken) {
+				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
+			}
+			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
+				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
+			}
+
 			if (ttype == 'users') {
 				usersDB.find({}).project({ name: 1, displayName: 1 }).toArray((err, users) => {
 					if (err) throw err;
@@ -662,6 +749,13 @@ mongodb.connect(url, function mongConnect(err, db) {
 		});
 
 		app.get('/ajax/getplans', ensureAJAXAuthenticated, function slashAjaxGetplansGET(req, res) {
+			if (!req.user.name || !req.query.XSRFToken) {
+				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
+			}
+			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
+				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
+			}
+
 			if (req.user.isadmin != 'true') {
 				res.json({ err: 'Insufficient permissions', errcode: 403, data: {} });
 			} else {
@@ -678,10 +772,18 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		app.get('/ajax/browsertracker', ensureAJAXAuthenticated, function slashAjaxBrowserTracker(req, res) {
 			// ik this is some really adhoc shit but i just needed it for my local deployment purposes.
-			// really secretly hope that somebody starts sending off fake requests with like, ?browser=KingZargloopsMagicScroll or something.
+			// really secretly hope that somebody starts sending off fake requests with like, ?browser=KingZargalsMagicScroll&version=666 or something.
+
+			if (!req.user.name || !req.query.XSRFToken) {
+				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
+			}
+			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
+				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
+			}
 
 			let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-			
+			if(!ip) return false;
+
 			ip = ip.split(':')[3] || ip; // i just want the numbers!
 
 			if(!BROWSERCONNECTIONS[ip]) BROWSERCONNECTIONS[ip] = {};
@@ -700,6 +802,13 @@ mongodb.connect(url, function mongConnect(err, db) {
 			let uname = req.body.uname;
 			let ucost = req.body.ucosts;
 
+			if (!req.user.name || !req.body.XSRFToken) {
+				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
+			}
+			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
+				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
+			}
+
 			usersDB.findOne({ name: uname }, (err, data) => {
 				if (err) throw err;
 
@@ -715,6 +824,13 @@ mongodb.connect(url, function mongConnect(err, db) {
 		});
 
 		app.post('/code/addjob', ensureAJAXAuthenticated, function slashCodeAddjobPOST(req, res) {
+			if (!req.user.name || !req.body.XSRFToken) {
+				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
+			}
+			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
+				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
+			}
+
 			if (req.body.date != 'Current' && new Date(req.body.date).getTime() > getPreviousMonday().getTime()) {
 				// the target date is in the future, plans *DONT* get scans
 				return res.json({ err: 'Future weeks are read only.', errcode: 403, data: {} });
@@ -801,6 +917,13 @@ mongodb.connect(url, function mongConnect(err, db) {
 		});
 
 		app.post('/code/deljob', ensureAJAXAuthenticated, function slashCodeDeljobPOST(req, res) {
+			if (!req.user.name || !req.body.XSRFToken) {
+				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
+			}
+			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
+				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
+			}
+
 			usersDB.findOne({ name: req.body.jobuser }, (err, user) => {
 				if(err) throw err;
 				timesheetDB.findOne({ user: user.name, date: req.body.date }, (err, timesheet) => {
@@ -862,6 +985,13 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		// from the front end, the params are: { jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text() },
 		app.post('/code/edittime', ensureAJAXAuthenticated, function slashCodeEditTimePOST(req, res) {
+			if (!req.user.name || !req.body.XSRFToken) {
+				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
+			}
+			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
+				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
+			}
+
 			req.body.jobtime = parseFloat(req.body.jobtime);
 			if(req.body.jobtime > 16) return res.json({ err: 'Cant have a job longer than 16 hours!', errcode: 504 });
 			if(req.body.jobtime < 0.25) return res.json({ err: 'Cant have a job less than 0.25 hours!', errcode: 504 });
@@ -933,6 +1063,13 @@ mongodb.connect(url, function mongConnect(err, db) {
 			// req.file is the spreadsheet file, loaded in memory. ty multer <3
 			if (req.user.isadmin != 'true') {
 				return res.redirect('/?err=You%20don\'t%20have%20permissions%20to%20use%20the%20planner');
+			}
+
+			if (!req.user.name || !req.body.XSRFToken) {
+				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
+			}
+			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
+				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
 			}
 
 			let spreadsheet = XLSX.read(req.file.buffer);
@@ -1092,17 +1229,26 @@ mongodb.connect(url, function mongConnect(err, db) {
 		//#region authDisplays
 
 		app.get('/login', function slashLoginGET(req, res) {
-			res.render('login.ejs', { user: req.user, error: req.query.err });
+			let XSRFToken;
+			if(req.user && req.user.name) {
+				XSRFToken = generateXSRFToken(req.user.name);
+			}
+			res.render('login.ejs', { user: req.user, error: req.query.err, XSRFToken: XSRFToken });
 		});
 
 		app.get('/signup', ensureAuthenticated, function slashSignupGET(req, res) {
+			let XSRFToken = generateXSRFToken(req.user.name);
+
 			if (req.user.isadmin == 'true') {
-				res.render('signup.ejs', { user: req.user, error: req.query.err });
+				return res.render('signup.ejs', { user: req.user, error: req.query.err, XSRFToken: XSRFToken });
+			} else {
+				return res.redirect('404', { user: req.user, error: req.query.err, XSRFToken: XSRFToken });
 			}
 		});
 
 		app.get('/changepassword', ensureAuthenticated, function slashChangepasswordGET(req, res) {
-			res.render('changepassword.ejs', { user: req.user, error: req.query.err });
+			let XSRFToken = generateXSRFToken(req.user.name);
+			return res.render('changepassword.ejs', { user: req.user, error: req.query.err, XSRFToken: XSRFToken });
 		});
 
 		//#endregion authDisplays
@@ -1172,7 +1318,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		app.post('/auth/signup', ensureAuthenticated, function slashAuthSignup(req, res) {
 			if (req.user.isadmin) {
-				if(req.body.password != req.body.confirmpassword) 
+				if(req.body.password != req.body.confirmpassword)
 					return res.redirect('/?err=Your%20passwords%20dont%20match!');
 
 				let redir = verifyPassword(req.body.username, req.body.confirmpassword);
@@ -1192,6 +1338,11 @@ mongodb.connect(url, function mongConnect(err, db) {
 					cost: 10,
 					timesheet: { jobs: [] },
 				};
+				if(toIns.name.indexOf('}') != -1 || toIns.name.indexOf('{') != -1 || toIns.name.indexOf('>') != -1 || toIns.name.indexOf('<') != -1
+				|| toIns.name.indexOf('$') != -1 || toIns.name.indexOf('@') != -1 || toIns.name.indexOf('#') != -1 || toIns.name.indexOf('"') != -1) {
+					return res.redirect('/?err=Your%20name%20contains%20illegal%20characters!');
+				}
+
 				usersDB.findOne({ name: toIns.name }, (err, data) => {
 					if (err) throw err;
 
@@ -1261,7 +1412,11 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		//The 404 Route (ALWAYS Keep this as the last route)
 		app.get('*', function slashStarGET(req, res) {
-			return res.render('404.ejs', { user: req.user, error: req.query.err });
+			let XSRFToken;
+			if(req.user && req.user.name) {
+				XSRFToken = generateXSRFToken(req.user.name);
+			}
+			return res.render('404.ejs', { user: req.user, error: req.query.err, XSRFToken: XSRFToken });
 		});
 		app.post('*', function slashStarPOST(req, res) {
 			return res.json({ err: 'Page is not found', errcode: 404, data: '' });
@@ -1684,8 +1839,14 @@ function recursiveMkdirSync(dir) {
 	try {
 		fs.mkdirSync(dir);
 	} catch(err) {
-		recursiveMkdirSync(pathDirname(dir)); // create parent dir
-		recursiveMkdirSync(dir); // create dir
+		try {
+			recursiveMkdirSync(pathDirname(dir)); // create parent dir
+			recursiveMkdirSync(dir); // create dir
+		} catch(err) {
+			console.log('err');
+			console.log('couldn\'t create log files!');
+			return ;
+		}
 	}
 }
 
@@ -1773,6 +1934,7 @@ function buildUrl(base, dict) {
 function getThisDate(now = new Date()) {
 	return now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
 }
+
 function getFineDate(now = new Date()) {
 	return now.getFullYear().npad(4) + '-' + (now.getMonth() + 1).npad(2) + '-' + now.getDate().npad(2) + ' ' + 
 		now.getHours().npad(2) + ':' + now.getMinutes().npad(2) + ':' + now.getSeconds().npad(2);
@@ -1836,6 +1998,55 @@ function getDates(startDate, stopDate) {
 //#endregion DATE-TIME HELPER FUNCS
 
 //#region crypto funcs
+
+// No, im not going to generate an xsrf token for every possible god damn link. im just not going to. so much effort.
+// Sure, theoretically someone could steal someones xsrf token, and if they respond within the hour, and get them to visit their website, within the hour,
+// they could trick them into sending a bad request somewhere, but that's SO targeted and involved, and requires a stealing of an xsrf token!
+// this is enough security for me.
+function generateXSRFToken(username, now = new Date()) {
+	let ttime = now-0;
+	let token = username+"@"+ttime;
+	return AESencrypt(token);
+}
+// if the token's time < XSRF_TIMEOUT_MINS, and its the same user, return true, else return false.
+function validateXSRFToken(token, name, now = new Date()) {
+	try {
+		let atoken = AESdecrypt(token);
+		let tokName = atoken.split('@')[0];
+		let tokTime = parseInt(atoken.split('@')[1]);
+
+		//console.log('TOKEN RECEIVED: ' + atoken + '.  NAME: ' + tokName + '.  TIME: ' + tokTime + '.');
+
+		if (atoken.split('@').length > 2) { // protects against a user name like 'bob@timestamp', generating tokens like 'bob@timestamp@timestamp'
+			return false;
+		}
+		if(Math.abs(now - tokTime) > (XSRF_TIMEOUT_MINS*60*1000)) {
+			return false;
+		}
+		if(tokName != name) {
+			return false;
+		}
+		//console.log('token considered valid!');
+		return true;
+	} catch (err) {
+		console.log('Some form of invalid or broken XSRF token was received from ' + name);
+		console.log(err);
+		return false;
+	}
+}
+function AESencrypt(str, key=AESKEY){
+	var cipher = crypto.createCipheriv('aes-256-ctr', key, AESIV);
+	var crypted = cipher.update(str, 'utf8', 'hex');
+	crypted += cipher.final('hex');
+	return crypted;
+}
+
+function AESdecrypt(str, key=AESKEY){
+	var decipher = crypto.createDecipheriv('aes-256-ctr', key, AESIV);
+	var dec = decipher.update(str, 'hex','utf8');
+	dec += decipher.final('utf8');
+	return dec;
+}
 
 function verifyPassword(user, pass) {
 	let passwordIsBlocked = false;

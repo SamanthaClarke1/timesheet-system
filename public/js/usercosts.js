@@ -50,7 +50,7 @@ $(document).ready(function(){
 		svg.append('g').attr('transform', 'translate(0, 0)').attr('class', 'axisWhite').call(xAxis);
 	}
 
-	$.get('/ajax/getusercosts', function(data){
+	$.get('/ajax/getusercosts', { XSRFToken: sXSRFToken }, function(data) {
 		if (data.errcode != 200) {
 			alert(data.err);
 		} else {
@@ -65,7 +65,9 @@ $(document).ready(function(){
 		littleburst_timeline.replay();
 		$('#uname-inp').val($('#uname-inp').val().toLowerCase());
 
-		$.post('/ajax/setusercost', $('#uc-mform').serialize(), function(data){
+		let tmForm = $('#uc-mform').serialize();
+		tmForm += '&XSRFToken='+sXSRFToken;
+		$.post('/ajax/setusercost', tmForm, function(data) {
 			if (data.errcode != 200) {
 				alert(data.err);
 			} else {
@@ -81,7 +83,7 @@ $(document).ready(function(){
 	});
 
 	function createUserCostBars(svg, dat, tcl, inx, iny, wscl, hscl){
-		let usrbar = svg.append('g').attr('transform', 'translate(' + inx + ', ' + (iny + marg.barspacing * 2) + ')').attr('class', tcl);
+		let usrbar = svg.append('g').attr('transform', 'translate(' + (inx) + ', ' + (iny + marg.barspacing * 2) + ')').attr('class', escHTML(tcl));
 
 		usrbar
 			.selectAll('g')
@@ -99,11 +101,11 @@ $(document).ready(function(){
 				return i % 2 == 0 ? '#ccc' : '#ddd';
 			})
 			.attr('onclick', (d) => {
-				return '$("#uname-inp").val("' + d.name + '"); $("#ucosts-inp").val("' + d.cost + '");';
+				return '$("#uname-inp").val("' + escHTML(d.name) + '"); $("#ucosts-inp").val("' + escHTML(d.cost) + '");';
 			})
 			.append('title')
 			.text((d) => {
-				return 'User: ' + d.name + '\nCost: $' + Math.round(d.cost * 100) / 100 + '/h';
+				return 'User: ' + (d.name) + '\nCost: $' + Math.round(d.cost * 100) / 100 + '/h';
 			})
 			.attr('class', 'tooltip');
 
@@ -129,7 +131,7 @@ $(document).ready(function(){
 			})
 			.attr('class', tcl + '-row-rect')
 			.attr('onclick', (d) => {
-				return '$("#uname-inp").val("' + d.name + '")';
+				return '$("#uname-inp").val("' + escHTML(d.name) + '")';
 			});
 
 		usrbarrow
@@ -141,7 +143,7 @@ $(document).ready(function(){
 			.attr('fill', '#111')
 			.attr('class', tcl + '-row-rect')
 			.text((d) => {
-				return d.name;
+				return escHTML(d.name);
 			});
 
 		return usrbar;

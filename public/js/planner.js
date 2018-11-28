@@ -9,7 +9,7 @@ $(document).ready(function() {
 	(function() {
 		let toImplantHTML = '<option value="Date">Date</option>';
 		for (let i = 0; i < indexToName.length; i++) {
-			toImplantHTML += '<option value="' + indexToName[i] + '">' + indexToName[i] + '</option>';
+			toImplantHTML += '<option value="' + escHTML(indexToName[i]) + '">' + escHTML(indexToName[i]) + '</option>';
 		}
 		$('#fieldSelect').html(toImplantHTML);
 	})();
@@ -102,10 +102,13 @@ $(document).ready(function() {
 			rect_loader.tune(offset).generate().replay();
 			rect_loaded.tune(offset).generate();
 
+			let tFormData = new FormData($('form')[0]);
+			tFormData.XSRFToken = sXSRFToken;
+
 			$.ajax({
 				url: '/ajax/planviaspreadsheet',
 				type: 'POST',
-				data: new FormData($('form')[0]),
+				data: tFormData,
 				cache: false,
 				contentType: false,
 				processData: false,
@@ -117,7 +120,7 @@ $(document).ready(function() {
 						// For handling the progress of the upload
 						myXhr.upload.addEventListener(
 							'progress',
-							function(e){
+							function(e) {
 								if (e.lengthComputable) {
 									$('progress').attr({
 										value: e.loaded,
@@ -130,7 +133,7 @@ $(document).ready(function() {
 					}
 					return myXhr;
 				},
-			}).done(function(){
+			}).done(function() {
 				loadState = 1;
 				rect_loader.tune({ speed: 2 }).generate();
 				updatePlans();
@@ -138,7 +141,7 @@ $(document).ready(function() {
 		}
 	});
 
-	function updateInputField(){
+	function updateInputField() {
 		let field = document.getElementById('filterSearch');
 		let fv = $('#fieldSelect').val();
 		if (fv == 'Date' || fv == 'Start' || fv == 'End') {
@@ -149,8 +152,8 @@ $(document).ready(function() {
 	}
 	updateInputField();
 
-	function updatePlans(){
-		$.get('/ajax/getplans', function(data) {
+	function updatePlans() {
+		$.get('/ajax/getplans', { XSRFToken: sXSRFToken }, function(data) {
 			if (data.errcode == 200) {
 				data = data.data[0].rows;
 				let toSetAsHTML =
@@ -161,7 +164,7 @@ $(document).ready(function() {
 				for (let row of data) {
 					toSetAsHTML += '<tr class="ts-planner-row ' + (total % 2 == 0 ? 'even ' : '') + 'showing col-12">';
 					for (let i in row) {
-						toSetAsHTML += '<td class="col-2 ' + indexToName[i] + '-d">' + row[i] + '</td>';
+						toSetAsHTML += '<td class="col-2 ' + escHTML(indexToName[i]) + '-d">' + escHTML(row[i]) + '</td>';
 					}
 					toSetAsHTML += '</tr>';
 					total++;

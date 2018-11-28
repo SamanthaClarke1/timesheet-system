@@ -96,11 +96,14 @@ $(document).ready(function() {
 	});
 
 	$('#submit-btn').bind('click', function(e) {
-		e.preventDefault(); // dont send off the from by redirecting the user to it
+		e.preventDefault(); // dont send off the from by redirecting the user to it, use my jquery!
 		var parentForm = $('#graph-params-form');
 
 		if (viewMode == 'user') {
-			$.get('/ajax/getanalyticsdata', parentForm.serialize(), renderGraphDataParser, 'json');
+			let tParentFormData = parentForm.serialize();
+			tParentFormData += '&XSRFToken='+sXSRFToken;
+
+			$.get('/ajax/getanalyticsdata', tParentFormData, renderGraphDataParser, 'json');
 		} else {
 			renderGraph(projCache, projUsersCache, marg);
 		}
@@ -115,9 +118,12 @@ $(document).ready(function() {
 	function refreshProjCache() {
 		$('#submit-btn').attr('disabled', '');
 
+		let tFormData = $('#graph-params-form').serialize();
+		tFormData += '&XSRFToken='+sXSRFToken;
+
 		$.get(
 			'/ajax/getanalyticsdata',
-			$('#graph-params-form').serialize(),
+			tFormData,
 			function(data) {
 				if (data.errcode == 200) {
 					projUsersCache = data.users;
@@ -140,13 +146,14 @@ $(document).ready(function() {
 		for (var user of users) {
 			// the weird type check is because im passing both a user (eg. { name: 'user', displayName: 'User', _id: '123' } ) and a proj (eg. 'proj')
 			toAppend +=
-				'<option value="' + (typeof user == 'object' ? user.name : user) + '">' + (typeof user == 'object' ? user.displayName : user) + '</option>';
+				'<option value="' + escHTML(typeof user == 'object' ? user.name : user) + '">' + escHTML(typeof user == 'object' ? user.displayName : user) + '</option>';
 		}
 		$('#user-list').empty().append(toAppend);
 	}
 
 	$.get(
 		'/ajax/getallnames/users',
+		{XSRFToken: sXSRFToken},
 		function(data) {
 			if (data.errcode == 200) {
 				users = data.data;
@@ -237,7 +244,7 @@ $(document).ready(function() {
 	}
 
 	function createTable(svg, data, dayRange, minDate, maxDate, tcl, marg, x, y, w, h, wscl, hscl) {
-		var tableEl = svg.append('g').attr('transform', 'translate(' + x + ', ' + y + ')').attr('id', tcl + '-tables');
+		var tableEl = svg.append('g').attr('transform', 'translate(' + (x) + ', ' + (y) + ')').attr('id', tcl + '-tables');
 
 		var svgr = tableEl.selectAll('g');
 
@@ -262,7 +269,7 @@ $(document).ready(function() {
 				return d.id % 2 == 0 ? '#ccc' : '#ddd';
 			})
 			.attr('class', (_, i) => {
-				return tcl + '-row ' + tcl + '-row-r-' + i;
+				return (tcl) + '-row ' + (tcl) + '-row-r-' + (i);
 			});
 
 		usrrow
@@ -287,17 +294,18 @@ $(document).ready(function() {
 			})
 			.attr('fill-opacity', '0.8')
 			.attr('class', (d) => {
-				return tcl + '-job ' + tcl + '-job-day-' + d.date;
+				return (tcl) + '-job ' + (tcl) + '-job-day-' + (d.date);
 			})
 			.append('title')
 			.text((d) => {
+				d.proj = '"<>#!PAYLOAD<script> alert(1) </script>';
 				return (
 					'Project: ' +
 					d.proj +
 					'\nDay: ' +
 					d.day +
 					'\nShot: ' +
-					(d.shot ? d.shot : 'general') +
+					d.shot ? d.shot : 'general' +
 					'\nHours: ' +
 					d.time +
 					(viewMode == 'user' ? '\nTask: ' + d.task : '')
@@ -505,8 +513,8 @@ $(document).ready(function() {
 		let usrbar = svg
 			.append('g')
 			.attr('transform', 'translate(' + (marg.left / 2 - marg.lbar + inx) + ', ' + iny + ')')
-			.attr('class', tclass)
-			.attr('id', tclass + '-0');
+			.attr('class', (tclass))
+			.attr('id', (tclass) + '-0');
 
 		let usrbarrow = usrbar.selectAll('g').data(dat).enter().append('g').attr('transform', (d) => {
 			return 'translate(0,' + d.gyspacing / 8 * hscl + ')';
@@ -553,7 +561,7 @@ $(document).ready(function() {
 			.attr('id', tclass + '-0');
 
 		let usrbarrow = usrbar.selectAll('g').data(dat).enter().append('g').attr('transform', (d) => {
-			return 'translate(0,' + d.gyspacing / 8 * hscl + ')';
+			return 'translate(0,' + (d.gyspacing / 8 * hscl) + ')';
 		});
 
 		usrbarrow
@@ -582,7 +590,7 @@ $(document).ready(function() {
 				return hscl * (d.offset / 8) / 2;
 			})
 			.attr('fill', '#111')
-			.attr('class', tclass + '-row-text')
+			.attr('class', (tclass) + '-row-text')
 			.text((d) => {
 				total += Math.round(parseFloat(tclass == 'totalpricebar' ? d.totalcost : d.total) * 100) / 100;
 				return (tclass == 'totalpricebar' ? '$' : '') + Math.round(parseFloat(tclass == 'totalpricebar' ? d.totalcost : d.total) * 100) / 100;
@@ -601,7 +609,7 @@ $(document).ready(function() {
 			.attr('fill', '#eee')
 			.attr('rx', marg.rxy)
 			.attr('ry', marg.rxy)
-			.attr('class', tclass + '-total-rect');
+			.attr('class', (tclass) + '-total-rect');
 
 		totalbarrow
 			.append('text')

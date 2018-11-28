@@ -18,7 +18,7 @@ function detectBrowser() { // tasty ponyfill adapted from https://stackoverflow.
 	if ((verOffset = nAgt.indexOf("Opera")) != -1) {
 		browserName = "Opera";
 		fullVersion = nAgt.substring(verOffset + 6);
-		if ((verOffset=nAgt.indexOf("Version")) != -1) 
+		if ((verOffset = nAgt.indexOf("Version")) != -1) 
 			fullVersion = nAgt.substring(verOffset + 8);
 	}
 	// In MSIE, the true version is after "MSIE" in userAgent
@@ -52,15 +52,15 @@ function detectBrowser() { // tasty ponyfill adapted from https://stackoverflow.
 		}
 	}
 	// trim the fullVersion string at semicolon/space if present
-	if ((ix=fullVersion.indexOf(";"))!=-1)
-		fullVersion=fullVersion.substring(0, ix);
-	if ((ix=fullVersion.indexOf(" "))!=-1)
-		fullVersion=fullVersion.substring(0, ix);
+	if ((ix=fullVersion.indexOf(";")) != -1)
+		fullVersion = fullVersion.substring(0, ix);
+	if ((ix=fullVersion.indexOf(" ")) != -1)
+		fullVersion = fullVersion.substring(0, ix);
 
-	majorVersion = parseInt(''+fullVersion,10);
+	majorVersion = parseInt('' + fullVersion, 10);
 	if (isNaN(majorVersion)) {
 		fullVersion  = ''+parseFloat(navigator.appVersion); 
-		majorVersion = parseInt(navigator.appVersion,10);
+		majorVersion = parseInt(navigator.appVersion, 10);
 	}
 
 	tbrowser.version = majorVersion;
@@ -71,18 +71,32 @@ function detectBrowser() { // tasty ponyfill adapted from https://stackoverflow.
 
 let BROWSER = detectBrowser();
 
-// ik bad code but its a lazy track for my own purposes that will prolly get removed later
-$.get('/ajax/browsertracker?browser='+BROWSER.name+'&version='+BROWSER.version, function (data) {
-	if(data.errcode > 300 || data.errcode < 200) console.log('ERROR IN DATA TRACK: ' + data.err + ' ERRCODE: ' + data.errcode);
-});
-
 
 let tmp;
 $.fn.classList = function() { return this[0].className.split(/\s+/); }; // jquery plugin for classList
 $.fn.safeVal   = function() { return (tmp=((this.attr('disabled')?' ':'')||(this.attr('hidden')?' ':'')||this.val()))==' '?'':tmp; };
 
-//let rKeys = [];
-//const easterEggString = 'me me big boy';
+function escURI(str) {
+	return encodeURIComponent(String(str));
+}
+function escHTML(str) {
+	return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+function escQuot(str) {
+	return String(str).replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+function escJQuot(str) {
+	return String(str).replace(/'/g, '\x27').replace(/"/g, '\x22');
+}
+function escSQuot(str) {
+	return String(str).replace(/'/g, '\\\'').replace(/"/g, '\\"');
+}
+
+// ik bad code but its a lazy track for my own purposes that will prolly get removed later
+$.get('/ajax/browsertracker', { browser: BROWSER.name, version: BROWSER.version, XSRFToken: sXSRFToken }, function (data) {
+	if(data.errcode > 300 || data.errcode < 200) console.log('ERROR IN DATA TRACK: ' + data.err + ' ERRCODE: ' + data.errcode);
+});
+
 const startDate = new Date().getTime();
 
 if(!IS_NODE) { 
@@ -99,31 +113,8 @@ $(document).ready(function(){
 
 	highlightCurrentPage();
 
-	/*$('body').keypress(function(e){
-		rKeys.push(e.key);
-		while (rKeys.length > easterEggString.length) rKeys.shift();
-		if (rKeys.join('') == easterEggString) {
-			alert(easterEggString);
-			$('p, a, h1, h2, h3, h4, h5, h6, span, #text, td, option, input').each(function(){
-				if ($(this).children().length < 1)
-					$(this).text(
-						$(this).text().split('')
-							.sort(() => {
-								return Math.random() - 0.5;
-							})
-							.join('')
-					);
-			});
-		}
-	});*/
-
 	let now = new Date();
 	if (now.getMonth() == 3 && now.getDate() == 1) {
-		// if the date is 1st of Apr
-		//alert('please type `me me big boy` into an input field.');
-		//$("p, a, h1, h2, h3, h4, h5, h6, span, #text, td, option, input").each(function() {
-		//    if($(this).children().length < 1) $(this).text($(this).text().split('').sort((a, b) => { return Math.random() - 0.5; }).join(''));
-		//});
 		$('p, a, h1, h2, h3, h4, h5, h6, span, #text, td, option, input').each(function(){
 			if ($(this).children().length < 1) {
 				var xarr = $(this).text().split('');
@@ -158,7 +149,7 @@ function highlightCurrentPage(){
 }
 
 try {
-	let es6testfunc = (x) => { return x+1; };
+	let es6testfunc = (x) => { return x + 1; };
 	if(es6testfunc(14) != 15) declareSupportMissing('ES6');
 } catch (Exception) {
 	declareSupportMissing('ES6');
@@ -168,7 +159,7 @@ if(typeof(es6testfunc) !== 'undefined') {
 }
 
 function declareSupportMissing(support) {
-	alert('We\'re sorry, but the timesheet system relies on '+support+' support to function correctly, and, your browser doesn\'t support it! Please upgrade to a more recent browser, such as firefox, or ensure that your current browser is up to date.');
+	alert('We\'re sorry, but the timesheet system relies on ' + support + ' support to function correctly, and, your browser doesn\'t support it! Please upgrade to a more recent browser, such as firefox, or ensure that your current browser is up to date.');
 }
 
 $(window).resize(function () {
