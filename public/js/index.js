@@ -168,7 +168,7 @@ function getJobHTML(job, srv, tid) {
 
 //#region submitters
 
-function submitJobCallback(parentForm) {
+function submitJobCallback(parentForm, callback=function(){}, errcallback=function(){}) {
 	return function(data) {
 		parentForm = $(parentForm);
 		parentForm.find('#subm-btn').removeAttr('disabled');
@@ -200,19 +200,23 @@ function submitJobCallback(parentForm) {
 				updateDayColor(job.day, total);
 				updateShading(tbody);
 			});
+
+			callback();
 		} else if (data.err && data.errcode) {
-			alert('ERRCODE ' + escHTML(data.errcode) + ' : ' + escHTML(data.err));
+			errcallback();
+			alert('ERRCODE ' + data.errcode + ' : ' + data.err);
 			if (data.errcode == 403) location.reload();
 		} else {
+			errcallback();
 			alert('Empty / Malformed Data recieved. The page will now reload.');
 			location.reload();
 		}
 	};
 }
 
-function submitJobData(jobData, parentForm) {
+function submitJobData(jobData, parentForm, callback=function() {}, errcallback=function() {}) {
 	jobData.XSRFToken = sXSRFToken;
-	$.post('/code/addjob', jobData, submitJobCallback(parentForm), 'json');
+	$.post('/code/addjob', jobData, submitJobCallback(parentForm, callback, errcallback), 'json');
 }
 
 //#endregion submitters
@@ -629,20 +633,23 @@ function publishTimer(timer, trusty=false) { // eslint-disable-line no-unused-va
 	let parentForm = timer.parentForm;
 
 	pauseTimer(timer, true);
-	timer.timeSpent /= (60*60*1000); //edgy division
+	timer.otimeSpent = timer.timeSpent;
+	timer.timeSpent /= (60*60*1000); // convert to hours
 	
-	if(Math.round(timer.timeSpent / .25) *.25 < .25) {
-		timer.timeSpent *= (60*60*1000); //undo my previous division
+	if(Math.round(timer.timeSpent * 4) / 4 < .25) { // rounds to nearest .25, checks if < .25
+		timer.timeSpent = timer.otimeSpent; // convert back to minutes
 		unpauseTimer(timer);
 		alert('Cannot publish timer yet, let it run for at least 15 Minutes!');
 		return false;
 	} else {
-		timer.timeSpent = Math.round(timer.timeSpent / .25) * .25;
+		timer.timeSpent = Math.round(timer.timeSpent * 4) / 4;
 	}
 	
-	submitJobData(convertTimerToJobData(timer), parentForm);
-
-	removeTimer(timer.id);
+	submitJobData(convertTimerToJobData(timer), parentForm, function() {
+		removeTimer(timer.id);
+	}, function() {
+		timer.timeSpent = timer.otimeSpent;
+	});
 
 	return timer;
 }

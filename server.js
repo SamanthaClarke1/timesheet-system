@@ -281,6 +281,7 @@ const __DEBUG_FORCE_COSTS_TO_TEN_PH__	= false; // !i!i! CAREFUL !i!i!  -  THIS W
 const __DEBUG_UNTEAR_DATA__				= false; // !i!i! CAREFUL !i!i!  -  WILL REMOVE ALL DUPLICATES ON A CERTAIN DATE, WITH A BIAS TOWARDS MORE JOBS.
 const __DEBUG_KNOCK_FROM_TO__			= false; // !i!i! CAREFUL !i!i!  -  WILL CHANGE UNIX-DATES FROM A CERTAIN DATE TO ANOTHER DATE
 const __DEBUG_FORCE_TIME_NUM__			= false; // !i!i! CAREFUL !i!i!  -  THIS WILL FORCE ALL TIMES IN JOBS TO A NUMBER RATHER THAN A STRING
+const __DEBUG_FORCE_COSTS_NUM__			= false; // !i!i! CAREFUL !i!i!  -  THIS WILL FORCE ALL USER COSTS TO A FLOAT RATHER THAN A STRING
 
 const __DEBUG_UNTEAR_DATA_DATE__		= 1531058400000;
 const __DEBUG_KNOCK_FROM__				= 1534082400000;
@@ -383,6 +384,31 @@ mongodb.connect(url, function mongConnect(err, db) {
 			});
 		}
 
+		if (__DEBUG_FORCE_COSTS_NUM__) {
+			console.log("__DEBUG_FORCE_COSTS_NUM__");
+
+			usersDB.find({}).toArray((err, data) => {
+				if (err) throw err;
+				for(let tuser of data) {
+					let og = JSON.parse(JSON.stringify(tuser));
+					let tcost = parseFloat(og.cost);
+					
+					if (!isNaN(tcost)) {
+						tuser.cost = tcost;
+					}
+					
+					usersDB.update(
+						{ name: og.name, dob: og.dob, email: og.email },
+						{ name: og.name, dob: og.dob, email: og.email, password: og.password, isadmin: og.isadmin,
+						  timesheet: og.timesheet, cost: tuser.cost, displayName: og.displayName }, (err) => {
+							if(err) throw err; //painfulpart (come on ES7)
+							console.log('success i think (userdb)');
+						}
+					)
+				}
+			});
+		}
+
 		if (__DEBUG_KNOCK_FROM_TO__) {
 			var frmDate = __DEBUG_KNOCK_FROM__;
 			var toDate = new Date(__DEBUG_KNOCK_TO__);
@@ -425,7 +451,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 					let original = JSON.parse(JSON.stringify(timesheet));
 					for (let i in timesheet.jobs) {
 						let ttime = parseFloat(timesheet.jobs[i].time);
-						if(!isNaN(ttime))
+						if (!isNaN(ttime))
 							timesheet.jobs[i].time = ttime;
 					}
 
@@ -796,6 +822,11 @@ mongodb.connect(url, function mongConnect(err, db) {
 		app.post('/ajax/setusercost', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxSetusercostPOST(req, res) {
 			let uname = req.body.uname;
 			let ucost = req.body.ucosts;
+
+			ucost = parseFloat(ucost);
+			if(isNaN(ucost)) {
+				return res.json({ err: 'User cost was not a number!', errcode: 400, data: {} });
+			}
 
 			usersDB.findOne({ name: uname }, (err, data) => {
 				if (err) throw err;
@@ -1334,6 +1365,9 @@ mongodb.connect(url, function mongConnect(err, db) {
 		});
 
 		app.get('/auth/logout', function slashAuthLogoutGET(req, res) {
+			let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+			if(req.user && req.user.name) console.log('user ' + req.user.name + ' logged out. IP: ' + ip);
+			else console.log('ANON (unauthenticated user) tried to log out. IP: ' + ip);
 			req.logout();
 			return res.redirect('/login');
 		});
@@ -2075,16 +2109,24 @@ function makeSlug(min, max) {
 
 //#region passport funcs
 function ensureAuthenticated(req, res, next) {
+	let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
 	if (req.isAuthenticated()) {
+		console.log('user at ip ' + ip + ' accessed a page and was authenticated  user: ' + req.user.name);
 		return next();
 	}
+	console.log('user at ip ' + ip + ' tried to access a page and failed to be authenticated');
 	return res.redirect('/login?err=Unable%20to%20authenticate%20user.');
 }
 
 function ensureAJAXAuthenticated(req, res, next) {
+	let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
 	if (req.isAuthenticated()) {
+		console.log('user at ip ' + ip + ' accessed a page and was authenticated  user: ' + req.user.name);
 		return next();
 	}
+	console.log('user at ip ' + ip + ' tried to access a page and failed to be authenticated');
 	return res.json({ err: 'User Is Not Authenticated', errcode: 403, data: '' });
 }
 

@@ -93,9 +93,11 @@ function escSQuot(str) {
 }
 
 // ik bad code but its a lazy track for my own purposes that will prolly get removed later
-$.get('/ajax/browsertracker', { browser: BROWSER.name, version: BROWSER.version, XSRFToken: sXSRFToken }, function (data) {
-	if(data.errcode > 300 || data.errcode < 200) console.log('ERROR IN DATA TRACK: ' + data.err + ' ERRCODE: ' + data.errcode);
-});
+if(sXSRFToken) {
+	$.get('/ajax/browsertracker', { browser: BROWSER.name, version: BROWSER.version, XSRFToken: sXSRFToken }, function (data) {
+		if(data.errcode > 300 || data.errcode < 200) console.log('ERROR IN DATA TRACK: ' + data.err + ' ERRCODE: ' + data.errcode);
+	});
+}
 
 const startDate = new Date().getTime();
 
