@@ -104,10 +104,10 @@ const startDate = new Date().getTime();
 if(!IS_NODE) { 
 	setInterval(function() {
 		let tDate = new Date().getTime();
-		if (Math.abs(tDate - startDate) > 12 * 60 * 60 * 1000) {
+		if (Math.abs(tDate - startDate) > 59 * 60 * 1000) {
 			location.reload();
 		}
-	}, 1000 * 60 * 60); // once every hour, check if the page is too outdated, and if so, refresh the page
+	}, 1000 * 60 * 59); // once every hour, check if the page is too outdated, and if so, refresh the page
 }
 
 $(document).ready(function(){
