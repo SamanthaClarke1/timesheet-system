@@ -1,56 +1,17 @@
-                                                                                                                                                                                                    43/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/package.json
-                                                                                                                                                                                                  2030/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/server.js
-                                                                                                                                                                                                    49/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/opt/selectList.json
-                                                                                                                                                                                                    12/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/.env
-                                                                                                                                                                                                     6/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/.yo-rc.json
-                                                                                                                                                                                                    35/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/views/login.ejs
-                                                                                                                                                                                                   132/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/views/help.ejs
-                                                                                                                                                                                                    26/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/views/404.ejs
-                                                                                                                                                                                                    54/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/views/signup.ejs
-                                                                                                                                                                                                   117/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/views/layout.ejs
-                                                                                                                                                                                                    41/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/views/changepassword.ejs
-                                                                                                                                                                                                    46/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/views/planner.ejs
-                                                                                                                                                                                                    48/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/views/analytics.ejs
-                                                                                                                                                                                                   243/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/views/index.ejs
-                                                                                                                                                                                                    44/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/views/usercosts.ejs
-                                                                                                                                                                                                    21/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/rustic-theme/package.json
-                                                                                                                                                                                                   733/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/rustic-theme/themes/Rustic Theme-color-theme.json
-                                                                                                                                                                                                    17/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/rustic-theme/.vscode/launch.json
-                                                                                                                                                                                                    16/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/js/inp-burst.js
-                                                                                                                                                                                                   150/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/js/usercosts.js
-                                                                                                                                                                                                   969/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/js/index.js
-                                                                                                                                                                                                   269/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/js/calendar-extender.js
-                                                                                                                                                                                                   134/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/js/burstpack.anim.js
-                                                                                                                                                                                                   100/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/js/general.js
-                                                                                                                                                                                                    55/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/js/loader.anim.js
-                                                                                                                                                                                                   678/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/js/analytics.js
-                                                                                                                                                                                                   306/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/js/planner.js
-                                                                                                                                                                                                   231/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/css/style.css
-                                                                                                                                                                                                   123/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/css/planner.css
-                                                                                                                                                                                                    10/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/css/help.night.css
-                                                                                                                                                                                                    19/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/css/usercosts.css
-                                                                                                                                                                                                    44/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/css/index.night.css
-                                                                                                                                                                                                   125/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/css/style.night.css
-                                                                                                                                                                                                   217/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/css/404.css
-                                                                                                                                                                                                    96/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/css/analytics.css
-                                                                                                                                                                                                    69/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/css/planner.night.css
-                                                                                                                                                                                                    96/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/css/index.css
-                                                                                                                                                                                                    44/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/public/css/calendar-extender.css
-                                                                                                                                                                                                    11/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/watch.sh
-                                                                                                                                                                                                    22/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/linecounter.sh
-                                                                                                                                                                                                    54/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/.eslintrc.json
-                                                                                                                                                                                                   491/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/portal.html
-                                                                                                                                                                                                    18/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/.vscode/settings.json
-                                                                                                                                                                                                    13/Volumes/RS01/Resources/Engineering/Sam/node-web-server-git/.vscode/launch.json
+     100 files     101 text files.
+classified 101 filesDuplicate file check 101 files (94 known unique)     100 unique files.                              
+Counting:  100      64 files ignored.
 
-Total:
-8057
-
-Total (with package-lock):
-12205
-
-Total (with package-lock and frontend libs):
-48198
-
-Total (with package-lock and node modules and frontend libs):
-617388
+github.com/AlDanial/cloc v 1.70  T=0.56 s (72.0 files/s, 21568.5 lines/s)
+-------------------------------------------------------------------------------
+Language                     files          blank        comment           code
+-------------------------------------------------------------------------------
+JSON                            10              0              0           5115
+JavaScript                      10            773            584           3717
+CSS                             11             90             34            974
+HTML                             1             31             12            448
+Markdown                         4             31              0            130
+Bourne Shell                     4             13              6             24
+-------------------------------------------------------------------------------
+SUM:                            40            938            636          10408
+-------------------------------------------------------------------------------
