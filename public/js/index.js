@@ -881,7 +881,8 @@ function bindSubmitJobClickEvent() {
 function onParentFormChange(parentForm) { // stupid bubbling bubbling the this selector... making me curry... tsk
 	return function() {
 		let valid = validateParentForm(parentForm);
-	
+		if(!valid) parentForm.find('.subm-btn').
+
 		$(parentForm).attr('isvalid', (valid ? 'valid' : 'invalid'));
 	}
 }
@@ -902,6 +903,7 @@ function validateParentForm(form) {
 
 	let hoursToday = parseFloat(form.parent().find('.total-day-bar-num').text());
 
+	console.log(hoursToday, thours);
 	if(hoursToday + thours > 16) {
 		// note the [0] to collapse from jquery to dom element
 		form.find('.time-inpc')[0].setCustomValidity('Trying to add too many hours in a day!');

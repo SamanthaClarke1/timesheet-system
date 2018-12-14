@@ -93,8 +93,9 @@ require('dotenv').config();
 const optionDefinitions = [
 	{ name: 'dburl',		alias: 'u',		type: String	},
 	{ name: 'help',			alias: 'h',		type: Boolean	},
-	{ name: 'version',		alias: 'v', 	type: Boolean	},
-	{ name: 'quickpush',	alias: 'q',		type: Boolean	}
+	{ name: 'version',		alias: 'v',		type: Boolean	},
+	{ name: 'quickpush',	alias: 'q',		type: Boolean	},
+	{ name: 'test',			alias: 't',		type: Boolean	}
 ];
 
 const boxen				= require('boxen');
@@ -102,6 +103,9 @@ const commandLineArgs	= require('command-line-args');
 const options			= commandLineArgs(optionDefinitions);
 const pjson				= require('./package.json');
 const pathDirname		= require('path-dirname'); // path.dirname ponyfill for lightness! ponyfill.com
+const net = require('net');
+const Promise = require('bluebird');
+
 
 const request = require('request');
 
@@ -113,11 +117,15 @@ Usage: node ./server.js [options]
     -u --dburl <url>    specifies the database to load (from an url)
     -h --help           displays this help message
     -v --version        displays the version number
-    -q --quickpush      pushes this week into the past week
+	-q --quickpush      pushes this week into the past week
+	-t --test           tests the program instead of running it
 `, { backgroundColor: 'black', float: 'center', align: 'left', padding: 1, margin: 1, borderStyle: 'classic', borderColor: 'magenta' }));
 } else if (options.version) {
 	console.log(boxen('Timesheets!\n\nv' + pjson.version + '\n~\nCodeName: ' + pjson.codename, { backgroundColor: 'black', float: 'center', align: 'center', 
 		padding: 1, margin: 1, borderStyle: 'classic', borderColor: 'magenta' }));
+}
+if(options.test) {
+	console.log("Beginning testing!");
 }
 
 //#endregion optionParsing
@@ -137,6 +145,7 @@ const readline			= require('readline');
 const passport			= require('passport'),
 	LocalStrategy		= require('passport-local').Strategy;
 const mongodb			= require('mongodb').MongoClient;
+const url 				= require('url');
 
 const crypto = require('crypto'),
 	AESKEY = new Buffer(crypto.randomBytes(32)),
@@ -176,7 +185,7 @@ const promptr	= '[\x1b[01m\x1b[38;2;70;242;221m] >> \x1b[38;2;0;176;255m';
 const srvrPRFX	= '[\x1b[00m\x1b[38;2;153;95;178m] SRVR: ';
 // interpreter title
 const intrPRFX	= '[\x1b[00m\x1b[38;2;125;163;230m] INTR: ';
-const url		= options.dburl || (process.env.MONGO_URL_PREFIX + process.env.MONGO_URL_BODY + process.env.MONGO_URL_SUFFIX); // Connection URL.
+const murl		= options.dburl || (process.env.MONGO_URL_PREFIX + process.env.MONGO_URL_BODY + process.env.MONGO_URL_SUFFIX); // Connection URL.
 const SHOTUPDATEFREQ = 1000 * 60 * 10;
 const XSRF_TIMEOUT_MINS = 60; // please keep this under 60 for security reasons :) // 60 is the best number for it tho, to sync up with the general.js refresh.
 
@@ -250,6 +259,34 @@ function getXSRFValidator(resResponse) {
 		}
 	);
 }
+if(options.test) {
+	// XSRF Validation Test
+	txsrfTok = generateXSRFToken('bob');
+	if(!validateXSRFToken(txsrfTok, 'bob')) console.log(" << XSRF Validation Test failed to Authenticate a valid user >> ");
+	txsrfTok = generateXSRFToken('bob', new Date("1/1/1984"));
+	if( validateXSRFToken(txsrfTok, 'bob')) console.log(" << XSRF Validation Test authenticated an outdated token >> ");
+	txsrfTok = generateXSRFToken('joe');
+	if( validateXSRFToken(txsrfTok, 'bob')) console.log(" << XSRF Validation Test authenticated someone elses token >> ");
+	txsrfTok = generateXSRFToken('AFG}}|(&{RP{}#$@(()!()93<>6;0');
+	try {
+		if(validateXSRFToken(txsrfTok, 'AFG}}|(&{RP{}#$@(()!()93<>6;0')) console.log(" << XSRF Validation Test authenticated user with a disallowed name >> ");
+	} catch (e) {
+		console.log(" << XSRF Validation Test crashed whilst trying to authenticate a valid user with a strange name >> ");
+	}
+
+	// Password Test
+	if(!passwordHash.verify("FOOBAR84", "sha1$4cca2e92$1$657ff8abb2c30dbcb026ad602de6223391ebcc9b")) 
+		console.log(" << Password Test failed to validate a correct password >> ");
+
+	// Connection Test
+	checkConnection(process.env.SGHTTP_SERVER).then(function() {}, function(err) {
+		console.log(" << Connection test failed to connect to the SGHttp server >> ");
+		console.log(err);
+	});
+
+	// Translation Cache Test
+	if(keys(TRANSLATIONCACHE).length < 3) console.log(" << Translation Cache was found to be unreasonably short >> ");
+}
 
 var loaderShouldBePrinting = true;
 printLoader('Server in startup ');
@@ -305,11 +342,11 @@ const __DEV_RELEASE__					= (process.env.DEV_RELEASE == 'true');
 console.log('Starting server. Channel ' + serverRel + '. Version ' + pjson.version + '. Codename ' + pjson.codename);
 console.log('Starting server. Channel ' + serverRel + '. Version ' + pjson.version + '. Codename ' + pjson.codename, undefined, 'sghttp', 1);
 
-mongodb.connect(url, function mongConnect(err, db) {
+mongodb.connect(murl, function mongConnect(err, db) {
 	if (err) {
 		console.log('Unable to connect to the mongoDB server. Error: ' + err);
 	} else {
-		console.log('Connected to the mongoDB server. ' + url.split(process.env.MONGO_PASS).join('{SECRET_PASSWORD}'));
+		console.log('Connected to the mongoDB server. ' + murl.split(process.env.MONGO_PASS).join('{SECRET_PASSWORD}'));
 		//#endregion mongoDB_connect
 
 		//#region dbSetup
@@ -2105,6 +2142,28 @@ function makeSlug(min, max) {
 	}
 	return t;
 }
+function checkConnection(fhost, timeout) {
+	host = url.parse(fhost).hostname;
+	port = url.parse(fhost).port;
+
+	return new Promise(function(resolve, reject) {
+		timeout = timeout || 10000;		// default of 10 seconds
+		var timer = setTimeout(function() {
+			reject("timeout");
+			if(socket) socket.end();
+		}, timeout);
+		var socket = net.createConnection(port, host, function() {
+			clearTimeout(timer);
+			resolve();
+			if(socket) socket.end();
+		});
+		socket.on('error', function(err) {
+			clearTimeout(timer);
+			reject(err);
+		});
+	});
+}
+
 //#endregion crypto funcs
 
 //#region passport funcs
