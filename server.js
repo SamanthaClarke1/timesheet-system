@@ -285,7 +285,7 @@ if(options.test) {
 	});
 
 	// Translation Cache Test
-	if(keys(TRANSLATIONCACHE).length < 3) console.log(" << Translation Cache was found to be unreasonably short >> ");
+	if(Object.keys(TRANSLATIONCACHE).length < 3) console.log(" << Translation Cache was found to be unreasonably short >> ");
 }
 
 var loaderShouldBePrinting = true;
