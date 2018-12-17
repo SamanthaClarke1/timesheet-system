@@ -6,6 +6,10 @@ It has natural integration with shotgun in order to predict what shots people ar
 and aims to deliver a pleasant, and accessible user experience for accessing and updating their timesheets.
 A local server is hosted on a particular machine, people visit it in their browsers. Standard.
 
+This README contains a lot of common information on how to
+***use*** the timesheet-system. For information on how to administrate,
+or edit the timesheet system, please see **./CODEBASE.md**
+
 **Version**: 1.9.2, **Codename**: Cold Cobalt.
 
 # Installation
@@ -118,6 +122,13 @@ node ./server.js --help
 # this for testing:
 node ./server.js --test
 ```
+
+Once it starts running, you can interface with it through the command line.
+`help` will give you some command line help.
+It's not bash or anything, and its just a shitty little interface that I made.
+So don't expect magic.
+Although, you can do the vast majority of what you need to do from there.
+You shouldn't ever need to manually edit config files, outside of `./.env`.
 
 If you're having issues with the timesheet system, `--test` should diagnose a lot of common issues.
 
