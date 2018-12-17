@@ -20,6 +20,8 @@
 		<% if (XSRFToken) { %> 
 			<script> const sXSRFToken = "<%- XSRFToken %>"; </script> <!-- passes XSRF Tokens to the client side js -->
 			<!-- (yes, XSRFTokens rendered by the server are being considered to be XSS proof here) -->
+		<% } else { %>
+			<script> const sXSRFToken = false; </script>
 		<% } %>
 
 			<!-- jQuery -->
@@ -115,7 +117,7 @@
 			<%- body %>
 		</div>
 		<div class="text-center version-footer font-main grn-text semi-dim up-shade">
-			<small> Developed by Samuel Clarke 2018, for CumulusVFX <br/> Version 1.9.1 | Codename: Cold Cobalt </small>
+			<small> Developed by Samuel Clarke 2018, for CumulusVFX <br/> Version 1.9.2 | Codename: Cold Cobalt </small>
 		</div>
 	</body>
 </html>

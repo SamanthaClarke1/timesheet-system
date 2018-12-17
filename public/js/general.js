@@ -93,19 +93,21 @@ function escSQuot(str) {
 }
 
 // ik bad code but its a lazy track for my own purposes that will prolly get removed later
-$.get('/ajax/browsertracker', { browser: BROWSER.name, version: BROWSER.version, XSRFToken: sXSRFToken }, function (data) {
-	if(data.errcode > 300 || data.errcode < 200) console.log('ERROR IN DATA TRACK: ' + data.err + ' ERRCODE: ' + data.errcode);
-});
+if(sXSRFToken) {
+	$.get('/ajax/browsertracker', { browser: BROWSER.name, version: BROWSER.version, XSRFToken: sXSRFToken }, function (data) {
+		if(data.errcode > 300 || data.errcode < 200) console.log('ERROR IN DATA TRACK: ' + data.err + ' ERRCODE: ' + data.errcode);
+	});
+}
 
 const startDate = new Date().getTime();
 
 if(!IS_NODE) { 
 	setInterval(function() {
 		let tDate = new Date().getTime();
-		if (Math.abs(tDate - startDate) > 12 * 60 * 60 * 1000) {
+		if (Math.abs(tDate - startDate) > 59 * 60 * 1000) {
 			location.reload();
 		}
-	}, 1000 * 60 * 60); // once every hour, check if the page is too outdated, and if so, refresh the page
+	}, 1000 * 60 * 59); // once every hour, check if the page is too outdated, and if so, refresh the page
 }
 
 $(document).ready(function(){

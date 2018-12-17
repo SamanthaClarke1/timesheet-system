@@ -93,8 +93,9 @@ require('dotenv').config();
 const optionDefinitions = [
 	{ name: 'dburl',		alias: 'u',		type: String	},
 	{ name: 'help',			alias: 'h',		type: Boolean	},
-	{ name: 'version',		alias: 'v', 	type: Boolean	},
-	{ name: 'quickpush',	alias: 'q',		type: Boolean	}
+	{ name: 'version',		alias: 'v',		type: Boolean	},
+	{ name: 'quickpush',	alias: 'q',		type: Boolean	},
+	{ name: 'test',			alias: 't',		type: Boolean	}
 ];
 
 const boxen				= require('boxen');
@@ -102,6 +103,9 @@ const commandLineArgs	= require('command-line-args');
 const options			= commandLineArgs(optionDefinitions);
 const pjson				= require('./package.json');
 const pathDirname		= require('path-dirname'); // path.dirname ponyfill for lightness! ponyfill.com
+const net = require('net');
+const Promise = require('bluebird');
+
 
 const request = require('request');
 
@@ -113,11 +117,15 @@ Usage: node ./server.js [options]
     -u --dburl <url>    specifies the database to load (from an url)
     -h --help           displays this help message
     -v --version        displays the version number
-    -q --quickpush      pushes this week into the past week
+	-q --quickpush      pushes this week into the past week
+	-t --test           tests the program instead of running it
 `, { backgroundColor: 'black', float: 'center', align: 'left', padding: 1, margin: 1, borderStyle: 'classic', borderColor: 'magenta' }));
 } else if (options.version) {
 	console.log(boxen('Timesheets!\n\nv' + pjson.version + '\n~\nCodeName: ' + pjson.codename, { backgroundColor: 'black', float: 'center', align: 'center', 
 		padding: 1, margin: 1, borderStyle: 'classic', borderColor: 'magenta' }));
+}
+if(options.test) {
+	console.log("Beginning testing!");
 }
 
 //#endregion optionParsing
@@ -137,6 +145,7 @@ const readline			= require('readline');
 const passport			= require('passport'),
 	LocalStrategy		= require('passport-local').Strategy;
 const mongodb			= require('mongodb').MongoClient;
+const url 				= require('url');
 
 const crypto = require('crypto'),
 	AESKEY = new Buffer(crypto.randomBytes(32)),
@@ -156,12 +165,14 @@ app.set('view engine', 'ejs');
 app.use(partials());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(session({ secret: process.env.SECRET, resave: false, saveUninitialized: false }));
+// yes, those are 4-hour long sessions. it's terrible, i know. but my boss complains if people have to log in more than once-twice a day
+app.use(session({ secret: process.env.SECRET, resave: false, saveUninitialized: false, cookie: { maxAge: 4 * 60 * 60 * 1000 } }));
 app.use(express.static(__dirname + '/public'));
 
 // Initialize Passport!  Also use passport.session() middleware, to support
 // persistent login sessions (recommended).
 app.use(passport.initialize());
+// yes the double session use is indeed what i mean to do. see http://www.passportjs.org/docs/configure/ ctrl+f "passport.session"
 app.use(passport.session());
 
 //#endregion importConfig
@@ -174,10 +185,9 @@ const promptr	= '[\x1b[01m\x1b[38;2;70;242;221m] >> \x1b[38;2;0;176;255m';
 const srvrPRFX	= '[\x1b[00m\x1b[38;2;153;95;178m] SRVR: ';
 // interpreter title
 const intrPRFX	= '[\x1b[00m\x1b[38;2;125;163;230m] INTR: ';
-const url		= options.dburl || (process.env.MONGO_URL_PREFIX + process.env.MONGO_URL_BODY + process.env.MONGO_URL_SUFFIX); // Connection URL.
+const murl		= options.dburl || (process.env.MONGO_URL_PREFIX + process.env.MONGO_URL_BODY + process.env.MONGO_URL_SUFFIX); // Connection URL.
 const SHOTUPDATEFREQ = 1000 * 60 * 10;
 const XSRF_TIMEOUT_MINS = 60; // please keep this under 60 for security reasons :) // 60 is the best number for it tho, to sync up with the general.js refresh.
-
 
 let SHOTCACHE = {};
 let TRANSLATIONCACHE = {};
@@ -222,6 +232,62 @@ console.log = function(str, pers = srvrPRFX, channel = 'general', group=0) {
 	}
 };
 
+// these are responses to be passed to getXSRFValidator
+function resResponseAJAX(res, errMsg, errcode) {
+	return res.json({ err: errMsg, errcode: errcode, data: {} })
+}
+function resResponseRedir(res, errMsg, errcode) {
+	return res.redirect('/?err='+errMsg);
+}
+
+// this is curried middle ware that should be called like below in express
+// app.get("/foo", getXSRFValidator(resResponseAJAX)), function () { /* my usual code */ });
+function getXSRFValidator(resResponse) {
+	return (
+		function (req, res, next) {
+			if(!req.user || !req.user.name) return resReponse(res, 'User not authenticated', 403);
+			
+			let tXSRFToken = '';
+			if(req.query && req.query.XSRFToken) tXSRFToken = req.query.XSRFToken;
+			if(req.body && req.body.XSRFToken) tXSRFToken = req.body.XSRFToken;
+
+			if(!tXSRFToken) return resResponse(res, 'No XSRF Token sent', 403);
+
+			if(!validateXSRFToken(tXSRFToken, req.user.name)) return resResponse(res, 'Invalid XSRF Token', 403);
+
+			return next()
+		}
+	);
+}
+if(options.test) {
+	// XSRF Validation Test
+	txsrfTok = generateXSRFToken('bob');
+	if(!validateXSRFToken(txsrfTok, 'bob')) console.log(" << XSRF Validation Test failed to Authenticate a valid user >> ");
+	txsrfTok = generateXSRFToken('bob', new Date("1/1/1984"));
+	if( validateXSRFToken(txsrfTok, 'bob')) console.log(" << XSRF Validation Test authenticated an outdated token >> ");
+	txsrfTok = generateXSRFToken('joe');
+	if( validateXSRFToken(txsrfTok, 'bob')) console.log(" << XSRF Validation Test authenticated someone elses token >> ");
+	txsrfTok = generateXSRFToken('AFG}}|(&{RP{}#$@(()!()93<>6;0');
+	try {
+		if(validateXSRFToken(txsrfTok, 'AFG}}|(&{RP{}#$@(()!()93<>6;0')) console.log(" << XSRF Validation Test authenticated user with a disallowed name >> ");
+	} catch (e) {
+		console.log(" << XSRF Validation Test crashed whilst trying to authenticate a valid user with a strange name >> ");
+	}
+
+	// Password Test
+	if(!passwordHash.verify("FOOBAR84", "sha1$4cca2e92$1$657ff8abb2c30dbcb026ad602de6223391ebcc9b")) 
+		console.log(" << Password Test failed to validate a correct password >> ");
+
+	// Connection Test
+	checkConnection(process.env.SGHTTP_SERVER).then(function() {}, function(err) {
+		console.log(" << Connection test failed to connect to the SGHttp server >> ");
+		console.log(err);
+	});
+
+	// Translation Cache Test
+	if(Object.keys(TRANSLATIONCACHE).length < 3) console.log(" << Translation Cache was found to be unreasonably short >> ");
+}
+
 var loaderShouldBePrinting = true;
 printLoader('Server in startup ');
 
@@ -252,6 +318,7 @@ const __DEBUG_FORCE_COSTS_TO_TEN_PH__	= false; // !i!i! CAREFUL !i!i!  -  THIS W
 const __DEBUG_UNTEAR_DATA__				= false; // !i!i! CAREFUL !i!i!  -  WILL REMOVE ALL DUPLICATES ON A CERTAIN DATE, WITH A BIAS TOWARDS MORE JOBS.
 const __DEBUG_KNOCK_FROM_TO__			= false; // !i!i! CAREFUL !i!i!  -  WILL CHANGE UNIX-DATES FROM A CERTAIN DATE TO ANOTHER DATE
 const __DEBUG_FORCE_TIME_NUM__			= false; // !i!i! CAREFUL !i!i!  -  THIS WILL FORCE ALL TIMES IN JOBS TO A NUMBER RATHER THAN A STRING
+const __DEBUG_FORCE_COSTS_NUM__			= false; // !i!i! CAREFUL !i!i!  -  THIS WILL FORCE ALL USER COSTS TO A FLOAT RATHER THAN A STRING
 
 const __DEBUG_UNTEAR_DATA_DATE__		= 1531058400000;
 const __DEBUG_KNOCK_FROM__				= 1534082400000;
@@ -275,11 +342,11 @@ const __DEV_RELEASE__					= (process.env.DEV_RELEASE == 'true');
 console.log('Starting server. Channel ' + serverRel + '. Version ' + pjson.version + '. Codename ' + pjson.codename);
 console.log('Starting server. Channel ' + serverRel + '. Version ' + pjson.version + '. Codename ' + pjson.codename, undefined, 'sghttp', 1);
 
-mongodb.connect(url, function mongConnect(err, db) {
+mongodb.connect(murl, function mongConnect(err, db) {
 	if (err) {
 		console.log('Unable to connect to the mongoDB server. Error: ' + err);
 	} else {
-		console.log('Connected to the mongoDB server. ' + url.split(process.env.MONGO_PASS).join('{SECRET_PASSWORD}'));
+		console.log('Connected to the mongoDB server. ' + murl.split(process.env.MONGO_PASS).join('{SECRET_PASSWORD}'));
 		//#endregion mongoDB_connect
 
 		//#region dbSetup
@@ -354,6 +421,31 @@ mongodb.connect(url, function mongConnect(err, db) {
 			});
 		}
 
+		if (__DEBUG_FORCE_COSTS_NUM__) {
+			console.log("__DEBUG_FORCE_COSTS_NUM__");
+
+			usersDB.find({}).toArray((err, data) => {
+				if (err) throw err;
+				for(let tuser of data) {
+					let og = JSON.parse(JSON.stringify(tuser));
+					let tcost = parseFloat(og.cost);
+					
+					if (!isNaN(tcost)) {
+						tuser.cost = tcost;
+					}
+					
+					usersDB.update(
+						{ name: og.name, dob: og.dob, email: og.email },
+						{ name: og.name, dob: og.dob, email: og.email, password: og.password, isadmin: og.isadmin,
+						  timesheet: og.timesheet, cost: tuser.cost, displayName: og.displayName }, (err) => {
+							if(err) throw err; //painfulpart (come on ES7)
+							console.log('success i think (userdb)');
+						}
+					)
+				}
+			});
+		}
+
 		if (__DEBUG_KNOCK_FROM_TO__) {
 			var frmDate = __DEBUG_KNOCK_FROM__;
 			var toDate = new Date(__DEBUG_KNOCK_TO__);
@@ -396,7 +488,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 					let original = JSON.parse(JSON.stringify(timesheet));
 					for (let i in timesheet.jobs) {
 						let ttime = parseFloat(timesheet.jobs[i].time);
-						if(!isNaN(ttime))
+						if (!isNaN(ttime))
 							timesheet.jobs[i].time = ttime;
 					}
 
@@ -675,15 +767,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		//#region ajaxGetters
 
-		app.get('/ajax/getusercosts', ensureAJAXAuthenticated, function slashAjaxGetusercostsGET(req, res) {
+		app.get('/ajax/getusercosts', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxGetusercostsGET(req, res) {
 			if (req.user.isadmin != 'true') return res.json({ err: 'User does not have the permissions to use this function', errcode: 403, data: {} });
-
-			if (!req.user.name || !req.query.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
 
 			usersDB.find({}).project({ name: 1, displayName: 1, cost: 1 }).toArray((err, users) => {
 				if (err) throw err;
@@ -692,15 +777,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 			});
 		});
 
-		app.get('/ajax/getanalyticsdata', ensureAJAXAuthenticated, function slashAjaxGetanalyticsdataGET(req, res) {
+		app.get('/ajax/getanalyticsdata', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxGetanalyticsdataGET(req, res) {
 			if (req.user.isadmin != 'true') return res.json({ err: 'User does not have the permissions to use this function', errcode: 403, data: {} });
-
-			if (!req.user.name || !req.query.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
 
 			var fromdate = new Date(req.query.fromdate).getTime(),
 				todate = new Date(req.query.todate).getTime();
@@ -722,16 +800,9 @@ mongodb.connect(url, function mongConnect(err, db) {
 			});
 		}); // /analytics?user=philippa&user=william&user=morgane&user=jee&fromdate=2018-06-07&todate=2018-06-12
 
-		app.get('/ajax/getallnames/:type', ensureAJAXAuthenticated, function slashAjaxGetallnamesGET(req, res) {
+		app.get('/ajax/getallnames/:type', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxGetallnamesGET(req, res) {
 			//req.params.type is the type.
 			var ttype = req.params.type;
-
-			if (!req.user.name || !req.query.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
 
 			if (ttype == 'users') {
 				usersDB.find({}).project({ name: 1, displayName: 1 }).toArray((err, users) => {
@@ -748,13 +819,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 			}
 		});
 
-		app.get('/ajax/getplans', ensureAJAXAuthenticated, function slashAjaxGetplansGET(req, res) {
-			if (!req.user.name || !req.query.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
+		app.get('/ajax/getplans', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxGetplansGET(req, res) {
 
 			if (req.user.isadmin != 'true') {
 				res.json({ err: 'Insufficient permissions', errcode: 403, data: {} });
@@ -770,16 +835,9 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		//#region ajaxSetters
 
-		app.get('/ajax/browsertracker', ensureAJAXAuthenticated, function slashAjaxBrowserTracker(req, res) {
+		app.get('/ajax/browsertracker', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxBrowserTracker(req, res) {
 			// ik this is some really adhoc shit but i just needed it for my local deployment purposes.
 			// really secretly hope that somebody starts sending off fake requests with like, ?browser=KingZargalsMagicScroll&version=666 or something.
-
-			if (!req.user.name || !req.query.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.query.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
 
 			let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 			if(!ip) return false;
@@ -798,15 +856,13 @@ mongodb.connect(url, function mongConnect(err, db) {
 			return res.json({ err: '', errcode: 200, data: {} });
 		});
 
-		app.post('/ajax/setusercost', ensureAJAXAuthenticated, function slashAjaxSetusercostPOST(req, res) {
+		app.post('/ajax/setusercost', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxSetusercostPOST(req, res) {
 			let uname = req.body.uname;
 			let ucost = req.body.ucosts;
 
-			if (!req.user.name || !req.body.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
+			ucost = parseFloat(ucost);
+			if(isNaN(ucost)) {
+				return res.json({ err: 'User cost was not a number!', errcode: 400, data: {} });
 			}
 
 			usersDB.findOne({ name: uname }, (err, data) => {
@@ -823,13 +879,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 			});
 		});
 
-		app.post('/code/addjob', ensureAJAXAuthenticated, function slashCodeAddjobPOST(req, res) {
-			if (!req.user.name || !req.body.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
+		app.post('/code/addjob', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashCodeAddjobPOST(req, res) {
 
 			if (req.body.date != 'Current' && new Date(req.body.date).getTime() > getPreviousMonday().getTime()) {
 				// the target date is in the future, plans *DONT* get scans
@@ -916,13 +966,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 			});
 		});
 
-		app.post('/code/deljob', ensureAJAXAuthenticated, function slashCodeDeljobPOST(req, res) {
-			if (!req.user.name || !req.body.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
+		app.post('/code/deljob', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashCodeDeljobPOST(req, res) {
 
 			usersDB.findOne({ name: req.body.jobuser }, (err, user) => {
 				if(err) throw err;
@@ -984,13 +1028,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 		});
 
 		// from the front end, the params are: { jobuser, jobday, jobid, jobdate, jobtime: jobTimeEl.text() },
-		app.post('/code/edittime', ensureAJAXAuthenticated, function slashCodeEditTimePOST(req, res) {
-			if (!req.user.name || !req.body.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
-			}
+		app.post('/code/edittime', ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashCodeEditTimePOST(req, res) {
 
 			req.body.jobtime = parseFloat(req.body.jobtime);
 			if(req.body.jobtime > 16) return res.json({ err: 'Cant have a job longer than 16 hours!', errcode: 504 });
@@ -1058,18 +1096,11 @@ mongodb.connect(url, function mongConnect(err, db) {
 			});
 		});
 
-		app.post('/ajax/planviaspreadsheet', upload.single('file'), ensureAJAXAuthenticated, function slashAjaxPlanviaspreadsheetPOST(req, res) {
+		app.post('/ajax/planviaspreadsheet', upload.single('file'), ensureAJAXAuthenticated, getXSRFValidator(resResponseAJAX), function slashAjaxPlanviaspreadsheetPOST(req, res) {
 			// this ended up being such a large algorithm :/
 			// req.file is the spreadsheet file, loaded in memory. ty multer <3
 			if (req.user.isadmin != 'true') {
 				return res.redirect('/?err=You%20don\'t%20have%20permissions%20to%20use%20the%20planner');
-			}
-
-			if (!req.user.name || !req.body.XSRFToken) {
-				return res.json({ err: 'User did not submit an XSRF Token.', errcode: 403, data: {} });
-			}
-			if (!validateXSRFToken(req.body.XSRFToken, req.user.name)) {
-				return res.json({ err: 'User did not submit a valid XSRF Token.', errcode: 403, data: {} });
 			}
 
 			let spreadsheet = XLSX.read(req.file.buffer);
@@ -1316,7 +1347,7 @@ mongodb.connect(url, function mongConnect(err, db) {
 
 		//#region authCodePages
 
-		app.post('/auth/signup', ensureAuthenticated, function slashAuthSignup(req, res) {
+		app.post('/auth/signup', ensureAuthenticated, getXSRFValidator(resResponseRedir), function slashAuthSignup(req, res) {
 			if (req.user.isadmin) {
 				if(req.body.password != req.body.confirmpassword)
 					return res.redirect('/?err=Your%20passwords%20dont%20match!');
@@ -1339,7 +1370,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 					timesheet: { jobs: [] },
 				};
 				if(toIns.name.indexOf('}') != -1 || toIns.name.indexOf('{') != -1 || toIns.name.indexOf('>') != -1 || toIns.name.indexOf('<') != -1
-				|| toIns.name.indexOf('$') != -1 || toIns.name.indexOf('@') != -1 || toIns.name.indexOf('#') != -1 || toIns.name.indexOf('"') != -1) {
+				|| toIns.name.indexOf('$') != -1 || toIns.name.indexOf('@') != -1 || toIns.name.indexOf('#') != -1 || toIns.name.indexOf('"') != -1
+				|| toIns.name.indexOf('.') != -1 || toIns.name.indexOf('\\') != -1|| toIns.name.indexOf('/') != -1 || toIns.name.indexOf(',') != -1) {
 					return res.redirect('/?err=Your%20name%20contains%20illegal%20characters!');
 				}
 
@@ -1370,16 +1402,21 @@ mongodb.connect(url, function mongConnect(err, db) {
 		});
 
 		app.get('/auth/logout', function slashAuthLogoutGET(req, res) {
+			let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+			if(req.user && req.user.name) console.log('user ' + req.user.name + ' logged out. IP: ' + ip);
+			else console.log('ANON (unauthenticated user) tried to log out. IP: ' + ip);
 			req.logout();
 			return res.redirect('/login');
 		});
 
-		app.post('/auth/changepassword', ensureAuthenticated, function slashAuthChangepasswordPOST(req, res) {
+		app.post('/auth/changepassword', ensureAuthenticated, getXSRFValidator(resResponseRedir), function slashAuthChangepasswordPOST(req, res) {
+			if(req.body.newpassword != req.body.newconfirmpassword) return res.redirect('/?err=Passwords%20do%20not%20match!');
+
 			let redir = verifyPassword(req.user.name, req.body.newpassword);
 			if(redir) return res.redirect('/?err='+redir);
 
 			if (passwordHash.verify(req.body.oldpassword, req.user.password)) {
-				req.user.password = hashOf(req.body.newpassword);
+				req.user.password = hashOf(req.body.newconfirmpassword);
 				var user = req.user;
 				usersDB.update(
 					{ name: user.name },
@@ -1577,6 +1614,8 @@ mongodb.connect(url, function mongConnect(err, db) {
 					setTimeout(sendOffProj, 1500, callback, i+1);
 					// since the shotgun api is somewhat unstable, i found that giving it more time in between api calls helped it not seg fault.
 					// if your sghttp server keeps seg faulting, up this timeout.
+					// luckily, there are practically no time restraints on this transfer since it's async
+					// (other than under 10 minutes, if thats what you have the refresh time set to)
 				}
 				else {
 					setTimeout(callback, 1500); // delayed to let the last project finish
@@ -2049,31 +2088,33 @@ function AESdecrypt(str, key=AESKEY){
 }
 
 function verifyPassword(user, pass) {
+	let ppass = JSON.parse(JSON.stringify(pass));
+
 	let passwordIsBlocked = false;
 	for (let bpass of selectList.bpass) {
-		if (pass == bpass) passwordIsBlocked = true;
+		if (ppass == bpass) passwordIsBlocked = true;
 	}
 	if (passwordIsBlocked) {
 		return 'Your%20New%20Password%20Cant%20Be%20That.';
 	}
 
-	let nums = pass.replace(/[^0-9]/g, '').length;
-	let syms = pass.replace(/[a-zA-Z\d\s:]/g, '').length;
-	let lowerCase = pass.replace(/[^a-z]/g, '').length;
-	let upperCase = pass.replace(/[^A-Z]/g, '').length;
+	let nums = ppass.replace(/[^0-9]/g, '').length;
+	let syms = ppass.replace(/[a-zA-Z\d\s:]/g, '').length;
+	let lowerCase = ppass.replace(/[^a-z]/g, '').length;
+	let upperCase = ppass.replace(/[^A-Z]/g, '').length;
 
 	if (nums < 2) return 'You%20Must%20Have%20At%20Least%20Two%20Numbers!';
 	if (syms < 1) return 'You%20Must%20Have%20At%20Least%20One%20Symbol!';
 	if (lowerCase < 2) return 'You%20Must%20Have%20At%20Least%20Two%20Lower%20Case%20Letters!';
 	if (upperCase < 1) return 'You%20Must%20Have%20At%20Least%20One%20Upper%20Case%20Letter!';
 
-	if (pass.length < 4)  return 'Your%20Password%20Cant%20be%20that%20short!';
+	if (ppass.length < 4)  return 'Your%20Password%20Cant%20be%20that%20short!';
 	if (user.length < 3)  return 'Your%20Username%20Cant%20be%20that%20short!';
-	if (pass.length > 50) return 'Your%20Password%20Cant%20be%20that%20long!';
+	if (ppass.length > 50) return 'Your%20Password%20Cant%20be%20that%20long!';
 	if (user.length > 50) return 'Your%20Username%20Cant%20be%20that%20long!';
 
 	for (let upart in user.toLowerCase().split(' ')) {
-		if (pass.toLowerCase().indexOf(upart) != -1)
+		if (ppass.toLowerCase().indexOf(upart) != -1)
 			return 'Your%20Password%20Cant%20Contain%20Your%20Username!';
 	}
 
@@ -2101,28 +2142,58 @@ function makeSlug(min, max) {
 	}
 	return t;
 }
+function checkConnection(fhost, timeout) {
+	host = url.parse(fhost).hostname;
+	port = url.parse(fhost).port;
+
+	return new Promise(function(resolve, reject) {
+		timeout = timeout || 10000;		// default of 10 seconds
+		var timer = setTimeout(function() {
+			reject("timeout");
+			if(socket) socket.end();
+		}, timeout);
+		var socket = net.createConnection(port, host, function() {
+			clearTimeout(timer);
+			resolve();
+			if(socket) socket.end();
+		});
+		socket.on('error', function(err) {
+			clearTimeout(timer);
+			reject(err);
+		});
+	});
+}
+
 //#endregion crypto funcs
 
 //#region passport funcs
 function ensureAuthenticated(req, res, next) {
+	let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
 	if (req.isAuthenticated()) {
+		console.log('user at ip ' + ip + ' accessed a page and was authenticated  user: ' + req.user.name);
 		return next();
 	}
-	res.redirect('/login?err=Unable%20to%20authenticate%20user.');
+	console.log('user at ip ' + ip + ' tried to access a page and failed to be authenticated');
+	return res.redirect('/login?err=Unable%20to%20authenticate%20user.');
 }
 
 function ensureAJAXAuthenticated(req, res, next) {
+	let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
 	if (req.isAuthenticated()) {
+		console.log('user at ip ' + ip + ' accessed a page and was authenticated  user: ' + req.user.name);
 		return next();
 	}
-	res.json({ err: 'User Is Not Authenticated', errcode: 403, data: '' });
+	console.log('user at ip ' + ip + ' tried to access a page and failed to be authenticated');
+	return res.json({ err: 'User Is Not Authenticated', errcode: 403, data: '' });
 }
 
 function ensureAuthenticatedSilently(req, res, next) {
 	if (req.isAuthenticated()) {
 		return next();
 	}
-	res.redirect('/login');
+	return res.redirect('/login');
 }
 //#endregion passport funcs
 
