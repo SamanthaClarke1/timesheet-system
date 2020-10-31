@@ -5,7 +5,7 @@
 
 //#region meta
 
-/* Code written by Samuel J. Clarke, May-July 2018, for CumulusVFX. */
+/* Code written by Samantha J. Clarke, May-November 2018, for CumulusVFX. */
 //begin server.js
 
 /*
