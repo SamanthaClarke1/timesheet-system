@@ -42,7 +42,7 @@ HTTPS_PORT=8443
 HTTPS_ENABLED=true
 HTTPS_PASS="<password>"
 
-AUTHOR="Samuel J. Clarke"
+AUTHOR="Samantha J.T. Clarke"
 
 # this is the cookie encryption secret.
 # DONT LET THIS LEAK, OR COOKIES WILL BE COMPROMISED (thats not good)
