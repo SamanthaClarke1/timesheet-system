@@ -12,7 +12,7 @@
     "command-line-args": "^5.0.2",
     "dotenv": "^5.0.1",
     "ejs": "^2.6.1",
-    "express": "^4.16.3",
+    "express": "^4.17.3",
     "express-partials": "^0.3.0",
     "express-session": "^1.15.6",
     "expressjs": "^1.0.1",
